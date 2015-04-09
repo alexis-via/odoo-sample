@@ -1,0 +1,90 @@
+unittest : 
+==========
+sous-répertoire "tests" (avec S)
+je teste du code
+ca vérife l'intérieur du module
+
+__init__
+from . import test_file.py
+FACULTATIF:
+checks = [
+   liste des fichiers python de test à lancer
+]
+fast_checks = [
+    liste des fichiers python de test qd on fait un fast check
+]
+
+Note : pas d'import sur tests dans le __init__ à la racine du module
+
+il va lancer les tests :
+test_XX_(par convention : le nom de la méthode qu'on teste dans le vrai code)
+
+def setUp()
+    self.picking = self.registry('stock.picking')
+importe les modèles et les variables nécessaires
+
+def test_00_machin(self):
+    cr, uid = self.cr, self.uid
+    #   Je créé des données, de façon classique
+    picking_id = self.picking.create(cr, uid, {})
+    # appel de la fonction à tester
+    return = self.picking.machin(cr, uid, ....)
+    self.assertTrue(result, "Error during method exec")
+    self.assertEquals(result, ce à quoi il doit être égale, "Error")
+    self.assertIn
+    self.assertNotIn # => cf doc de unittest
+
+    # si le test est censé envoyer une exception
+    try:
+        result = self.picking.ma_fonction_a_test
+        self.assertFalse(result, "Le test aurait du renvoyer une exception, c pas normal")
+    except orm.except_orm:
+        continue
+
+Pour tester : comme pour yaml:
+--log-level=test --test-enable -u modules
+
+
+yaml :
+=======
+sous-répertoire "test" (sans S)
+déclare les fichiers yml dans __openerp__.py dans clé 'test': [liste des ficheirs .yml],
+tests fonctionnels
+ca vérifie que le module marche ds son environnement
+
+-
+  Je décris ce que je vais faire dans l'étape en dessous
+-
+  !record {model: product.product, id: product_product_1}:
+    name: Product 1
+    type: product
+    sale_ok: True
+
+    pour un O2M:
+    order_line:
+      - product_id: product_product_1
+        product_uom: 1
+
+# Quid du champ M2M et date
+-
+  I confirm the order
+-
+  !function {model:sale.order, name: nom_fonction}:
+    - eval: "[obj(ref('sale_order_1')).id]"    # on ne s'occupe pas de cr, uid
+      model: sale.order   # est-ce nécessaire -> tester sans.
+
+-
+  Je vérifier le résulat
+-
+  !python {model:sale.order}: |
+    order = self.browse(cr, uid, ref('sale_order_1'), context=context)
+    for picking in order.picking_ids:
+        assert picking.state == 'cancel', "Picking state is not canceled"
+
+# a confirmer : pour démarrer un wizard, on fait un !record {model: object_du_wizard
+
+Exemple :
+https://github.com/akretion/sale-workflow/blob/7.0_sd/sale_cancel_picking/test/picking_cancel_test.yml
+
+-d database --log-level test --test-enable
+les données de demo ne seront pas conservées 

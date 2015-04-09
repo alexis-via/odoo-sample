@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<openerp>
+<data noupdate="1">
+
+
+<!-- pour avoir des valeurs par défaut sur un model -->
+<function
+            eval="('default',False,'warehouse_id', [('purchase.order', False)], stock.warehouse0, True, False, False, False, True)"
+            id="purchase_default_set"
+            model="ir.values"
+            name="set"/>
+<!-- TODO dans quel ordre sont les arguments ?
+Dans le eval :
+le 1er arg est toujours 'default'
+le 3e arg donne le nom du champ
+le 4e arg donne le modèle
+le 5e arg donne l'ID XML à mettre comme valeur par défaut
+les args suivants doivent tjs avoir la même valeur
+
+IMPORTANT : au final, dans le champ "value" (?) de la table ir_values
+on a "I3" où 3 est l'ID du record par défaut et I signifie que c'est un entier.
+Si on change la valeur à la main dans Settings > Actions > User-defined values,
+et qu'on change l'ID, il va l'enregistrer en base sans le "I" et on aura un crash
+car il prendra '3' en tant que string.
+En fait, c'est une représentation "pickle" qui est écrite dans la base de donnée,
+donc ce n'est pas exactement I3, il y a des caractères en plus.
+
+ATTENTION, set est DEPRECATED -> il faut utiliser set_default
+
+  -->
+
+<!--
+A savoir quand on créé des records via des fichiers xxx_data.xml :
+Quand le record est supprimé, l'entrée dans ir_model_data est supprimée également !
+Problème : quand on fait un update du module, il va re-créer le record même si il y avait noupdate="1"
+
+-->
+
+<record id="donation_seq_type" model="ir.sequence.type">
+    <field name="name">Donation Number</field>
+    <field name="code">donation.donation</field>
+</record>
+
+<record id="donation_seq" model="ir.sequence">
+    <field name="name">Donation</field>
+    <field name="code">donation.donation</field>
+    <field name="prefix">DON-%(year)s-</field>
+    <field name="padding">4</field>
+    <field name="number_next">421</field>
+    <field name="company_id" eval="False"/>
+</record>
+
+<!--
+Année en cours avec le siècle : %(year)s
+Année en cours sans les siècles : %(y)s
+Mois: %(month)s
+Jour: %(day)s
+Jour de l'année: %(doy)s
+Semaine de l'année : %(woy)s
+Jour de la semaine (0: lundi): %(weekday)s
+Heure 00->24: %(h24)s
+Heure 00->12: %(h12)s
+Minute: %(min)s
+Seconde : %(sec)s
+
+Comment retrouver la sequence correspondante dans la base SQL :
+la séquence s'appelle ir_sequence_xxx où xxx est l'ID de l'objet ir.sequence, en 3 chiffres
+\d ir_sequence_xxx
+
+Pour changer son next number :
+alter sequence ir_sequence_xxx RESTART WITH 420;
+=> le numéro suivant devrait être 421...
+
+-->
+
+<delete id="stock.access_stock_tracking_sales_user" model="ir.model.access"/>
+
+</data>
+</openerp>

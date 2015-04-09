@@ -1,0 +1,71 @@
+setLang(o.partner_id.lang or 'en_US')
+
+getLang()=="fr_FR" and u"Contact acheteur" or u"Order contact"
+
+Pour afficher un champ sélection : 
+l.stay_id and get_selection_item(l.stay_id, 'arrival_time')
+où 'arrival_time' est le champ sélection
+
+Pour afficher la date :
+formatLang(time.strftime('%Y-%m-%d'), date=True)
+avec l'heure :
+NE MARCHE PAS : formatLang(time.strftime('%Y-%m-%d %H-%M-%S'), date_time=True)
+
+autres args de formatLang :
+formatLang(self, value, digits=None, date=False, date_time=False, grouping=True, monetary=False, dp=False, currency_obj=False)
+
+Affiche un montant avec devise :
+formatLang(o.amount_untaxed, currency_obj=o.currency_id)
+
+Affiche le name_get:
+get_name(l.product_id)   # Permet d'afficher les options des variantes
+
+for each=""
+/for
+
+if test=""
+/if
+
+choose
+when test=""
+/when
+when test=""
+otherwize
+/otherwize
+/choose
+
+Saut de page avant fin de boucle for :
+Menu Format->Paragraph :  Onglet Enchainement (Text Flow) : Insérer : Type = Page ; Position = Après (select "Breaks" = insert page after)
+
+Pour code barre ou image :
+Cadre, onglet "option" : mettre dans le champ "Nom" :
+image: asimage(pack.get_128_barcode(thickness=2), 0)
+ou
+image: barcode(l.prodlot_id and l.prodlot_id.name or '0', 'code128', 'None', 25)
+'code128' ou 'code39' ou 'ean13'
+ATTENTION, si on veut mettre 2 x le même code barre dans un rapport, comme il faut que chaque cadre est un nom unique, il faut changer légèrement la formulation de l'appel de fonction barcode()
+
+Bloc addresse en v7
+
+Bloc addresse en v8:
+if test='o.partner_id.parent_id'
+o.partner_id.parent_id.name
+/if
+o.partner_id.name
+display_address(o.partner_id)
+
+=======================================
+Tableur
+-------
+
+Pour mettre une balise : insérer un Hyperlien de type Web/Internet
+- ciable : python://balise
+- Texte : si on veut, on peut mettre un texte + lisible, par exemple la balise sans python://
+
+Balises testées :
+python://if test="o.msds"
+python:///if
+
+python://for each="c in o.fragrance_ids"
+c.substance_id.name
+python:///for

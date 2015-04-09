@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (C) 2014 Akretion (http://www.akretion.com/)
+  The licence is in the file __openerp__.py
+  @author: Alexis de Lattre <alexis.delattre@akretion.com>
+-->
+
+<openerp>
+<data>
+
+<!-- pour remplacer un rapport existant -->
+<record id="sale.report_sale_order" model="ir.actions.report.xml">
+    <field name="name">Quotation / Order</field>
+    <field name="model">sale.order</field>
+    <field name="report_name">sale.order</field>
+    <field name="report_type">aeroo</field>
+    <field name="in_format">oo-odt</field>
+    <!-- available in formats :
+        oo-odt
+        oo-ods
+        genshi-raw
+    -->
+    <field name="report_rml">report_aeroo_sale/report/quotation.odt</field>
+    <field name="parser_state">default</field>
+    <!-- si parseur : parser_state=loc et ajouter
+    <field name="parser_loc">nom_du_module/report/proforma_invoice.py</field>
+    -->
+    <field name="tml_source">file</field>
+    <field name="multi" eval="0"/>
+    <field name="out_format" ref="report_aeroo_ooo.report_mimetypes_pdf_odt"/>
+    <!-- available output formats :
+        report_aeroo.report_mimetypes_odt_odt
+        report_aeroo.report_mimetypes_ods_ods
+        report_aeroo.report_mimetypes_raw
+        v8 only
+        report_aeroo.report_mimetypes_pdf_odt
+        v7 only
+        report_aeroo_ooo.report_mimetypes_pdf_odt
+        report_aeroo_ooo.report_mimetypes_pdf_ods
+        report_aeroo_ooo.report_mimetypes_doc_odt
+        report_aeroo_ooo.report_mimetypes_xls_odt
+        report_aeroo_ooo.report_mimetypes_csv_ods
+    -->
+    <field name="content_fname">txt</field> <!-- override extension -->
+    <field name="charset">cp1252</field>  <!-- for raw files -->
+    <field name="fallback_false" eval="0"/>
+    <field name="process_sep" eval="1"/> <!-- NOT in v8 -->
+    <field name="attachment">(object.state in ('draft','sent')) and ('%s_%s.pdf' %((object.name or ''), time.strftime('%Y-%m-%d_%Hh%M')))</field>
+    <field name="attachment_use" eval="0"/>
+    <field name="styles_mode">default</field>
+    <field name="copies">2</field>  <!-- Number of copies -->
+</record>
+
+<!-- The Proforma report uses the SAME report as the Quotation -->
+<record id="report_proforma" model="ir.actions.report.xml">
+    <field name="name">Pro Forma</field>
+    <field name="model">sale.order</field>
+    <field name="report_name">sale.proforma</field>
+    <field name="report_type">aeroo</field>
+    <field name="in_format">oo-odt</field>
+    <field name="report_rml">report_aeroo_sale/quotation.odt</field>
+    <field name="parser_state">default</field>
+    <field name="tml_source">file</field>
+    <field name="rml" eval="0"/>
+    <field name="multi" eval="0"/>
+    <field name="out_format" ref="report_aeroo.report_mimetypes_odt_odt"/>
+    <field name="fallback_false" eval="0"/>
+    <field name="process_sep" eval="1"/>
+    <field name="attachment_use" eval="0"/>
+    <field name="styles_mode">default</field>
+</record>
+
+<record id="proforma_button_sale_order_form" model="ir.ui.view">
+    <field name="name">proforma_button_sale_order_form</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form"/>
+    <field name="arch" type="xml">
+        <button name="print_quotation" position="after">
+            <button name="%(report_proforma)d" string="Print Pro Forma" type="action" groups="base.group_user"/>
+        </button>
+    </field>
+</record>
+
+<record id="button_report_proforma" model="ir.values"> <!-- Add print button -->
+    <field name="key2">client_print_multi</field>
+    <field name="model">sale.order</field>
+    <field name="name">Pro Forma</field> <!-- ce qui apparaît dans la liste déroulante 'Print' n'est pas ce champ mais le "name" du ir.actions.report.xml -->
+    <field name="value" eval="'ir.actions.report.xml,%d'%report_proforma" />
+</record>
+
+
+</data>
+</openerp>

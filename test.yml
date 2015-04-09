@@ -1,0 +1,77 @@
+# -*- encoding: utf-8 -*-
+# Copyright (C) 2015 Akretion France (www.akretion.com)
+# @author: Alexis de Lattre <alexis.delattre@akretion.com>
+# The licence is in the file __openerp__.py
+
+# Sous-répertoire "test" (sans S)
+# déclare les fichiers yml dans __openerp__.py dans clé 'test': [liste des ficheirs .yml],
+-
+  Je décris ce que je vais faire dans l'étape en dessous
+-
+  !record {model: product.product, id: product_product_1}:
+    name: Product 1   # Char
+    type: product     # Selection
+    sale_ok: True     # Bool
+    date: '2012-08-05'  # Date
+    date: !eval time.strftime('%Y-%m-%d') # today
+    partner_id: base.res_partner_2 # M2O
+    #pour un O2M:
+    order_line:
+      - product_id: product_product_1
+        product_uom: 1
+
+# QUESTION : comment fait-on pour METTRE A JOUR un record en YAML ; mes tests dans base_phone sont infructueux
+
+# Quid du champ M2M et date
+-
+  I confirm the order
+-
+  !function {model: sale.order, name: nom_fonction}:
+    - eval: "[obj(ref('sale_order_1')).id]"    # on ne s'occupe pas de cr, uid
+
+-
+  Je vérifier le résulat
+-
+  !python {model: sale.order}: |
+    import time
+    order = self.browse(cr, uid, ref('sale_order_1'), context=context)
+    for picking in order.picking_ids:
+        assert picking.state == 'cancel', "Picking state is not canceled"
+        assert stay1.line_ids[0].room_id.id == ref('room_st_elie'), 'stay1: wrong room'
+        assert stay1.line_ids[0].date == time.strftime('%Y-%m-01'), 'stay1: wrong date'
+# Si on veut utiliser la nouvelle API, la SEULE façon de faire est:
+# cf https://github.com/odoo/odoo/issues/2695
+  !python {model: sale.order, id: order1}: |
+    # là, self est un recordset de la sale order xmlid order1
+    self.name
+-
+  On peut faire aussi des vérifs simples sans python
+-
+  !assert {model: sale.order, id: sale.sale_order_test2, string: The onchange function of product was not correctly triggered}:
+    - order_line[0].name == u'[A8767] Apple In-Ear Headphones'
+    - order_line[0].price_unit == 79.0 * 12
+    - date == time.strftime('%Y-%m-01')
+    - line_ids[0].room_id.id == ref('st_benoit_house')
+
+
+
+  !context
+    uid: 'res_users_salesman'
+
+
+
+# Pour démarrer un wizard:
+  !python {model: donation.stay.create}: |
+    import time
+    ctx = context.copy()
+    ctx.update({'active_id': ref('stay.stay2'), 'active_ids': [ref('stay.stay2')], 'active_model': 'stay.stay'})
+    wiz_id = self.create(cr, uid, {'journal_id': ref('account.check_journal'), 'amount': 200, 'payment_ref': 'CHQ LBP 421242'})
+    action = self.create_donation(cr, uid, [wiz_id], context=ctx)
+    donation_id = action['res_id']
+
+
+Exemple :
+https://github.com/akretion/sale-workflow/blob/7.0_sd/sale_cancel_picking/test/picking_cancel_test.yml
+
+-d database -u module --log-level=test --test-enable
+les données de demo ne seront pas conservées 

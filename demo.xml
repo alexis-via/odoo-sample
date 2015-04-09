@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<openerp>
+<data noupdate="1">
+
+
+<!-- Nouveau -->
+<!-- Question : les valeurs par défaut sont appliquées ?? -->
+<record id="my_new_product" model="product.product">
+
+<!-- Ajout sur existant -->
+<record id="product.product_product_25" model="product.product">
+    <!-- Boolean -->
+    <!-- WARNING : ne pas mettre <field >0</field> à la place de eval="False"
+    sinon ça ne marche pas -->
+    <field name="event_ok" eval="True"/>
+    <!-- String -->
+    <field name="name">RAM SR3</field>
+    <!-- Integer ou float -->
+    <field name="standard_price">80.0</field>
+    <!-- Fields.selection string -->
+    <field name="type">consu</field>
+    <!-- Fields.selection integer -->
+    <field name="default_intrastat_transport" eval="int(3)" />
+    <!-- M2O -->
+    <field name="uom_id" ref="product.product_uom_unit"/>
+    <!-- date -->
+    <!-- pour du relatif -->
+    <field name="membership_date_from" eval="time.strftime('%Y-01-01')" />
+    <!-- pour du fixe -->
+    <field name="membership_date_from">2014-09-01</field>
+    <!-- Datetime -->
+    <field name="date" eval="time.strftime('%Y-%m-28  15:40:00')"/>
+    <!-- M2M -->
+    <field name="company_ids" eval="[(4, ref('main_company'))]"/>
+    <field name="groups_id" eval="[(4, ref('stock.group_stock_manager')), (4, ref('account.group_account_invoice')), (4, ref('account.group_account_user')), (4, ref('account.group_account_manager'))]"/>
+</record>
+
+<!-- Mettre une propriété en donnée de demo -->
+<record id="property_account_payable" model="ir.property" forcecreate="True">
+    <field name="name">property_account_payable</field>
+    <field name="fields_id" search="[('model','=','res.partner'),('name','=','property_account_payable')]"/>
+    <field name="type">many2one</field>  <!-- mettre le type du champ indiqué dans fields_id -->
+    <field name="value" eval="'payment.mode,'+str(ref('account_banking_payment_export.payment_mode_2'))"/> <!-- si c'est un selection : eval="'picking'" -->
+    <field name="company_id" ref="base.main_company"/>
+    <!-- Si pas de valeur pour res_id => ce bloc devient la définition de la valeur par défaut -->
+    <field name="res_id" ref=""/>
+</record>
+
+<!-- Faire franchir une transition de workflow -->
+<workflow action="invoice_open" model="account.invoice" ref="invoice_1"/>
+<!-- invoice_open = signal de la transition de workflow ; ref=xmlid de la facture-->
+
+</data>
+</openerp>

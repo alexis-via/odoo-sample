@@ -1,0 +1,19 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_cutoff_mapping,Full access on account.cutoff.mapping,model_account_cutoff_mapping,account.group_account_manager,1,1,1,1
+access_account_cutoff_mapping_user,Read access on account.cutoff.mapping,model_account_cutoff_mapping,base.group_user,1,0,0,0
+access_account_cutoff,Full access on account.cutoff,model_account_cutoff,account.group_account_manager,1,1,1,1
+access_account_cutoff_read,Read access on account.cutoff,model_account_cutoff,account.group_account_user,1,0,0,0
+access_account_cutoff_line,Full access on account.cutoff.line,model_account_cutoff_line,account.group_account_manager,1,1,1,1
+access_account_cutoff_line_read,Read access on account.cutoff.line,model_account_cutoff_line,account.group_account_user,1,0,0,0
+access_account_cutoff_tax_line,Full access on account.cutoff.tax.line,model_account_cutoff_tax_line,account.group_account_manager,1,1,1,1
+access_account_cutoff_tax_line_read,Read access on account.cutoff.tax.line,model_account_cutoff_tax_line,account.group_account_user,1,0,0,0
+
+# Autre trucs pour CSV :
+- si on veut déclarer un M2M dans un CSV : séparer les XMLs par des virgules à intérieur des quotes :
+champ_m2m,autre_champ
+"base.fr,base.de,base.es","autre_champ"
+
+Employee : base.group_user
+Access Rights : base.group_erp_manager
+Settings : base.group_system
+Technique : base.group_no_one

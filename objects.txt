@@ -1,0 +1,168 @@
+ACCOUNT
+=======
+
+account.invoice
+- invoice_line : O2M account.invoice.line
+- move_id : M2O account.move
+- type : Selection out_invoice, in_invoice, out_refund, in_refund
+- number
+- internal_number
+- supplier_invoice_number
+- origin
+- state : Selection draft, open, paid, cancel, proforma, proforma2
+- date_invoice
+- date_due
+- partner_id
+- payment_term
+- period_id
+- account_id
+- tax_line : O2M account.invoice.tax
+- amount_untaxed
+- amount_tax
+- amount_total
+- currency_id
+- journal_id
+- company_id
+- check_total
+- reconciled : Bool compute
+- partner_bank_id : M2O res.partner.bank
+- move_lines : M2M compute account.move.line
+- residual : float compute
+- payment_ids : M2M account.move.line
+- move_name
+- user_id
+- fiscal_position
+- commercial_partner_id
+
+account.move
+- line_id : O2M account.move.line
+- name (numéro d'écriture)
+- ref
+- date
+- period_id
+- journal_id
+- state : Selection draft, posted
+- partner_id : Related line_id.partner_id !!!
+- company_id : Related journal_id.company_id
+
+account.move.line
+- name
+- quantity
+- product_uom_id
+- product_id
+- debit
+- credit
+- account_id
+- move_id : M2O account.move
+- ref : Related move_id.ref
+- statement_id : M2O account.bank.statement
+- reconcile_id : M2O account.move.reconcile
+- reconcile_partial_id : M2O account.move.reconcile
+- currency_id
+- journal_id : Related move_id.journal_id store=True
+- period_id : Related move_id.period_id store=True
+- partner_id
+- date_maturity
+- date : Related move_id.date
+- analytic_lines : O2M account.analytic.line
+- state : Selection draft, valid
+- analytic_account_id : M2O account.analytic.account
+- company_id : Related account_id.company_id
+- invoice : M2O compute
+
+account.move.reconcile
+- name (A1232)
+- type
+- line_id : O2M account.move.line reconcile_id
+- line_partial_ids : O2M account.move.line reconcile_partial_id
+- opening_reconciliation bool Is this reconciliation produced by the opening of a new fiscal year ?
+
+SALE
+====
+
+sale.order
+- name
+- origin
+- client_order_ref
+- state : Selection draft,sent,cancel,waiting_date,progress,manual,shipping_except,invoice_except,done
+- date_order
+- date_confirm
+- user_id
+- partner_id
+- partner_invoice_id
+- partner_shipping_id
+- order_policy : Selection manual,picking,prepaid (les 2 derniers sont dans sale_stock)
+- pricelist_id
+- currency_id : Related pricelist_id, currency_id
+- project_id : M2O account.analytic.account
+- order_line : O2M sale.order.line
+- invoice_ids : M2M account.invoice
+- note
+- amount_untaxed
+- amount_tax
+- amount_total
+- payment_term
+- fiscal_position
+- company_id
+- section_id : M2O crm.case.section
+- procurement_group_id
+- picking_policy : direct, one (sale_stock)
+- warehouse_id
+- picking_ids : O2M compute
+
+sale.order.line
+- order_id : M2O sale.order
+- name
+- sequence
+- product_id
+- invoice_lines : M2M account.invoice.line
+- invoiced : Boolean compute
+- price_unit
+- price_subtotal : float compute
+- price_reduce : float compute
+- tax_id : M2M account.tax
+- product_uom_qty
+- product_uom
+- product_uos_qty
+- product_uos
+- discount
+- th_weight
+- state : selection cancel,draft,confirmed,exception,done
+- order_partner_id : related order_id, partner_id
+- salesman_id : Related order_id, user_id
+- delay
+- procurement_ids : O2M procurement.order
+- product_packaging : M2O product.packaging
+- number_packages : Integer compute
+- route_id : M2O stock.location.route
+
+
+PROCUREMENT
+===========
+procurement.group
+- name
+- move_type : Selection direct,one
+- procurement_ids : O2M procurement.order
+
+procurement.order
+- name
+- origin
+- company_id
+- priority
+- date_planned
+- group_id : M2O procurement.group
+- rule_id : M2O procurement.rule
+- product_id
+- product_qty
+- product_uom
+- product_uos_qty
+- product_uos
+- state : Selection cancel,confirmed,exception,running,done
+- sale_line_id : M2O sale.order.line (sale)
+
+procurement.rule
+- name
+- group_propagation_option : Selection none, propagate, fixed
+- group_id : M2O procurement.group
+- action
+- company_id

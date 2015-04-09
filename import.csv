@@ -1,0 +1,27 @@
+En-tête première colonne: id
+
+Pour un M2M:
+- xmlid séparés par des virgules  (en tête : taxes_id/id) : attention à bien mettre des guillements autour, sinon
+- name_search : string de l'objet séparé par des virgules, cf http://anybox.fr/blog/importer-des-employes-via-csv-avec-openerp-v7 (en tête : taxes_id)
+
+Pour un M2O:
+- xmlid (en tête : company_id/id)
+- ID (en tête : company_id)
+- name_search (en tête : company_id)
+
+Pour un O2M:
+Mettre dans l'entête: nom_du_champO2M/nom_du_champ_normal
+Exemple pour product template:
+id,name,attribute_line_ids/attribute_id/id,attribute_line_ids/value_ids/id
+Ensuite, on fait autant de lignes que d'entrées dans le O2M, sans répéter les champs autres que ceux liés au O2M
+
+On peut même faire du multi-O2M dans un même fichier CSV, exemple : lp:~akretion-team/+junk/usability-80 répertoire product_variant_csv_import/sample_csv/product.template.csv
+
+Pour une date : YYYY-MM-DD
+
+Pour un datetime : 1970-01-01 14:30:10
+
+Pour un bool : True ou False
+
+Très bons slides :
+http://fr.slideshare.net/Audaxis/opendays-import-csv-2013v5

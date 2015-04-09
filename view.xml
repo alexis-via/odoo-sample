@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2015 Akretion (http://www.akretion.com/)
+    @author: Alexis de Lattre <alexis.delattre@akretion.com>
+    The licence is in the file __openerp__.py
+-->
+
+<openerp>
+<data>
+
+<!-- HERITAGE d'une vue FORM -->
+<record id="view_asterisk_server_company_form" model="ir.ui.view">
+    <field name="name">asterisk.server.company</field>
+    <field name="model">res.company</field>
+    <field name="inherit_id" ref="base.view_company_form" />
+    <field name="arch"  type="xml">
+        <notebook>
+            <!-- Ajout d'un nouvel onglet -->
+            <page position="inside" string="IPBX">
+                <field nolabel="1" name="asterisk_server_ids" />
+                <!-- affiche la string du champ, sans afficher la valeur -->
+                <label for="amount_total" />
+            </page>
+        </notebook>
+        <xpath expr="//field[@name='product_id']" position="attributes">
+            <attribute name="editable">bottom</attribute>
+            <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
+            <attribute name="readonly">1</attribute>
+        </xpath>
+    </field>
+</record>
+
+<!-- SEARCH VIEW -->
+<record id="view_asterisk_server_search" model="ir.ui.view">
+    <field name="name">asterisk.server.search</field>
+    <field name="model">asterisk.server</field>
+    <field name="arch" type="xml">
+        <search string="Asterisk Server Search">
+            <!-- Permet une recherche "directe" -->
+            <field name="name" />
+            <field name="ip_address" />
+            <!-- Pour une recherche sur plusieurs champs -->
+            <field name="reference" filter_domain="['|', ('name', 'ilike', self), ('client_order_ref', 'ilike', self)]" string="Tutu"/>
+            <!-- permet un filtrage -->
+            <filter name="import" string="Import" domain="[('type', '=', 'import')]" />
+            <!-- TODO exemple de multi-filtrage -->
+            <!-- permet le regroupement -->
+            <group string="Group By" name="groupby">
+                <filter name="partner_groupby" string="Partner" context="{'group_by': 'partner_id'}"/>
+                <filter name="date_groupby" string="Date" context="{'group_by': 'date:week'}"/> <!-- Dans la BI, on aura un regroupement en semaine par défaut -->
+            </group>
+            <!-- Pour faire de l'affichage dynamique de la vue tree :  -->
+            <group string="Display">
+                 <filter string="Show Context" name="context_show" context="{'context_show': True}"/>  <!-- et sur le champ Context de la vue tree, il suffit de mettre invisible="not context.get('context_show')" -->
+            </group>
+        </search>
+    </field>
+</record>
+
+<!-- FORM VIEW -->
+<record id="view_asterisk_server_form" model="ir.ui.view">
+    <field name="name">asterisk.server.form</field>
+    <field name="model">asterisk.server</field>
+    <field name="arch" type="xml">
+        <form string="Asterisk Servers" version="7.0">
+            <header>
+            <!-- si on a un bouton à l'intérieur de la vue, on peut par exemple utiliser : class="oe_link oe_edit_only" (cas du bouton (update) des taxes) -->
+                <button name="done" string="Done" type="object" class="oe_highlight" states="draft" />
+                <button name="back2draft" string="Back to draft" type="object" states="done" />
+                <field name="state" widget="statusbar" clickable="True" statusbar_colors="{'pending': 'blue'}"/> <!-- si on utilise clickable="True" and statusbar_colors=, il ne faut évidemment pas que le champ "state" soit readonly=True, sinon on a une erreur JS -->
+                <!-- print report -->
+                <field name="%(report_proforma)d" string="Print Pro Forma" type="action" />
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <label for="name" string="Server Name" class="oe_edit_only"/>
+                    <h1>
+                        <field name="name" placeholder="Write the name of the server here..."/>
+                    </h1>
+                </div>
+                <group colspan="" col="">
+                    <field name="company_id" invisible="not context.get('asterisk_server_main_view')" groups="base.group_multi_company"/>
+                    <!-- pour groups=, il faut toujours mettre "nom du module.XMLID du groupe", même si le groupe est défini dans le même module. -->
+                    <field name="active" />
+                    <field name="ip_address" />
+                    <field name="partner_id" context="{'show_address': 1}" options="{'always_reload': 1}"/> <!-- Pour montrer l'adresse, il faut les clés spéciales dans context ET dans options -->
+                    <field name="port" />
+                    <field name="password" password="True" />
+                    <separator string="New section" colspan="2"/>
+                    <field name="tutu_id" widget="selection" />
+                    <field name="tutu_id" options="{'no_open': True}" /> <!-- no_open vire the lien HTML sur un champ M2O -->
+                    <field name="estimated_hours" widget="float_time"/>
+                    <field name="image_binary" widget="image"/>
+                    <!-- estimated_hours est un fields.float -->
+                    <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/> <!-- il faut que le champ 'currency_id' soit dans la vue -->
+                    <field name="currency_id" invisible="1"/> <!-- groups="base.group_multi_currency" -->
+                    <field name="field_many2one" domain="[('tit', '=', 'tutu')]"/>
+<!-- domaine dans une vue form : ce qu'on peut mettre à droite dans le tuple :
+                    - une valeur fixe
+                    - si on veut un truc dynamique, on fait un on_change sur un autre champ qui retourne un domaine
+                    ou sinon :
+                    domain="[('partner_id','=',partner_id)]"
+                    pour filtrer sur l'ID courant, utiliser "active_id" au lieu de "id"
+                    domain="[('partner_id', '=', active_id)] -->
+                    <field name="invoice_id" context="{'form_view_ref': 'account.invoice_form', 'tree_view_ref': 'account.invoice_tree'}"/>
+                    <!-- clés form_view_ref et tree_view_ref pour forcer une certaine vue -->
+                    <field name="test_field_many2one" context="{'search_default_partner_id': [partner_id]}"/>
+                    <!-- search_default_xxxx : xxxx est le 'name' du filtre dans la vue search -->
+                    <field name="intrastat_uom_id" attrs="{'invisible': [('is_fiscal_only', '=', True)], 'required': [('is_fiscal_only', '=', False)]}" groups="l10n_fr_intrastat_product.group_detailed_intrastat_product" />
+                    <!-- Exemple de champ "intégrés" avec commentaires après -->
+                    <label string="Impregnation Report Beads / Fragrance" for="testing_impregnation_beads_percentage"/> <!-- sur un label, quand on a for="champ", le string sera en gras. Si on n'a pas mis de string, la string du champ sera utilisée -->
+                        <div>
+                            <field name="testing_impregnation_beads_percentage" class="oe_inline"/> <!-- pas besoin de nolabel="1" quand on a class="oe_inline" -->
+                            <label string=" %% / " class="oe_inline"/> <!-- pas en gras car pas de for="" -->
+                            <field name="testing_impregnation_fragrance_percentage" class="oe_inline"/>
+                            <label string=" %%" class="oe_inline"/>
+                        </div>
+                    <!-- button to start a wizard : -->
+                    <button type="action" name="%(action_xmlid)d" string="Start wizard" />
+                    <!-- button with confirm pop-up -->
+                    <button type="type" name="do_this" string="Do this" confirm="Are you really sure ?" />
+                    <field name="machin_m2m_ids" widget="many2many_tags">
+                    <field name="description_text" widget="html">
+                    <field name="machine_ids" widget="x2many_counter" string="things" views="[['account.view_machin_tree', 'tree'], ['account.view_machin_form', 'form']]"/> <!-- utilisable sur M2M et O2M ; affichera 'nn things' où nn est le nombre de records-->
+                    <field name="my_prop_ids" widget="many2many_checkboxes"/>
+                </group>
+            </sheet>
+            <!-- Note: pas besoin qu'il y ait un sheet pour mettre le chatter - on peut le faire si la form contient un simple group -->
+            <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
+        </form>
+    </field>
+</record>
+
+<!-- TREE VIEW -->
+<record id="fr_intrastat_product_tree" model="ir.ui.view">
+    <field name="name">fr.intrastat.product.tree</field>
+    <field name="model">report.intrastat.product</field>
+    <field name="arch" type="xml">
+        <tree string="Intrastat Product" colors="blue:state=='draft';blue:state in ('waiting_date','manual')"> <!-- ajout possible : edit="0" create="0" -->
+        <!-- COLORS :
+            - on peut utiliser current_date : red:date > current_date
+            - il faut que le champ soit présent dans la vue tree (même invisible)
+            couleurs possibles : red, green, blue, gray, black
+            Pour hériter la couleur d'une vue tree :
+             -->
+            <field name="start_date" />
+            <field name="end_date" />
+            <field name="on_order" attrs="{'invisible':[('on_order','=', True)]}"/>
+            <!-- quand on met un attrs / invisible sur une vue Tree, ça ne masque
+            pas la colonne mais ça rend invisible la valeur
+            Pour masquer la colonne, il faut faire : invisible="context.get('tutu')" -->
+            <field name="total_fiscal_amount" sum="Total fiscal amount" />
+            <button name="%(project_action_item_timesheet_action)d"
+                type="action" string="Progress" states="todo,progress"
+                icon="terp-accessories-archiver"/>
+            <!-- en v7.0, ça a encore un intérêt de mettre des icones dans les buttons des vues tree
+            Pour avoir la liste, il faut regarder dans
+            openerp/tools/misc.py
+            en v8.0, on peut utiliser les boutons depuis
+            icon="fa-heart-o"
+            http://fortawesome.github.io/Font-Awesome/icons/
+            attention, version 4.0.3 maxi pour l'instant en v8
+            cf ./addons/web/static/lib/fontawesome/css/font-awesome.css
+            APPAREMMENT, on ne peut pas mettre un icon font awsome en vue tree :-(
+             -->
+        </tree>
+    </field>
+</record>
+
+<!--
+Dans une vue Tree, si on veut rendre un champ invisible de façon conditionnelle, on ne peut pas utiliser le classique attrs="{'invisible': [('', '=', '')]}" ; il faut utiliser invisible="context.get('hide_tracking',False)" (cf stock/stock_partial_picking_view.xml). Mais si on fait ça sur la vue tree d'un champ d'une vue form (genre les lignes de facture), quand on va passer à la facture suivante, la présentation des champs ne changera pas même si la clé du context qu'on utilise est censée avoir changé.
+
+Par contre, on peut utiliser attrs="{'invisible': [('', '=', '')]}" sur un bouton (il y a plusieurs exemples dans les addons)
+
+Ce champ fonction peut être utile pr débugger :
+
+    def _compute_context(self, cr, uid, ids, name, arg, context=None):
+        result = {}
+        for id in ids:
+            result[id] = unicode(context)
+        return result
+
+    'context_str': fields.function(_compute_context,
+            type='char', string="Context", readonly=True),
+
+-->
+
+<!-- KANBAN -->
+<record model="ir.ui.view" id="view_project_kanban">
+    <field name="name">project.project.kanban</field>
+    <field name="model">project.project</field>
+    <field name="arch" type="xml">
+        <kanban version="7.0" class="oe_background_grey">
+            <field name="effective_hours"/>
+            <field name="planned_hours"/>
+            <field name="name"/>
+            <field name="members"/>
+            <field name="use_tasks"/>
+            <field name="user_id"/>
+            <field name="date"/>
+            <field name="color"/>
+            <field name="task_count"/>
+            <field name="alias_id"/>
+            <field name="alias_domain"/>
+            <field name="doc_count"/>
+        <templates>
+        </templates>
+    </field>
+</record>
+
+<!-- widget="many2many_kanban" -->
+
+<!-- GRAPH -->
+<!-- http://fr.slideshare.net/openobject/business-intelligence-35790564 -->
+<record id="stay_graph" model="ir.ui.view">
+    <field name="name">stay.line.graph</field>
+    <field name="model">stay.line</field>
+    <field name="arch"  type="xml">
+        <graph string="Stay Lines" type="pivot">
+            <!-- type= correspond au type par défaut du graph
+            Autres possibilités : type="bar" (default), type="pie", type="line"
+            pour "bar" : orientation="vertical" stacked="True" -->
+
+            <!-- pour les "row", il prend tt les champs sur lesquels on a un group_by dans la vue de recherche" -->
+<!-- operator="+" -->
+            <field name="date" type="row" interval="month"/> <!-- si on met un champ de dimension là, cette dimension sera active par défaut pour les lignes; elle doit se trouver dans un group_by du search -->
+            <field name="partner_id" type="col"/> <!-- cette dimension sera active par défault pour les colonnes -->
+            <!-- interval pour être day, week, month, quarter, year -->
+            <field name="lunch_qty" type="measure"/>
+            <field name="dinner_qty" type="measure"/>
+            <field name="bed_night_qty" type="measure"/>
+            <!-- Ce sont les mesures qui seront sélectionnées par défaut
+            Sinon, il propose tt les champs int et float -->
+        </graph>
+    </field>
+</record>
+
+<!-- ACTION -->
+<record id="fr_intrastat_product_tree_action" model="ir.actions.act_window">
+    <field name="name">Intrastat Product</field>
+    <field name="res_model">report.intrastat.product</field>
+<!--    <field name="view_type">form</field>  Tree type to use for the tree view : set to 'tree' for a hierarchical tree view, or 'form' for a regular list view (default) -->
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[('is_customer', '=', True)]</field>
+    <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
+    Le default_xxx permet de mettre une valeur par defaut lors de la création d'un record depuis cette entrée de menu
+    search_default_xxx : active le filtre de recherche dont le name est xxx
+    'active_test': False permet d'afficher les records ac active=True ET active=False par défaut -->
+    <field name="target">new</field> <!-- seulement pour un wizard -->
+    <field name="view_id" ref="stock.view_move_tree"/> <!-- permet de force l'utilisation d'une certaine view tree ; marche aussi pour les vues form ?? ATTENTION, ça sera la vue affichée en premier, même si ce n'est pas le premier type de vue dans "view_mode" -->
+    <field name="help" type="html">
+        <p class="oe_view_nocontent_create">
+        Click to start a new xxx.
+        </p><p>
+        Et ici le text normal de l'aide.
+        </p>
+    </field>
+    <field name="limit">500</field>
+    <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/> <!-- groups_id : M2M -->
+</record>
+
+<!-- MENU -->
+<!-- déclanche une action -->
+<menuitem id="fr_intrastat_product_menu"
+    parent="intrastat_base.menu_intrastat_base_root"
+    action="fr_intrastat_product_tree_action"
+    sequence="50"
+    groups="group_stock_manager" />
+
+<!-- menu parent -->
+<menuitem id="" name="" parent="" sequence="" />
+
+<!--
+Menu racines :
+Sale : base.menu_base_partner
+Purchase: base.menu_purchase_root
+Stock : stock.menu_stock_root
+Account : account.menu_finance
+MRP : base.menu_mrp_root
+-->
+
+<!-- HERITAGE d'une entrée de menu existante -->
+<!-- Add stock location menu entry to warehouse-user group -->
+<record id="stock.menu_stock_configuration" model="ir.ui.menu">
+    <field name="groups_id" eval="[(4, ref('stock.group_stock_user'))]"/>
+</record>
+
+<!-- Notification in the chatter -->
+<record id="declaration_done" model="mail.message.subtype">
+    <field name="name">Intrastat Product Validated</field>
+    <field name="res_model">report.intrastat.product</field>
+    <field name="default" eval="False"/>
+    <field name="description">Intrastat Product Validated</field>
+</record>
+
+<!-- dans la vue form d'un wizard :
+<button special="cancel" string="Cancel" class="oe_link"/>
+-->
+
+<!-- Bouton de lien, comme par exemple le lien "Rendez-vous" sur la vue form des partenaires 
+<button type="action"
+    string="Meetings"
+    name="%(base_calendar.action_crm_meeting)d"
+    context="{'search_default_partner_ids': active_id, 'default_partner_ids' : [active_id]}"/>
+-->
+
+<!-- Ajouter une entrée de lien dans le menu déroulant "More" de la vue tree/form -->
+<!-- Sur la vue tree/form des account.account, j'ajoute un lien vers la vue liste des account.move.line filtrées sur le compte comptable sélectionné  === NON, ça ne marche pas !-->
+<act_window
+    id="action_account_items"
+    name="Journal Items"
+    context="{'search_default_account_id': [active_id]}"
+    res_model="account.move.line"
+    src_model="account.account"
+    key2="tree_but_open"/>
+
+<record id="ir_move_traceability_upstream" model="ir.values">
+    <field name="key2">tree_but_action</field>
+    <field name="model">stock.move</field>
+    <field name="name">Downstream traceability</field>
+    <field name="value" eval="'ir.actions.act_window,%d'%action3"/>
+</record>
+
+<!-- Lien vers la vue form d'un autre objet en target = new -->
+<act_window
+    id="action_view_purchase_order_group"
+    name="Merge Purchase orders"
+    context="{'search_default_draft': 1, 'search_default_approved': False}"
+    res_model="purchase.order.group"
+    src_model="purchase.order"
+    view_mode="form"
+    target="new"
+    multi="True"
+    key2="client_action_multi"
+    groups="base.group_survey_user"/>
+<!-- Avec multi=True, l'entrée n'est présente que ds l'option "More" de la vue tree, pas dans la vue form -->
+
+<!-- Pour lancer le wizard donation.validate depuis la vue tree des donation.donation -->
+<act_window id="donation_validate_action"
+            multi="True"
+            key2="client_action_multi"
+            name="Validate Draft Donations"
+            res_model="donation.validate"
+            src_model="donation.donation"
+            view_mode="form"
+            target="new" />
+
+<!-- After installation of the module, open a specific menu -->
+<!-- This requires ir.actions.client + ir.actions.todo with id="base.open_menu" -->
+<record id="reformat_phonenumbers_module_install" model="ir.actions.client">
+    <field name="name">Open Reformat Phone Numbers Menu</field>
+    <field name="params" eval="{'menu_id': ref('reformat_all_phonenumbers_menu')}"/> <!-- points to a menuitem ; if this menu item is linked to an action, it will start start this action-->
+    <field name="tag">reload</field>
+</record>
+
+<record id="base.open_menu" model="ir.actions.todo">
+    <field name="action_id" ref="reformat_phonenumbers_module_install"/>
+    <field name="state">open</field>
+</record>
+
+
+<!-- Start a wizard after the installation of a module -->
+<record id="account_configuration_installer_todo" model="ir.actions.todo">
+    <field name="action_id" ref="action_account_configuration_installer"/> <!-- points to an ir.actions.act_window -->
+    <field name="sequence">3</field>
+    <field name="type">automatic</field>
+</record>
+
+</data>
+</openerp>
+
+
+<!--
+ parent.partner_id => utilisable dans les on_change et les contexte
+ mais a priori pas dans les attrs
+-->

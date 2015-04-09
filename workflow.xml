@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+
+<record id="wkf_sale" model="workflow">
+    <field name="name">sale.order.basic</field>
+    <field name="osv">sale.order</field>
+    <field name="on_create">True</field>  <!-- ?? -->
+</record>
+
+<record id="act_sent" model="workflow.activity">
+    <field name="wkf_id" ref="wkf_sale"/>
+    <field name="name">sent</field>
+    <field name="flow_start">True</field>  <!-- seulement pr l'étape de départ -->
+    <field name="flow_stop">True</field>  <!-- Seulement pr l'étape d'arrivée -->
+    <field name="kind">function</field>  <!-- = dummy par defaut (dummy = n'exécute aucun code -->
+    <field name="action">write({'state':'sent'})</field>  <!-- Code exécuté à l'ARRIVE sur l'étape -->
+    OU
+    <field name="action">action_invoice_create()</field> <!-- le proto de la fonction est alors : action_invoice_create(self, cr, uid, ids, context=None): -->
+    <field name="split_mode">XOR</field>  <!-- ça fait quoi ?? -->
+    <field name="join_mode">AND</field> <!-- ???? -->
+</record>
+
+<record id="trans_sent_cancel" model="workflow.transition">
+    <field name="act_from" ref="act_sent"/>
+    <field name="act_to" ref="act_cancel"/>
+    <field name="signal">cancel</field>  <!-- ce signal peut être appelé par un bouton SANS type='' ou via du code wf_service.trg_validate(uid, 'sale.order', sale_id, 'cancel', cr) -->
+    <!-- ATTENTION : soit on met un signal, soit on met une condition (avec un trigger éventuel en plus), mais pas les deux a priori -->
+    <field name="trigger_model">procurement.order</field>
+    <field name="trigger_expr_id">procurement_lines_get()</field> <!-- Cette fonction doit être sur l'objet du workflow, avec un proto def procurement_lines_get(self, cr, uid, ids, *args) -->
+    <field name="condition">test_state('finished')</field> <!-- test_state(self, cr, uid, ids, mode, *args) sur l'objet du trigger_model et il passera mode='finished'
+    doit renvoyer True ou False -->
+    OU
+    <field name="condition">test_paid()</field> <!-- proto de la fonction : self, cr, uid, ids, *args)
+</record>
+
+# 2 méthodes pour faire avancer manuellement un workflow :
+
+#1) <button name="po_wait_conf"   SANS type=  => le "name" doit correspondre au "signal" de la workflow.transition
+# Dans cette solution, on met l'écriture du nouveau "state" dans la fonction action de la workflow.activity
+
+# Avantage de la solution 1) : simplicité.
+
+#2) <button name="action_button_confirm" type="object"
+
+#et on définit la fonction action_button_confirm dans le code :
+
+#def action_button_confirm(self, cr, uid, ids, context=None):
+#     self.write(   {'state':  truc})
+#     wf_service = netsvc.LocalService("workflow")
+#     wf_service.trg_validate(uid, 'sale.order', ids[0], 'my_signal', cr)  
+#    où my_signal est celui de la transition qui permet de faire avancer le workflow a l'étape suivante
+
+# Dans cette solution, la action de la workflow.activity d'arrivée est a priori vide, vu que le write du 'state' a été fait dans la fonction.
+
+# Avantage de la solution 2) : la fonction action_button_confirm peut retourner une nouvelle vue.
+
+
+Champ "condition" sur une transition de workflow :
+=================================================
+When an activity has been completed, its outgoing transitions are inspected to determine whether it is possible for the workflow instance to proceed through them and reach the next activities. When only a condition is defined (i.e., no signal or trigger is defined), the condition is evaluated by OpenERP, and if it evaluates to True, the worklfow instance progresses through the transition. If the condition is not met, it will be reevaluated every time the associated record is modified, or by an explicit method call to do it.
+
+By default, the attribute condition (i.e., the expression to be evaluated) is just "True", which trivially evaluates to True.
+
+Triggers sur une transition de workflow
+=======================================
+With conditions that evaluate to False, transitions are not taken (and thus the activity it leads to is not processed immediately). Still, the workflow instance can get new chances to progress across that transition by providing so-called triggers. The idea is that when the condition is not satisfied, triggers are recorded in database. Later, it is possible to wake up specifically the workflow instances that installed those triggers, offering them to reevaluate their transition conditions. This mechanism makes it cheaper to wake up workflow instances by targetting just a few of them (those that have installed the triggers) instead of all of them.
+
+Triggers are recorded in database as record IDs (together with the model name) and refer to the workflow instance waiting for those records. The transition definition provides a model name (attribute trigger_model) and a Python expression (attribute trigger_expression) that evaluates to a list of record IDs in the given model. Any of those records can wake up the workflow instance they are associated with.
+
+Proto des fonctions de trigger : self, cr, uid, ids, *args
+
+on prend en argument les IDS de l'objet du workflow
+On donne en retour les IDS du trigger_model
+=> ce qui est un peu nul, on aurait imaginé l'inverse
+
+Comment ça marche ?
+En fait, il faut qu'il y ait un appel explicite à la fonction trg_trigger() :
+wf_service = netsvc.LocalService("workflow")
+wf_service.trg_trigger(uid, 'account.move.line', id, cr)
+
+cela va appeler toutes les fonctions de trigger liées à l'objet 'account.move.line'
+ces fonctions vont renvoyer les IDs des account.move.line
+
+Pour re-tester une condition d'une transition :
+wf_service.trg_write(uid, 'purchase.order', purchase.id, cr)
+Il va alors appeler la condition et avancer dans la workflow si la condition renvoie True

@@ -1,0 +1,42 @@
+Titre
+=====
+
+Sub-title
+---------
+
+Sub-sub-title
+^^^^^^^^^^^^^
+
+Sub-sub-sub title
+"""""""""""""""""
+
+Here is a list:
+* Update
+* Merge
+
+  * nested list1
+  * nested list followup
+
+* and other items
+then I continue to speak.
+
+Order list now:
+
+#. First item (il met les numéros tt seul)
+#. Second Item
+
+It will auto-add link on email address alexis.delattre@akretion.com.
+
+Apparemment, on peut faire vers `Google <http://www.google.com>` de cette façon.
+
+*emphasisze*
+
+**string**
+
+``literal``
+
+A code bloc (note the empty line):
+
+   3 space indent
+
+.. Là je mets un commentaire
