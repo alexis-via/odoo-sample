@@ -93,7 +93,27 @@ class ProductCode(models.Model):
                 return refs.name_get()
         return super(StayRefectory, self).name_search(
             name=name, args=args, operator=operator, limit=limit)
-    # TODO : default_get en NEW API
+
+    @api.model
+    def default_get(self, fields):
+        res = super(OvhInvoiceGet, self).default_get(fields)
+        accounts = []
+        ovh_accounts = self.env['ovh.account'].search(
+            [('company_id', '=', self.env.user.company_id.id)])
+        for account in ovh_accounts:
+            accounts.append({
+                'ovh_account_id': account.id,
+                'password': account.password,
+            })
+        # to set the value for a O2M fields, you need to return:
+        # res = [
+        #   {'o2m_field': [
+        #       {'field1': field1val1, 'field2': field2val1},
+        #       {'field1': field1val2, 'field2': field2val2}]
+        #   }]
+        res.update(account_ids=accounts)
+        return res
+
 
     # Fonction on_change NON déclarée dans la vue form/tree
     # ATTENTION : apparemment, on ne peut pas avoir à la fois un
@@ -519,6 +539,7 @@ recs2 = self.with_env(env2)
 recs2 = self.with_context(context2)  # change context by context2
 #ou
 self = self.with_context(lang='fr')  # extend current context
+self.env['res.currency'].with_context(date=signature_date).compute()
 
 # special case: change the uid
 recs2 = self.sudo(user)

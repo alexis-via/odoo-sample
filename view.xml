@@ -13,6 +13,7 @@
     <field name="name">asterisk.server.company</field>
     <field name="model">res.company</field>
     <field name="inherit_id" ref="base.view_company_form" />
+    <field name="priority">100</field> <!-- Only when necessary -->
     <field name="arch"  type="xml">
         <notebook>
             <!-- Ajout d'un nouvel onglet -->
@@ -91,6 +92,9 @@
                     <field name="tutu_id" options="{'no_open': True}" /> <!-- no_open vire the lien HTML sur un champ M2O -->
                     <field name="estimated_hours" widget="float_time"/>
                     <field name="image_binary" widget="image"/>
+                    <!-- For a file-binary field: -->
+                    <field name="file" filename="filename" /> <!-- Binary field -->
+                    <field name="filename" invisible="True"/> <!-- char field -->
                     <!-- estimated_hours est un fields.float -->
                     <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/> <!-- il faut que le champ 'currency_id' soit dans la vue -->
                     <field name="currency_id" invisible="1"/> <!-- groups="base.group_multi_currency" -->
@@ -245,6 +249,10 @@ Ce champ fonction peut être utile pr débugger :
 <!--    <field name="view_type">form</field>  Tree type to use for the tree view : set to 'tree' for a hierarchical tree view, or 'form' for a regular list view (default) -->
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_customer', '=', True)]</field>
+    <!-- Here is what is possible to do to handle dates in a domain in XML :
+    work on v8: get last 365 days (datetime.timedelta doesn't accept years/months)
+    ('date', '>=', (context_today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'))
+    -->
     <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
     Le default_xxx permet de mettre une valeur par defaut lors de la création d'un record depuis cette entrée de menu
     search_default_xxx : active le filtre de recherche dont le name est xxx

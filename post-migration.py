@@ -19,10 +19,15 @@
 #
 ##############################################################################
 
+# In post migration script, we can access the registry
+from openerp import pooler, SUPERUSER_ID
+
 
 def migrate(cr, version):
     if not version:
         return
+
+    pool = pooler.get_pool(cr.dbname)
 
     cr.execute(
         'ALTER TABLE "account_cutoff_line" RENAME "after_cutoff_days" '

@@ -617,6 +617,15 @@ return {
 # WRITE MANY2ONE
 Simply use the ID of target record, which must already exist, or ``False`` to remove the link.
 
+# SEARCH on MANY2MANY
+# 'in', tuple ne marche pas
+
+'|', ('route_ids', '=', ha_lib_route_id),
+('route_ids', '=', ha_lib_et_vpc_route_id),
+])
+# -> ('route_ids', '=', 7) doit en fait se comprendre pour un M2M en route_ids.ids contient ha_lib_route_id (et ça peut contenir d'autres IDs)
+# donc la recherche ci-dessous donne en fait tous les produits qui contiennent la route ha_lib_route_id ou ha_lib_et_vpc_route_id.
+
 ### Get an XMLID
 # en v8
 res_id = self.pool['ir.model.data'].xmlid_to_res_id(
