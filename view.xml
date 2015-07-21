@@ -13,6 +13,7 @@
     <field name="name">asterisk.server.company</field>
     <field name="model">res.company</field>
     <field name="inherit_id" ref="base.view_company_form" />
+    <field name="groups_id" eval="[(4, ref('account.group_account_user'))]"/> <!-- vu en v8 seulement -->
     <field name="priority">100</field> <!-- Only when necessary -->
     <field name="arch"  type="xml">
         <notebook>
@@ -44,6 +45,7 @@
             <field name="reference" filter_domain="['|', ('name', 'ilike', self), ('client_order_ref', 'ilike', self)]" string="Tutu"/>
             <!-- permet un filtrage -->
             <filter name="import" string="Import" domain="[('type', '=', 'import')]" />
+            <filter string="My Sales Order Lines" domain="[('salesman_id', '=', uid)]"/>
             <!-- TODO exemple de multi-filtrage -->
             <!-- permet le regroupement -->
             <group string="Group By" name="groupby">
@@ -250,12 +252,21 @@ Ce champ fonction peut être utile pr débugger :
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_customer', '=', True)]</field>
     <!-- Here is what is possible to do to handle dates in a domain in XML :
-    work on v8: get last 365 days (datetime.timedelta doesn't accept years/months)
+    on v8: we have access to datetime.timedelta and to relativedelta (great !)
+     get last 365 days (datetime.timedelta doesn't accept years/months)
     ('date', '>=', (context_today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'))
+    Mois en cours :
+    ('date_order', '&gt;=', (context_today().strftime('%Y-%m-01')))
+    Mois précédent :
+    [('date_order', '&gt;=', (context_today() + relativedelta(day=1, months=-1)).strftime('%Y-%m-01')), ('date_order', '&lt;', context_today().strftime('%Y-%m-01'))]
     -->
     <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
     Le default_xxx permet de mettre une valeur par defaut lors de la création d'un record depuis cette entrée de menu
     search_default_xxx : active le filtre de recherche dont le name est xxx
+    Pour un group_by, il faut mettre directement la bonne instruction dans le context:
+    'group_by': 'employee_id'
+    si on veut avoir 2 niveaux de group_by :
+    'group_by': ['employee_id', 'holiday_status_id']
     'active_test': False permet d'afficher les records ac active=True ET active=False par défaut -->
     <field name="target">new</field> <!-- seulement pour un wizard -->
     <field name="view_id" ref="stock.view_move_tree"/> <!-- permet de force l'utilisation d'une certaine view tree ; marche aussi pour les vues form ?? ATTENTION, ça sera la vue affichée en premier, même si ce n'est pas le premier type de vue dans "view_mode" -->

@@ -26,6 +26,7 @@ import openerp.addons.decimal_precision as dp
 from openerp import SUPERUSER_ID
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, \
     DEFAULT_SERVER_DATETIME_FORMAT
+# DEFAULT_SERVER_DATETIME_FORMAT = %Y-%m-%d %H:%M:%S
 from openerp import netsvc
 
 from datetime import datetime
@@ -238,8 +239,9 @@ class ProductCode(orm.Model):
         'code_digits': fields.integer(
             '# of Digits', track_visibility='always',
             groups='base.group_user'),
-        # OU groups=['base.group_user', 'base.group_hr_manager']
+        # OU groups='base.group_user,base.group_hr_manager'
         # groups = XMLID : restriction du read/write et invisible ds les vues
+        # cf https://doc.odoo.com/trunk/server/04_security#access-rights
         'sequence': fields.integer('Sequence'),
         # track_visibility = always ou onchange
         'amount_untaxed': fields.float('Amount untaxed', digits=(2, 1)),
@@ -345,6 +347,7 @@ class ProductCode(orm.Model):
 
     def _default_code_digit(self, cr, uid, context=None):
         return default_value
+        # Champ date : retourner la date en string (ne marche pas si on retourne en datetime)
 
     # Note : quand on fait un create() dans du code, les valeurs
     # de _defaults = {} sont prises en compte (ainsi que le default_get()
@@ -557,6 +560,9 @@ action.update({
     'domain': [('id', 'in', new_donation_ids)],
     'target': 'current'})
 
+# Avoir un double group_by dans une vue tree:
+    'context': {'group_by': ['employee_id', 'holiday_status_id']},
+
 # fermer la vue form du wizard :
 return {'type': 'ir.actions.act_window_close'}  # en fait, on n'en a plus besoin, car par défaut un return True sur un bouton type="object" va fermer le wizard
 
@@ -580,6 +586,13 @@ return {
     'tag': 'reload',
     'params': {'menu_id': menu_id},
     }
+
+# Renvoi d'une URL:
+return {
+    'type': 'ir.actions.act_url',
+    'url': 'http://maps.google.com/',
+    'target': 'new',
+}
 
 #### M2M/O2M
 # MANY2MANY

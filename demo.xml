@@ -51,5 +51,14 @@
 <workflow action="invoice_open" model="account.invoice" ref="invoice_1"/>
 <!-- invoice_open = signal de la transition de workflow ; ref=xmlid de la facture-->
 
+<!-- Ajouter l'admin dans le groupe -->
+<record id="base.user_root" model="res.users">
+    <field name="groups_id" eval="[(4, ref('group_donation_user'))]"/>
+</record>
+
+<record id="base.user_demo" model="res.users">
+    <field name="groups_id" eval="[(4, ref('group_donation_user'))]"/>
+</record>
+
 </data>
 </openerp>

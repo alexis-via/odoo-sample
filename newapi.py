@@ -233,7 +233,7 @@ class ProductCode(models.Model):
     @api.model
     def _default_account(self):
         return valeur_par_defaut
-        # M2O : retourne un recordset
+        # M2O : retourne un recordset (ne PAS retourner False !)
         # O2M : retourne une liste de dict contenant la valeur des champs
         # date : string ou objet datetime
 
@@ -324,6 +324,9 @@ class ProductCode(models.Model):
     company_currency_id = fields.Many2one(
         'res.currency', string='Currency', related='company_id.currency_id',
         store=True)
+    # ATTENTION, en nouvelle API, on ne peut PAS faire un fields.Char qui
+    # soit un related d'un fields.Selection (bloque le démarrage d'Odoo
+    # sans message d'erreur !)
 
     line_ids = fields.One2many(
         'product.code.line', 'parent_id', string='Product lines',
