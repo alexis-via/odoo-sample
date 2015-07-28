@@ -17,6 +17,9 @@ formatLang(self, value, digits=None, date=False, date_time=False, grouping=True,
 Affiche un montant avec devise :
 formatLang(o.amount_untaxed, currency_obj=o.currency_id)
 
+Détecter le nom du rapport :
+if test="report_xml.report_name=='sale.proforma'"
+
 Affiche le name_get:
 get_name(l.product_id)   # Permet d'afficher les options des variantes
 

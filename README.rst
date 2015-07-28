@@ -30,6 +30,11 @@ Field list :
 
 External hyperlinks, like `Python <http://www.python.org/>`_.
 
+Include image:
+.. figure:: static/description/ex_report_template.png
+   :scale: 80 %
+   :alt: Sample report template
+
 Installation
 ============
 

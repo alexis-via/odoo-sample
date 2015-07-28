@@ -193,6 +193,8 @@ class ProductCode(models.Model):
     # ATTENTION : si chgt de @api.depends, faire -u module !
     # Pour un one2many : ne PAS juste indiquer le nom du champ o2m, sinon il ne fait rien
     # il faut aussi indiquer un champ sur le O2M. Exemple : 'line_ids.request_id'
+    # Apparemment, on peut mettre dans @api.depends un champ fonction et ça va bien
+    # faire le recalcul en cascade
     def _compute_price(self):
         price = self.price_unit * (1 - (self.discount or 0.0) / 100.0)
         taxes = self.invoice_line_tax_id.compute_all(price, self.quantity, product=self.product_id, partner=self.invoice_id.partner_id)
@@ -305,12 +307,12 @@ class ProductCode(models.Model):
         default=_default_account)
     company_id = fields.Many2one(
         'res.company', string='Company',
-        ondelete='cascade',
+        ondelete='cascade', required=True,
         default=lambda self: self.env['res.company']._company_default_get(
             'product.code'))
         # si on veut que tous les args soient nommés : comodel_name='res.company'
     user_id = fields.Many2one(
-        'res.users', string='Salesman', default=lambda self: self.env.user ou self._uid ??) ## NON TESTE
+        'res.users', string='Salesman', default=lambda self: self.env.user)
     # ATTENTION : si j'ai déjà un domaine sur la vue,
     # c'est le domaine sur la vue qui prime !
     # ondelete='cascade' :
@@ -393,9 +395,7 @@ class ProductCode(models.Model):
 
     @api.model  # equivalent de (self, cr, uid, vals, context=None)
     @api.returns('self')  # quand une fonction renvoi un recordset, on doit dire ici quel est le model de ce recordset
-    def create(self, vals=None):
-        if vals is None:
-            vals = {}
+    def create(self, vals):
         if vals.get('name', '/') == '/':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'hr.expense.expense')
@@ -403,9 +403,9 @@ class ProductCode(models.Model):
 
     # Qd on appelle un write, pour un champ M2O, on met l'ID et non le recordset
     @api.multi  # équivalent de (self, cr, uid, ids, values, context=None)
-    def write(self, values):
-        values.update({'tutu': toto})
-        return super(ObjClass, self).write(values)
+    def write(self, vals):
+        vals.update({'tutu': toto})
+        return super(ObjClass, self).write(vals)
 
     @api.multi
     def unlink(self):
@@ -582,3 +582,6 @@ datetime.datetime(2014, 6, 15, ...)
 
 @api.cr_uid_ids_context
 def machin(cr, uid, ids, context=None):
+
+# Conversion de devises
+self.with_context(date=date).from_currency.compute(amount_to_convert, to_currency_obj, round=True)
