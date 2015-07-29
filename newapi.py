@@ -123,7 +123,10 @@ class ProductCode(models.Model):
     def _onchange_partner(self):
         if self.partner_id:
             self.delivery_id = self.partner_id  # MAJ d'un autre champ
-            # M2M : liste d'IDs (pas besoin de (6, 0, [])
+            # M2M : 2 possibilités :
+            # - liste d'IDs, mais ça va AJOUTER les ids, comme (4, [IDs])
+            # - [(6, 0, [IDs])], ce qui va remplacer les ids
+            # (cf module product_category_tax dans akretion/odoo-usability)
             # On utilise un autre M2M pour le mettre à jour, on peut faire
             # self.champ_M2M_ids.ids -> ça donne la liste des IDs
             # M2O : recordset (ou ID)
@@ -193,8 +196,9 @@ class ProductCode(models.Model):
     # ATTENTION : si chgt de @api.depends, faire -u module !
     # Pour un one2many : ne PAS juste indiquer le nom du champ o2m, sinon il ne fait rien
     # il faut aussi indiquer un champ sur le O2M. Exemple : 'line_ids.request_id'
-    # Apparemment, on peut mettre dans @api.depends un champ fonction et ça va bien
+    # Apparemment, on peut mettre dans @api.depends un champ fonction stocké et ça va bien
     # faire le recalcul en cascade
+    # (ça n'a pas l'air de marcher qd on met un api.depends sur un champ non stocké)
     def _compute_price(self):
         price = self.price_unit * (1 - (self.discount or 0.0) / 100.0)
         taxes = self.invoice_line_tax_id.compute_all(price, self.quantity, product=self.product_id, partner=self.invoice_id.partner_id)
