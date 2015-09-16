@@ -244,7 +244,7 @@ class ProductCode(orm.Model):
         # cf https://doc.odoo.com/trunk/server/04_security#access-rights
         'sequence': fields.integer('Sequence'),
         # track_visibility = always ou onchange
-        'amount_untaxed': fields.float('Amount untaxed', digits=(2, 1)),
+        'amount_untaxed': fields.float('Amount untaxed', digits=(16, 2)),
         # digits=(precision, scale)
         # Scale est le nombre de chiffres après la virgule
         # quand le float est un fields.float ou un fields.function,

@@ -245,7 +245,7 @@ Ce champ fonction peut être utile pr débugger :
 </record>
 
 <!-- ACTION -->
-<record id="fr_intrastat_product_tree_action" model="ir.actions.act_window">
+<record id="fr_intrastat_product_action" model="ir.actions.act_window">
     <field name="name">Intrastat Product</field>
     <field name="res_model">report.intrastat.product</field>
 <!--    <field name="view_type">form</field>  Tree type to use for the tree view : set to 'tree' for a hierarchical tree view, or 'form' for a regular list view (default) -->
@@ -259,6 +259,9 @@ Ce champ fonction peut être utile pr débugger :
     ('date_order', '&gt;=', (context_today().strftime('%Y-%m-01')))
     Mois précédent :
     [('date_order', '&gt;=', (context_today() + relativedelta(day=1, months=-1)).strftime('%Y-%m-01')), ('date_order', '&lt;', context_today().strftime('%Y-%m-01'))]
+    Comparaison avec un champ DATETIME:
+    [('in_date', '&lt;=', datetime.datetime.combine(context_today() + relativedelta(years=-1), datetime.time(0, 0, 0))), ('in_date', '&gt;', datetime.datetime.combine(context_today() + relativedelta(years=-2), datetime.time(0, 0, 0)))]"/>
+    More info @odony in https://github.com/odoo/odoo/issues/6469
     -->
     <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
     Le default_xxx permet de mettre une valeur par defaut lors de la création d'un record depuis cette entrée de menu
@@ -305,6 +308,11 @@ MRP : base.menu_mrp_root
 <!-- Add stock location menu entry to warehouse-user group -->
 <record id="stock.menu_stock_configuration" model="ir.ui.menu">
     <field name="groups_id" eval="[(4, ref('stock.group_stock_user'))]"/>
+</record>
+
+<!-- Replace original group by another one -->
+<record id="mail.mail_feeds_main" model="ir.ui.menu">
+    <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
 </record>
 
 <!-- Notification in the chatter -->
