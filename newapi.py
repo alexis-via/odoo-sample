@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    MODULENAME module for Odoo
@@ -21,7 +21,7 @@
 ##############################################################################
 
 from openerp import models, fields, api, _
-from openerp.exceptions import Warning, ValidationError, RedirectWarning
+from openerp.exceptions import UserError, ValidationError, RedirectWarning
 import openerp.addons.decimal_precision as dp
 from openerp import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
@@ -136,7 +136,7 @@ class ProductCode(models.Model):
         # Here, all form values are set on self
         # assigned values are not written to DB, but returned to the client
         # It is not possible to output a warning
-        # It is not possible to put a raise Warning()
+        # It is not possible to put a raise UserError()
         # in this function (it will crash odoo)
         res = {'warning':
             {'title': _('Be careful'),
@@ -415,7 +415,7 @@ class ProductCode(models.Model):
     def unlink(self):
         for donation in self:
             if donation.state == 'done':
-                raise Warning(
+                raise UserError(
                     _("The donation '%s' is in Done state, so you must "
                         "set it back to draft before deleting it.")
                     % donation.number)

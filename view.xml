@@ -165,10 +165,12 @@
             <!-- en v7.0, ça a encore un intérêt de mettre des icones dans les buttons des vues tree
             Pour avoir la liste, il faut regarder dans
             openerp/tools/misc.py
+            Pour visualiser les icones STOCK_xxx, regarder sur
+            http://www.pygtk.org/pygtk2reference/gtk-stock-items.html
             en v8.0, on peut utiliser les boutons depuis
             icon="fa-heart-o"
             http://fortawesome.github.io/Font-Awesome/icons/
-            attention, version 4.0.3 maxi pour l'instant en v8
+            attention, version 4.2.0 maxi pour l'instant en v8
             cf ./addons/web/static/lib/fontawesome/css/font-awesome.css
             APPAREMMENT, on ne peut pas mettre un icon font awsome en vue tree :-(
              -->
