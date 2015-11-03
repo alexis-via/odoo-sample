@@ -523,7 +523,7 @@ action.update({
     })
 
 #en v8, encore mieux
-self.pool['ir.actions.act_window'].for_xml_id(cr, uid, 'stock', 'action_package_view', context=context)
+action = self.pool['ir.actions.act_window'].for_xml_id(cr, uid, 'stock', 'action_package_view', context=context)
 # ça fait à la fois le xmlid_to_res_id et le read
 
 # ATTENTION: si on veut renvoyer une vue form, il faut faire:
@@ -671,8 +671,22 @@ button_confirm correspond au champ "signal" sur la workflow.transition
 #### Petits secrets de l'ORM :
 # Quand on fait un search sur un champ traduisible, il ne cherche que sur la langue qu'on donne dans la clé 'lang' du contexte (si pas de context, il cherche sur l'anglais)
 # Quand on fait un create sur un objet avec un champ traduisible :
-# On fait le create avec 'name' en anglais et context['lang'] = 'en_US'
+# Quand on fait le create, il ne tient pas compte de l'éventuelle langue du contexte
+#  et fait l'entrée dans la table principale et rien dans ir_translation
 # Ensuite, on fait le write avec 'name' en français et context['lang'] = 'fr_FR'
+# -> il créé une entrée dans la table ir_translation
+# Conséquence de cela :
+# Si je fais :
+# 1) create({'name': 'Mon produit joli'})
+# 2) with_context(lang='en_US').write({'name': 'My cute product'})
+# => on a perdu le texte français !
+## La solution qui marche :
+# 1) create({'name': 'Mon produit joli'})
+# 2) with_context(lang='fr_FR').write({'name': 'Mon produit joli'})
+# 3) with_context(lang='en_US').write({'name': 'My cute product'})
+# Evidemment, le plus simple et logique est de faire :
+# 1) create({'name': 'My cute product'})
+# 2) with_context(lang='fr_FR').write({'name': 'Mon produit joli'})
 
 #### List comprehension :
 # [x*2 for x in range(20) if x % 3]

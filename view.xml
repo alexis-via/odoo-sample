@@ -46,6 +46,9 @@
             <!-- permet un filtrage -->
             <filter name="import" string="Import" domain="[('type', '=', 'import')]" />
             <filter string="My Sales Order Lines" domain="[('salesman_id', '=', uid)]"/>
+            <!-- on peut filtrer sur un champ M2M, par exemple :
+            domain="[('default_user_ids', '=', uid)]"
+            Pour comprendre ce filtre, il faut le lire : uid in 'default_user_ids' -->
             <!-- TODO exemple de multi-filtrage -->
             <!-- permet le regroupement -->
             <group string="Group By" name="groupby">
@@ -54,7 +57,7 @@
             </group>
             <!-- Pour faire de l'affichage dynamique de la vue tree :  -->
             <group string="Display">
-                 <filter string="Show Context" name="context_show" context="{'context_show': True}"/>  <!-- et sur le champ Context de la vue tree, il suffit de mettre invisible="not context.get('context_show')" -->
+                <filter string="Show Context" name="context_show" context="{'context_show': True}"/>  <!-- et sur le champ Context de la vue tree, il suffit de mettre invisible="not context.get('context_show')" -->
             </group>
         </search>
     </field>
@@ -96,7 +99,7 @@
                     <field name="image_binary" widget="image"/>
                     <!-- For a file-binary field: -->
                     <field name="file" filename="filename" /> <!-- Binary field -->
-                    <field name="filename" invisible="True"/> <!-- char field -->
+                    <field name="filename" invisible="1"/> <!-- char field -->
                     <!-- estimated_hours est un fields.float -->
                     <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/> <!-- il faut que le champ 'currency_id' soit dans la vue -->
                     <field name="currency_id" invisible="1"/> <!-- groups="base.group_multi_currency" -->
@@ -115,12 +118,12 @@
                     <field name="intrastat_uom_id" attrs="{'invisible': [('is_fiscal_only', '=', True)], 'required': [('is_fiscal_only', '=', False)]}" groups="l10n_fr_intrastat_product.group_detailed_intrastat_product" />
                     <!-- Exemple de champ "intégrés" avec commentaires après -->
                     <label string="Impregnation Report Beads / Fragrance" for="testing_impregnation_beads_percentage"/> <!-- sur un label, quand on a for="champ", le string sera en gras. Si on n'a pas mis de string, la string du champ sera utilisée -->
-                        <div>
-                            <field name="testing_impregnation_beads_percentage" class="oe_inline"/> <!-- pas besoin de nolabel="1" quand on a class="oe_inline" -->
-                            <label string=" %% / " class="oe_inline"/> <!-- pas en gras car pas de for="" -->
-                            <field name="testing_impregnation_fragrance_percentage" class="oe_inline"/>
-                            <label string=" %%" class="oe_inline"/>
-                        </div>
+                    <div>
+                        <field name="testing_impregnation_beads_percentage" class="oe_inline"/> <!-- pas besoin de nolabel="1" quand on a class="oe_inline" -->
+                        <label string=" %% / " class="oe_inline"/> <!-- pas en gras car pas de for="" -->
+                        <field name="testing_impregnation_fragrance_percentage" class="oe_inline"/>
+                        <label string=" %%" class="oe_inline"/>
+                    </div>
                     <!-- button to start a wizard : -->
                     <button type="action" name="%(action_xmlid)d" string="Start wizard" />
                     <!-- button with confirm pop-up -->
@@ -256,6 +259,7 @@ Ce champ fonction peut être utile pr débugger :
     <!-- Here is what is possible to do to handle dates in a domain in XML :
     on v8: we have access to datetime.timedelta and to relativedelta (great !)
      get last 365 days (datetime.timedelta doesn't accept years/months)
+    ('date', '=', context_today().strftime('%Y-%m-%d'))
     ('date', '>=', (context_today() - datetime.timedelta(days=365)).strftime('%Y-%m-%d'))
     Mois en cours :
     ('date_order', '&gt;=', (context_today().strftime('%Y-%m-01')))
@@ -309,7 +313,10 @@ MRP : base.menu_mrp_root
 <!-- HERITAGE d'une entrée de menu existante -->
 <!-- Add stock location menu entry to warehouse-user group -->
 <record id="stock.menu_stock_configuration" model="ir.ui.menu">
+    <!-- add group -->
     <field name="groups_id" eval="[(4, ref('stock.group_stock_user'))]"/>
+    <!-- replace groups -->
+    <field name="groups_id" eval="[(6, 0, [ref('base.group_hr_manager')])]"/>
 </record>
 
 <!-- Replace original group by another one -->

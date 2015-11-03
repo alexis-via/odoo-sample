@@ -25,8 +25,8 @@
     <!-- si parseur : parser_state=loc et ajouter
     <field name="parser_loc">nom_du_module/report/proforma_invoice.py</field>
     -->
-    <field name="tml_source">file</field>
-    <field name="multi" eval="0"/>
+    <field name="tml_source">file</field> <!-- database (default), file ou parser -->
+    <field name="multi" eval="0"/> <!-- Si True : rapport qu'on peut exécuter pour N records. False par défaut -->
     <field name="out_format" ref="report_aeroo_ooo.report_mimetypes_pdf_odt"/>
     <!-- available output formats :
         report_aeroo.report_mimetypes_odt_odt
@@ -43,11 +43,10 @@
     -->
     <field name="content_fname">txt</field> <!-- override extension -->
     <field name="charset">cp1252</field>  <!-- for raw files -->
-    <field name="fallback_false" eval="0"/>
-    <field name="process_sep" eval="1"/> <!-- NOT in v8 -->
-    <field name="attachment">(object.state in ('draft','sent')) and ('%s_%s.pdf' %((object.name or ''), time.strftime('%Y-%m-%d_%Hh%M')))</field>
-    <field name="attachment_use" eval="0"/>
-    <field name="styles_mode">default</field>
+    <field name="fallback_false" eval="0"/> <!-- Si 1, désactive le fallback sur le rapport ODT si la conversion PDF ne marche pas. False par défaut -->
+    <field name="attachment">(object.state in ('draft','sent')) and ('%s_%s.pdf' %((object.name or ''), time.strftime('%Y-%m-%d_%Hh%M')))</field> <!-- False par défaut -->
+    <field name="attachment_use" eval="0"/> <!-- False par défault -->
+    <field name="styles_mode">default</field> <!-- 'default' par défaut. Autres valeurs possibles : global et specified  -->
     <field name="copies">2</field>  <!-- Number of copies -->
 </record>
 

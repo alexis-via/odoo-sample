@@ -21,7 +21,11 @@
 ##############################################################################
 
 from openerp import models, fields, api, _
-from openerp.exceptions import UserError, ValidationError, RedirectWarning
+from openerp.exceptions import ValidationError, RedirectWarning
+from openerp.exceptions import Warning as UserError
+# v9
+from openerp.exceptions import UserError, RedirectWarning, ValidationError
+
 import openerp.addons.decimal_precision as dp
 from openerp import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
@@ -41,7 +45,7 @@ class ProductCode(models.Model):
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
-    _track = {
+    _track = {  # V7 and V8 / deprecated in v9
         'state': {
             'l10n_fr_intrastat_service.declaration_done':
             lambda self, cr, uid, obj, ctx=None: obj.state == 'done',
@@ -205,8 +209,8 @@ class ProductCode(models.Model):
         self.price_subtotal = taxes['total']  # calcul et stockage de la valeur
         self.second_field = 'iuit'  # calcul et stockage d'un 2e champ
                                     # equivalent de multi='pouet'
-        # Pour un champ O2M, envoyer une liste d'IDS
-        # pour un champ M2O, donner l'ID (ou le recordset ?)
+        # Pour un champ O2M, envoyer un recordset multiple ou une liste d'IDS
+        # pour un champ M2O, donner le recordset ou l'ID
         if self.invoice_id:
             self.price_subtotal = self.invoice_id.currency_id.round(self.price_subtotal)
         # Pas besoin de return !
@@ -277,6 +281,8 @@ class ProductCode(models.Model):
     # Autres valeurs possibles pour get_precision : product/product_data.xml
     # Product Price, Discount, Stock Weight, Product Unit of Measure,
     # Product UoS
+    # fields.Monetary is only in version >= 9.0
+    debit = fields.Monetary(default=0.0, currency_field='company_currency_id')
     start_date = fields.Date(
         string='Start Date', copy=False, default=fields.Date.context_today)
     # similaire : fields.Datetime and fields.Time
@@ -297,6 +303,15 @@ class ProductCode(models.Model):
     # la boite de dialogue, mais ça ne marche pas en GTK (on
     # ne peut rien sélectionner) et c'est pas supporté en Web, cf
     # https://bugs.launchpad.net/openobject-server/+bug/1076895
+    picture_filename = fields.Char(string='Filename')
+    # Les champs "picture" et "picture_filename" sont liés ensemble dans la vue
+    # via la balise filename="picture_filename" sur le champ 'picture'
+    # Il faut que le champ 'picture_filename' soit présent dans la vue
+    # (il peut être invisible)
+    # Pour un fichier à télécharger d'Odoo, le nom du fichier aura la valeur de
+    # picture_filename
+    # Pour un fichier à uploader dans Odoo, 'picture_filename' vaudra le nom
+    # du fichier uploadé par l'utilisateur
 
     # Exemple de champ fonction stocké
     price_subtotal = fields.Float(
@@ -469,6 +484,18 @@ class ProductCode(models.Model):
     # il ne bouclera qu'une fois. Par contre, le résultat sera mis dans une séquence
     # donc ça marche pas si on renvoie une action
 
+    # in v9
+    @api.multi
+    def _track_subtype(self, init_values):
+        self.ensure_one()
+        if 'state' in init_values and self.state == 'paid' and self.type in ('out_invoice', 'out_refund'):
+            return 'account.mt_invoice_paid'
+        elif 'state' in init_values and self.state == 'open' and self.type in ('out_invoice', 'out_refund'):
+            return 'account.mt_invoice_validated'
+        elif 'state' in init_values and self.state == 'draft' and self.type in ('out_invoice', 'out_refund'):
+            return 'account.mt_invoice_created'
+        return super(AccountInvoice, self)._track_subtype(init_values)
+
 ### EXEMPLES de code
 partners = self.env['res.partner'].search([])
 for partner in partners:
@@ -547,6 +574,7 @@ recs2 = self.with_context(context2)  # change context by context2
 #ou
 self = self.with_context(lang='fr')  # extend current context
 self.env['res.currency'].with_context(date=signature_date).compute()
+super(ProductPriceList, self.with_context(fiscal_position_id=self.fiscal_position_id.id)).print_report()
 
 # special case: change the uid
 recs2 = self.sudo(user)

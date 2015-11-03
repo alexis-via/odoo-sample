@@ -17,3 +17,8 @@ Employee : base.group_user
 Access Rights : base.group_erp_manager
 Settings : base.group_system
 Technique : base.group_no_one
+
+ACCOUNT
+Invoicing and Payment : account.group_account_invoice
+Accoutant : account.group_account_user
+Manager : account.group_account_manager
