@@ -3,8 +3,8 @@ setLang(o.partner_id.lang or 'en_US')
 getLang()=="fr_FR" and u"Contact acheteur" or u"Order contact"
 
 Pour afficher un champ sélection : 
-l.stay_id and get_selection_item(l.stay_id, 'arrival_time')
-où 'arrival_time' est le champ sélection
+o.state and get_selection_item(o, 'state')
+où 'state' est le champ sélection
 
 Pour afficher la date :
 formatLang(time.strftime('%Y-%m-%d'), date=True)

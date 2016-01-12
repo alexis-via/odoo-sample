@@ -19,6 +19,8 @@
     order_line:
       - product_id: product_product_1
         product_uom: 1
+    # Pour un M2M, il semble que ça ne marche pas :
+    # https://github.com/odoo/odoo/issues/2678
 
 # QUESTION : comment fait-on pour METTRE A JOUR un record en YAML ; mes tests dans base_phone sont infructueux
 

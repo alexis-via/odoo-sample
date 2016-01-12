@@ -27,6 +27,7 @@ from openerp.exceptions import Warning as UserError
 from openerp.exceptions import UserError, RedirectWarning, ValidationError
 
 import openerp.addons.decimal_precision as dp
+from openerp.tools import float_compare, float_is_zero
 from openerp import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
@@ -237,7 +238,11 @@ class ProductCode(models.Model):
     def _search_loud(self, operator, value):
         if value is not False:
             value = value.lower()
-        return [('name', operator, value)]  # recherche sur les autres champs
+        today = fields.Date.context_today(self)
+        self._cr.execute('SELECT id FROM [cur_obj] WHERE (fortress_type <> %s OR (fortress_type = %s AND effectivity_date is not null)) AND (end_date is null OR end_date > %s)', (today, ))
+        res_ids = [x[0] for x in self._cr.fetchall()]
+        res = [('id', 'in', res_ids)] # recherche sur les autres champs
+        return res
 
     # Fonction default=_default_account
     @api.model
@@ -401,11 +406,14 @@ class ProductCode(models.Model):
         # fields.Date.context_today(self)
         # ça renvoie la date du jour sous forme de STR
 
+        # Pour avoir la date et l'heure LOCALE de l'utilisateur en datetime:
+        # fields.Datetime.context_timestamp(self, datetime.now())
         # Pour convertir une datetime UTC en datetime de la timezone du
         # context (clé 'tz'), ou, si elle n'est pas présente, dans la timezone
         # de l'utilisateur:
         # datetime_in_tz = fields.datetime.context_timestamp(
         #    cr, uid, timestamp, context=context)
+        # Datetime en UTC en string : fields.Datetime.now()
     }
 
     # APPEL A CREATE
@@ -617,3 +625,18 @@ def machin(cr, uid, ids, context=None):
 
 # Conversion de devises
 self.with_context(date=date).from_currency.compute(amount_to_convert, to_currency_obj, round=True)
+
+# FLOAT
+float_compare(value1, value2, precision_digits=None, precision_rounding=None)
+
+returns -1, 0 or 1, if ``value1`` is lower than,
+           equal to, or greater than ``value2``, at the given precision.
+
+exemple:
+precision = self.env['decimal.precision'].precision_get('Payroll')
+float_compare(credit_sum, debit_sum, precision_digits=precision)
+
+float_is_zero(value, precision_digits=None, precision_rounding=None)
+
+Returns true if ``value`` is small enough to be treated as
+       zero at the given precision (smaller than the corresponding *epsilon*)

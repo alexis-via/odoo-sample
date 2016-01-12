@@ -137,6 +137,19 @@ class ProductCode(orm.Model):
         return super(product_code, self).copy(
             cr, uid, id, default=default, context=context)
 
+    def copy_data(self, cr, uid, id, default=None, context=None):
+        # Intérêt d'utiliser un copy_data() plutôt que copy() :
+        # Quand on fait un copy() sur une sale order, Odoo ne va pas passer
+        # dans la méthode copy() des sale.order.line, mais seulement dans la
+        # fonction copy_data() des sale.order.line !
+        if not default:
+            default = {}
+        default.update({
+            'customer_wish_date': False,
+        })
+        return super(sale_order_line, self).copy_data(
+            cr, uid, id, default=default, context=context)
+
     # FONCTION ON_CHANGE déclarée dans la vue form/tree
     def product_id_change(self, cr, uid, ids, champ1, champ2, context):
         # ATTENTION : a priori, on ne doit pas utiliser ids dans le code de la

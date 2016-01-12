@@ -60,13 +60,11 @@
     <field name="report_rml">report_aeroo_sale/quotation.odt</field>
     <field name="parser_state">default</field>
     <field name="tml_source">file</field>
-    <field name="rml" eval="0"/>
     <field name="multi" eval="0"/>
     <field name="out_format" ref="report_aeroo.report_mimetypes_odt_odt"/>
     <field name="fallback_false" eval="0"/>
-    <field name="process_sep" eval="1"/>
     <field name="attachment_use" eval="0"/>
-    <field name="styles_mode">default</field>
+    <field name="download_filename">Akretion-proforma-${o.name}.pdf</field>
 </record>
 
 <record id="proforma_button_sale_order_form" model="ir.ui.view">

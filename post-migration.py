@@ -19,7 +19,10 @@
 #
 ##############################################################################
 
-# In post migration script, we can access the registry
+# In post migration script:
+# - we can access the registry
+# - the new fields are created
+# - the old fields are still readable
 from openerp import pooler, SUPERUSER_ID
 
 
@@ -28,6 +31,7 @@ def migrate(cr, version):
         return
 
     pool = pooler.get_pool(cr.dbname)
+    pto = pool['product.template']
 
     cr.execute(
         'ALTER TABLE "account_cutoff_line" RENAME "after_cutoff_days" '
