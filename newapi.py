@@ -248,7 +248,7 @@ class ProductCode(models.Model):
     @api.model
     def _default_account(self):
         return valeur_par_defaut
-        # M2O : retourne un recordset (ne PAS retourner False !)
+        # M2O : retourne un recordset
         # O2M : retourne une liste de dict contenant la valeur des champs
         # date : string ou objet datetime
 
@@ -593,6 +593,8 @@ action = self.env.ref('account.action_account_config')
 msg = _('Cannot find a chart of accounts for this company, You should configure it. \nPlease go to Account Configuration.')
 raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 
+# Récupérer une action sous forme de dico
+action = self.env['ir.actions.act_window'].for_xml_id('stock', 'action_package_view')
 
 ### INHERIT
 class SaleOrderLine(orm.Model):
@@ -625,6 +627,15 @@ def machin(cr, uid, ids, context=None):
 
 # Conversion de devises
 self.with_context(date=date).from_currency.compute(amount_to_convert, to_currency_obj, round=True)
+# Conversion d'UoM
+In class product.uom
+def _compute_qty(self, cr, uid, from_uom_id, qty, to_uom_id=False, round=True, rounding_method='UP')
+return qty
+# the same method with uom as objects instead of ID (to be preferd)
+def _compute_qty_obj(self, cr, uid, from_unit, qty, to_unit, round=True, rounding_method='UP', context=None)
+return qty
+def _compute_price(self, cr, uid, from_uom_id, price, to_uom_id=False)
+return price
 
 # FLOAT
 float_compare(value1, value2, precision_digits=None, precision_rounding=None)
@@ -633,7 +644,7 @@ returns -1, 0 or 1, if ``value1`` is lower than,
            equal to, or greater than ``value2``, at the given precision.
 
 exemple:
-precision = self.env['decimal.precision'].precision_get('Payroll')
+precision = self.env['decimal.precision'].precision_get('Account')
 float_compare(credit_sum, debit_sum, precision_digits=precision)
 
 float_is_zero(value, precision_digits=None, precision_rounding=None)

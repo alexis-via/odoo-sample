@@ -2,12 +2,12 @@
 # Sample monkey-patching
 ##############################################################################
 
-from openerp.osv import orm, fields
+from openerp import models
 from openerp.report import report_sxw
 
 
 
-class base_formatlang_date_extension_installed(orm.AbstractModel):
+class base_formatlang_date_extension_installed(models.AbstractModel):
     '''When you use monkey patching, the code is executed when the module
     is in the addons_path of the OpenERP server, even is the module is not
     installed ! In order to avoid the side-effects it can create,
@@ -23,8 +23,9 @@ _get_lang_dict_original = report_sxw.rml_parse._get_lang_dict
 
 
 def _get_lang_dict(self):
-    if self.pool.get('base.formatlang.date.extension.installed'):
+    if self.env.get('base.formatlang.date.extension.installed'):
         # This is the code which is executed when this module is installed
+        # BON, là c pas un bon exemple, le code est en ancienne API
         pool_lang = self.pool.get('res.lang')
         lang = self.localcontext.get('lang', 'en_US') or 'en_US'
         lang_ids = pool_lang.search(

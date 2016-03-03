@@ -461,6 +461,7 @@ TERM_OPERATORS = ('=', '!=', '<=', '<', '>', '>=', '=?', '=like', '=ilike',
 # plus précis
 # starts with AB is [('field','=like','AB%')]
 # ends with AB is [('field','=like','%AB')]
+# 'child_of', 'ID') => matche sur les enfants ET l'ID
 
 # Récupérer une clé du fichier de config du serveur Odoo
 from openerp.tools.config import config
@@ -541,7 +542,7 @@ action = self.pool['ir.actions.act_window'].for_xml_id(cr, uid, 'stock', 'action
 
 # ATTENTION: si on veut renvoyer une vue form, il faut faire:
 action.update({
-    'views': False,  # Important, sinon il continue de mettre le tree en premier !
+    'views': False,  # Important, sinon il continue de mettre le tree en premier (en particulier quand il y a des ir.actions.act_window.view)
     'view_mode': 'form,tree',
     })
 
