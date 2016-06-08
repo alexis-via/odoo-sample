@@ -740,3 +740,8 @@ attach_id = self.pool['ir.attachment'].create(
 </xpath>
 dans le code:
 private_car_product_id = context.get('private_car_product_id')
+
+# Pour avoir le libellé d'un fields.selection:
+key_label_dict = dict(self.pool['sale.order'].fields_get(
+    cr, uid, ['state'], context=context)['state']['selection'])
+order_state_label = key_label_dict[order.state]

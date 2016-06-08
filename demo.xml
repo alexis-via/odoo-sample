@@ -31,12 +31,13 @@
     <field name="membership_date_from">2014-09-01</field>
     <!-- Datetime -->
     <field name="date" eval="time.strftime('%Y-%m-28  15:40:00')"/>
+    <field name="date_invoice" eval="(datetime.now() + relativedelta(day=5, months=-1)).strftime('%Y-%m-%d')"/>
     <!-- M2M -->
     <field name="company_ids" eval="[(4, ref('main_company'))]"/>
     <field name="groups_id" eval="[(4, ref('stock.group_stock_manager')), (4, ref('account.group_account_invoice')), (4, ref('account.group_account_user')), (4, ref('account.group_account_manager'))]"/>
 </record>
 
-<!-- Mettre une propriété en donnée de demo -->
+<!-- Mettre une propriété en donnée de demo EN VERSION 8 -->
 <record id="property_account_payable" model="ir.property" forcecreate="True">
     <field name="name">property_account_payable</field>
     <field name="fields_id" search="[('model','=','res.partner'),('name','=','property_account_payable')]"/>
@@ -45,6 +46,11 @@
     <field name="company_id" ref="base.main_company"/>
     <!-- Si pas de valeur pour res_id => ce bloc devient la définition de la valeur par défaut -->
     <field name="res_id" ref=""/>
+</record>
+
+<!-- Champ property EN VERSION 9 -->
+<record id="base.res_partner_2" model="res.partner">
+    <field name="customer_payment_mode" ref="account_payment_mode.payment_mode_inbound_dd1"/>
 </record>
 
 <!-- Faire franchir une transition de workflow -->

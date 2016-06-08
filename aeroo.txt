@@ -16,6 +16,8 @@ formatLang(self, value, digits=None, date=False, date_time=False, grouping=True,
 
 Affiche un montant avec devise :
 formatLang(o.amount_untaxed, currency_obj=o.currency_id)
+Affiche un montant avec précision décimale :
+formatLang(o.amount_untaxed, dp='Account')
 
 Détecter le nom du rapport :
 if test="report_xml.report_name=='sale.proforma'"

@@ -1,26 +1,8 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    MODULENAME module for Odoo
-#    Copyright (C) 2015 Akretion (http://www.akretion.com)
-#    @author Alexis de Lattre <alexis.delattre@akretion.com>
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp import models, fields, api, _
+from openerp import models, fields, api, tools, _
 from openerp.exceptions import ValidationError, RedirectWarning
 from openerp.exceptions import Warning as UserError
 # v9
@@ -83,7 +65,7 @@ class ProductCode(models.Model):
         # when called with a single ID :
         # record.name_get()[0][1]
 
-    # Hériter la recherche textuelle dans les champs many2one
+    # Hériter la recherche textuelle dans les champs many2one (et aussi dans les vues de recherche qui ont <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
     # name : object name to search for
     # operator : operator for name criteria
     @api.model
@@ -111,11 +93,10 @@ class ProductCode(models.Model):
                 'password': account.password,
             })
         # to set the value for a O2M fields, you need to return:
-        # res = [
-        #   {'o2m_field': [
+        # res = {'o2m_field': [
         #       {'field1': field1val1, 'field2': field2val1},
         #       {'field1': field1val2, 'field2': field2val2}]
-        #   }]
+        #   }
         res.update(account_ids=accounts)
         return res
 
@@ -210,7 +191,7 @@ class ProductCode(models.Model):
         self.price_subtotal = taxes['total']  # calcul et stockage de la valeur
         self.second_field = 'iuit'  # calcul et stockage d'un 2e champ
                                     # equivalent de multi='pouet'
-        # Pour un champ O2M, envoyer un recordset multiple ou une liste d'IDS
+        # Pour un champ O2M ou M2M, envoyer un recordset multiple ou une liste d'IDS
         # pour un champ M2O, donner le recordset ou l'ID
         if self.invoice_id:
             self.price_subtotal = self.invoice_id.currency_id.round(self.price_subtotal)
@@ -462,6 +443,8 @@ class ProductCode(models.Model):
 
     # PARFOIS, quand on supprime une contrainte SQL, il faut aussi la
     # supprimer dans postgres : ALTER TABLE res_partner DROP CONSTRAINT ...
+    # On peut hériter une contrainte d'un module dont on dépend en lui
+    # donnant le même nom (1er arg du tuple)
     _sql_constraints = [
         (
             'date_uniq',
@@ -585,7 +568,7 @@ self.env['res.currency'].with_context(date=signature_date).compute()
 super(ProductPriceList, self.with_context(fiscal_position_id=self.fiscal_position_id.id)).print_report()
 
 # special case: change the uid
-recs2 = self.sudo(user)
+recs2 = self.sudo(user.id)
 recs2 = self.sudo()  # uid = SUPERUSER_ID
 
 # RedirectWarning
@@ -651,3 +634,25 @@ float_is_zero(value, precision_digits=None, precision_rounding=None)
 
 Returns true if ``value`` is small enough to be treated as
        zero at the given precision (smaller than the corresponding *epsilon*)
+
+# Attachments
+# Read attachment
+attachments = self.env['ir.attachment'].search([
+    ('res_id', '=', des.id),
+    ('res_model', '=', 'l10n.fr.intrastat.service.declaration'),
+    ('type', '=', 'binary'),
+    ])
+attachment = attachments[0]
+filename = attachment.datas_fname
+file_itself = attachment.datas.decode('base64')
+# Create attachment
+import base64
+attach = self.env['ir.attachment'].create({
+    'name': filename,
+    'res_id': self.id,
+    'res_model': self._name,
+    'datas': base64.encodestring(xml_string),
+    'datas_fname': filename})
+
+# Lire une entrée du fichier de config du serveur Odoo
+idir = tools.config.get('invoice2data_templates_dir', False)
