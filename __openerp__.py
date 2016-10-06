@@ -29,9 +29,10 @@ This module has been written by Alexis de Lattre from Akretion
     'depends': ['account_cutoff_base'],
     'external_dependencies': {'python': ['phonenumbers', 'Asterisk']},
     'data': [
-        'company_view.xml',
-        'account_view.xml',
+        'views/company.xml',
+        'views/account.xml',
     ],
+    'post_init_hook': 'update_bank_journals',
     'demo': ['product_demo.xml'],
     'test': ['test/sale_stock_users.yml'],
     'qweb': ['static/src/xml/*.xml'],

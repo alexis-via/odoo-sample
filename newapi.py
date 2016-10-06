@@ -9,7 +9,8 @@ from openerp.exceptions import Warning as UserError
 from openerp.exceptions import UserError, RedirectWarning, ValidationError
 
 import openerp.addons.decimal_precision as dp
-from openerp.tools import float_compare, float_is_zero
+from openerp.tools import float_compare, float_is_zero, float_round
+from openerp.tools import file_open
 from openerp import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
@@ -230,7 +231,10 @@ class ProductCode(models.Model):
     def _default_account(self):
         return valeur_par_defaut
         # M2O : retourne un recordset
+        #       ATTENTION, si on veut un M2O à False, il ne pas que la fonction
+        #       _default_account retourne False mais self.env['..'].browse(False)
         # O2M : retourne une liste de dict contenant la valeur des champs
+        # M2M : retrourne un recordset multiple ?
         # date : string ou objet datetime
 
     # Fonction pour fields.selection
@@ -252,7 +256,7 @@ class ProductCode(models.Model):
     comment = fields.Text(string='Comment', translate=True)
     html = fields.Html(string='report', translate=True)
     code_digits = fields.Integer(
-        string='# of Digits', track_visibility='always', default=12,
+        string='# of Digits', track_visibility='onchange', default=12,
         groups='base.group_user')
     # OU groups=['base.group_user', 'base.group_hr_manager']
     # groups = XMLID : restriction du read/write et invisible ds les vues
@@ -260,7 +264,7 @@ class ProductCode(models.Model):
     # track_visibility = always ou onchange
     amount_untaxed = fields.Float(
         'Amount untaxed', digits=dp.get_precision('Account'))
-    # digits=(precision, scale)
+    # digits=(precision, scale)   exemple (16, 2)
     # Scale est le nombre de chiffres après la virgule
     # quand le float est un fields.float ou un fields.function,
     # on met l'option : digits=dp.get_precision('Account')
@@ -270,8 +274,11 @@ class ProductCode(models.Model):
     # fields.Monetary is only in version >= 9.0
     debit = fields.Monetary(default=0.0, currency_field='company_currency_id')
     start_date = fields.Date(
-        string='Start Date', copy=False, default=fields.Date.context_today)
+        string='Start Date', copy=False, default=fields.Date.context_today,
+        index=True)
     # similaire : fields.Datetime and fields.Time
+    # index=True => the field will be indexed in the database
+    # (much faster when you search on that field)
     type = fields.Selection([
         ('import', 'Import'),
         ('export', 'Export'),
@@ -436,7 +443,9 @@ class ProductCode(models.Model):
     # CONTRAINTE PYTHON
     @api.one
     @api.constrains('lines', 'max_lines')  # SANS T à la fin pour constrains !
+                                           # Ne mettre que des noms de champs de l'objet, sans suivre de liens (pas de 'lines.quantity')
     def _check_size(self):
+        # Au niveau des contraines, les champs related ont déjà leur valeur
         if len(self.lines) > self.max_lines:
             raise ValidationError(_("Too many lines in %s") % self.name)
         # Pas besoin de return
@@ -456,6 +465,11 @@ class ProductCode(models.Model):
             'currency_rate_max_delta_positive',
             'CHECK (currency_rate_max_delta >= 0)',
             "The value of the field '...' must be positive or 0."),
+        # Exemple de neutralisation de la contrainte check_name native :
+        (
+            'check_name',
+            "CHECK( 1=1 )",
+            'Contacts require a name.'),
     ]
 
     @api.multi
@@ -609,12 +623,12 @@ datetime.datetime(2014, 6, 15, ...)
 def machin(cr, uid, ids, context=None):
 
 # Conversion de devises
-self.with_context(date=date).from_currency.compute(amount_to_convert, to_currency_obj, round=True)
+from_currency.with_context(date=date).compute(amount_to_convert, to_currency, round=True)
 # Conversion d'UoM
 In class product.uom
 def _compute_qty(self, cr, uid, from_uom_id, qty, to_uom_id=False, round=True, rounding_method='UP')
 return qty
-# the same method with uom as objects instead of ID (to be preferd)
+# the same method with uom as objects instead of ID (to be prefered)
 def _compute_qty_obj(self, cr, uid, from_unit, qty, to_unit, round=True, rounding_method='UP', context=None)
 return qty
 def _compute_price(self, cr, uid, from_uom_id, price, to_uom_id=False)
@@ -623,8 +637,9 @@ return price
 # FLOAT
 float_compare(value1, value2, precision_digits=None, precision_rounding=None)
 
-returns -1, 0 or 1, if ``value1`` is lower than,
-           equal to, or greater than ``value2``, at the given precision.
+value1 < value2 : returns -1
+value1 > value2 : returns 1
+value1 == value2 : returns 0
 
 exemple:
 precision = self.env['decimal.precision'].precision_get('Account')
@@ -634,6 +649,31 @@ float_is_zero(value, precision_digits=None, precision_rounding=None)
 
 Returns true if ``value`` is small enough to be treated as
        zero at the given precision (smaller than the corresponding *epsilon*)
+
+float_round(value, precision_digits=None, precision_rounding=None, rounding_method='HALF-UP')
+rounding_method = 'UP' ou 'HALF-UP'
+
+exemple : float_round(1.3298, precision_digits=precision)
+
+# Tools
+from openerp.tools import file_open
+f = file_open(
+            'account_invoice_import_invoice2data/tests/pdf/'
+            'invoice_free_fiber_201507.pdf',
+            'rb')
+pdf_file = f.read()
+wiz = self.env['account.invoice.import'].create({
+    'invoice_file': base64.b64encode(pdf_file),
+    'invoice_filename': 'invoice_free_fiber_201507.pdf',
+    })
+f.close()
+
+# fields.Binary
+# READ
+# Quand on a un recodset d'un object qui a un fields.Binary:
+wizard.picture => fichier en base64
+# WRITE
+object.write({'picture': contenu_en_base64 ?})
 
 # Attachments
 # Read attachment
@@ -652,7 +692,12 @@ attach = self.env['ir.attachment'].create({
     'res_id': self.id,
     'res_model': self._name,
     'datas': base64.encodestring(xml_string),
-    'datas_fname': filename})
+    'datas_fname': filename,
+    })
+
+# To know if a user is part of a group :
+self.create_uid.has_group('account.group_account_manager')
+return True or False
 
 # Lire une entrée du fichier de config du serveur Odoo
 idir = tools.config.get('invoice2data_templates_dir', False)

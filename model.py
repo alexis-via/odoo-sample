@@ -1,24 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    MODULENAME module for Odoo
-#    Copyright (C) 2014 Akretion (http://www.akretion.com)
-#    @author Alexis de Lattre <alexis.delattre@akretion.com>
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
@@ -565,6 +547,7 @@ return {
     'view_mode': 'tree,form',
     'domain': [('id', 'in', ids)],
 
+# v8 only
 action_id = self.pool['ir.model.data'].xmlid_to_res_id(
     cr, uid, 'donation.donation_action', raise_if_not_found=True)
 action = self.pool['ir.actions.act_window'].read(
@@ -724,8 +707,8 @@ attach_id = self.pool['ir.attachment'].create(
         'name': filename,
         'res_id': 12,
         'res_model': 'sale.order',  # self._name
-        'datas': base64.encodestring(xml_string),
-        ##'datas_fname': filename
+        'datas': xml_string.encode('base64'),
+        'datas_fname': filename,
     },
     context=context)
 

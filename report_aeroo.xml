@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright (C) 2014 Akretion (http://www.akretion.com/)
-  The licence is in the file __openerp__.py
-  @author: Alexis de Lattre <alexis.delattre@akretion.com>
+  © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+  License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
 
-<openerp>
+<odoo>
 <data>
 
 <!-- pour remplacer un rapport existant -->
@@ -26,7 +25,7 @@
     <field name="parser_loc">nom_du_module/report/proforma_invoice.py</field>
     -->
     <field name="tml_source">file</field> <!-- database (default), file ou parser -->
-    <field name="multi" eval="0"/> <!-- Si True : rapport qu'on peut exécuter pour N records. False par défaut -->
+    <field name="multi" eval="0"/> <!-- ATTENTION: Si False, le rapport est accessible en vue form ET liste ; Si True, le rapport est UNIQUEMENT accessible en vue liste. Dans les 2 cas, si on veut que le rapport soit multi-recordset, il faut commencer par <for each="o in objects"> -->
     <field name="out_format" ref="report_aeroo_ooo.report_mimetypes_pdf_odt"/>
     <!-- available output formats :
         report_aeroo.report_mimetypes_odt_odt
@@ -87,4 +86,4 @@
 
 
 </data>
-</openerp>
+</odoo>

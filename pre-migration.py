@@ -22,3 +22,4 @@ def migrate(cr, version):
 # Explications :
 # Il faut créer un sous-répertoire "migrations/7.0.0.2/" et mettre ce script dedans:
 # le script sera alors exécuté pour openerp 7.0, quand on met à jour le module vers la version 0.2
+# Si on utilise la nouvelle numérotation à 5 chiffres de l'OCA, il faut créer un répertoire "migrations/8.0.1.0.2" (sans ajouter le numéro de version d'Odoo

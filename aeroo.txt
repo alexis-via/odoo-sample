@@ -36,7 +36,7 @@ when test=""
 /when
 when test=""
 otherwize
-/otherwize
+/otherwise
 /choose
 
 Saut de page avant fin de boucle for :

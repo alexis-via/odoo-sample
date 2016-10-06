@@ -5,7 +5,7 @@
 -->
 
 
-<openerp>
+<odoo>
 <data noupdate="0">
 
 <!-- Category, pour que ça apparaisse comme une "Application" -->
@@ -50,4 +50,4 @@
 </record>
 
 </data>
-</openerp>
+</odoo>

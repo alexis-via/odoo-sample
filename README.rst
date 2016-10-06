@@ -22,6 +22,12 @@ Subtitle
   Continuing text must be aligned
   after the bullet and whitespace.
 
+Liste ordonnée:
+
+1. premier item
+2. 2e item
+#. idem suivant
+
 Note that a blank line is required before the first item and after the
 last, but is optional between items.
 
@@ -60,6 +66,8 @@ Configuration
 To configure this module, you need to:
 
 * go to ...
+
+This module doesn't require any configuration.
 
 Usage
 =====

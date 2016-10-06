@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<openerp>
+<odoo>
 <data noupdate="1">
 
 
@@ -77,4 +77,4 @@ alter sequence ir_sequence_xxx RESTART WITH 420;
 <delete id="stock.access_stock_tracking_sales_user" model="ir.model.access"/>
 
 </data>
-</openerp>
+</odoo>

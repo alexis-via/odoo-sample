@@ -4,7 +4,7 @@
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
 
-<openerp>
+<odoo>
 <data>
 
 <!-- HERITAGE d'une vue FORM -->
@@ -95,7 +95,7 @@
                     <field name="password" password="True" />
                     <separator string="New section" colspan="2"/>
                     <field name="tutu_id" widget="selection" />
-                    <field name="tutu_id" options="{'no_open': True}" /> <!-- no_open vire the lien HTML sur un champ M2O -->
+                    <field name="tutu_id" options="{'no_open': True, 'no_create': True, 'no_create_edit': True}" /> <!-- no_open vire the lien HTML sur un champ M2O ; no_create: vire l'option de création dans la liste déroulante ; idem pour Create and Edit -->
                     <field name="estimated_hours" widget="float_time"/>
                     <field name="image_binary" widget="image"/>
                     <!-- For a file-binary field: -->
@@ -107,6 +107,7 @@
                     <field name="field_many2one" domain="[('tit', '=', 'tutu')]"/>
 <!-- domaine dans une vue form : ce qu'on peut mettre à droite dans le tuple :
                     - une valeur fixe
+                    - un XMLID : [('parent_id', 'child_of', %(l10n_eu_nace.nace_root)d)]
                     - si on veut un truc dynamique, on fait un on_change sur un autre champ qui retourne un domaine
                     ou sinon :
                     domain="[('partner_id','=',partner_id)]"
@@ -137,6 +138,14 @@
                     <field name="description_text" widget="html">
                     <field name="machine_ids" widget="x2many_counter" string="things" views="[['account.view_machin_tree', 'tree'], ['account.view_machin_form', 'form']]"/> <!-- utilisable sur M2M et O2M ; affichera 'nn things' où nn est le nombre de records-->
                     <field name="my_prop_ids" widget="many2many_checkboxes"/>
+                    <div class="oe_right oe_button_box" name="buttons"
+                                    attrs="{'invisible': [('total', '=', 0)]}">
+                            <button name="%(action_view_mass_mailing_contacts)d"
+                                type="action" class="oe_stat_button oe_inline">
+                              <field name="received_ratio" widget="percentpie" string="Received"/>  <!-- extrait du module mass_mailing : le widget percentpie affiche un jolie cercle en couleur avec le chiffre en pourcent au milieu. Le type du champ est un integer. Ce widget ne marche qu'en lecture seule. -->
+                            </button>
+                    <field name="company_type" options="{'horizontal': true}" widget="radio"/>
+                    </div>
                 </group>
             </sheet>
             <!-- Note: pas besoin qu'il y ait un sheet pour mettre le chatter - on peut le faire si la form contient un simple group -->
@@ -439,7 +448,7 @@ MRP : base.menu_mrp_root
 </record>
 
 </data>
-</openerp>
+</odoo>
 
 
 <!--

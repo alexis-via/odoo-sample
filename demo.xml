@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<openerp>
+<odoo>
 <data noupdate="1">
 
 
@@ -24,6 +24,8 @@
     <field name="default_intrastat_transport" eval="int(3)" />
     <!-- M2O -->
     <field name="uom_id" ref="product.product_uom_unit"/>
+    <field name="journal_id" model="account.journal"
+        search="[('type', '=', 'bank')]"/>
     <!-- date -->
     <!-- pour du relatif -->
     <field name="membership_date_from" eval="time.strftime('%Y-01-01')" />
@@ -67,4 +69,4 @@
 </record>
 
 </data>
-</openerp>
+</odoo>
