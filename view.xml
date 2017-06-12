@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+  © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
 
@@ -12,9 +12,12 @@
     <field name="name">asterisk.server.company</field>
     <field name="model">res.company</field>
     <field name="inherit_id" ref="base.view_company_form" />
-    <field name="groups_id" eval="[(4, ref('account.group_account_user'))]"/> <!-- vu en v8 seulement -->
+    <field name="groups_id" eval="[(4, ref('account.group_account_user'))]"/> <!-- vu en v8 seulement 
+    OU -->
+    <field name="groups_id" eval="[(6, 0, [ref('account.group_account_user')])]"/> 
+    <!-- => pratique pour avoir un champ en readonly=1 pour tout le monde et en readonly=0 pour account.group_account_user par exemple -> dans cet héritage avec groups_id, on hérite le champ concerné avec position="attributes" et <attribute name="readonly">0</attribute> -->
     <field name="priority">100</field> <!-- Only when necessary -->
-    <field name="arch"  type="xml">
+    <field name="arch" type="xml">
         <notebook>
             <!-- Ajout d'un nouvel onglet -->
             <page position="inside" string="IPBX">
@@ -47,6 +50,8 @@
             <!-- permet un filtrage -->
             <filter name="import" string="Import" domain="[('type', '=', 'import')]" />
             <filter string="My Sales Order Lines" domain="[('salesman_id', '=', uid)]"/>
+            <separator/>
+            <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
             <!-- on peut filtrer sur un champ M2M, par exemple :
             domain="[('default_user_ids', '=', uid)]"
             Pour comprendre ce filtre, il faut le lire : uid in 'default_user_ids' -->
@@ -69,7 +74,7 @@
     <field name="name">asterisk.server.form</field>
     <field name="model">asterisk.server</field>
     <field name="arch" type="xml">
-        <form string="Asterisk Servers" version="7.0">
+        <form string="Asterisk Servers">
             <header>
             <!-- si on a un bouton à l'intérieur de la vue, on peut par exemple utiliser : class="oe_link oe_edit_only" (cas du bouton (update) des taxes) -->
                 <button name="done" string="Done" type="object" class="oe_highlight" states="draft" />
@@ -79,8 +84,18 @@
                 <field name="%(report_proforma)d" string="Print Pro Forma" type="action" />
             </header>
             <sheet>
+                <div class="oe_button_box" name="button_box">
+                    <!-- replaces the active field starting from v9
+                    No code to write -->
+                    <button name="toggle_active" type="object"
+                        class="oe_stat_button" icon="fa-archive">
+                        <field name="active" widget="boolean_button"
+                            options='{"terminology": "archive"}'/>
+                    </button>
+                </div>
                 <div class="oe_title">
                     <label for="name" string="Server Name" class="oe_edit_only"/>
+                    <!-- il y a aussi class="oe_read_only" dispo en v8+ -->
                     <h1>
                         <field name="name" placeholder="Write the name of the server here..."/>
                     </h1>
@@ -88,10 +103,10 @@
                 <group colspan="" col="">
                     <field name="company_id" invisible="not context.get('asterisk_server_main_view')" groups="base.group_multi_company"/>
                     <!-- pour groups=, il faut toujours mettre "nom du module.XMLID du groupe", même si le groupe est défini dans le même module. -->
-                    <field name="active" />
                     <field name="ip_address" />
                     <field name="partner_id" context="{'show_address': 1}" options="{'always_reload': 1}"/> <!-- Pour montrer l'adresse, il faut les clés spéciales dans context ET dans options -->
                     <field name="port" />
+                    <field name="boolean_field" widget="toggle_button"/> <!-- exemple: payslip_status sur hr_holidays => rond cliquable qui change de couleur au lieu de case à cocher -->
                     <field name="password" password="True" />
                     <separator string="New section" colspan="2"/>
                     <field name="tutu_id" widget="selection" />
@@ -162,14 +177,23 @@
     <field name="name">fr.intrastat.product.tree</field>
     <field name="model">report.intrastat.product</field>
     <field name="arch" type="xml">
-        <tree string="Intrastat Product" colors="blue:state=='draft';blue:state in ('waiting_date','manual')"> <!-- ajout possible : edit="0" create="0"
+        <tree string="Intrastat Product" colors="blue:state=='draft';blue:state in ('waiting_date','manual')"> <!-- syntaxe color v8 -->
+        <tree decoration-info="state == 'draft'" decoration-muted="state == 'cancel'" string="Invoice">  <!-- syntaxe color v10 : couleurs possibles :
+        decoration-danger (red)
+        decoration-info (bleu)
+        decoration-muted
+        decoration-bf  (bold font)
+        decoration-success (green)
+        decoration-warning
+         -->
+        <!-- ajout possible : edit="0" create="0"
         editable="top/bottom" : rend la vue liste éditable, avec création de nouveaux records en haut ou en bas de la liste
         -->
         <!-- COLORS :
             - on peut utiliser current_date : red:date < current_date
             - il faut que le champ soit présent dans la vue tree (même invisible)
             - exemple double condition: colors="red:date &lt; current_date and state=='draft'"
-            couleurs possibles : red, green, blue, gray, black
+            couleurs possibles : red, green, blue, grey, black
             Pour hériter la couleur d'une vue tree :
             <tree position="attributes">
                 <attribute name="colors">blue:state=='draft';black:state=='confirm'</attribute>
@@ -192,10 +216,13 @@
             http://www.pygtk.org/pygtk2reference/gtk-stock-items.html
             en v8.0, on peut utiliser les boutons depuis
             icon="fa-heart-o"
+            A partir de la v10, on peut mettre un icon font awsome en vue tree:
+            icon="fa fa-undo text-warning" et on ne peut plus mettre les terp-* ni STOCK_*
             http://fortawesome.github.io/Font-Awesome/icons/
-            attention, version 4.2.0 maxi pour l'instant en v8
-            cf ./addons/web/static/lib/fontawesome/css/font-awesome.css
-            APPAREMMENT, on ne peut pas mettre un icon font awsome en vue tree :-(
+            VERSION de fontawesome:
+            v8: -> 4.2.0
+            v10: -> 4.5.0
+            cf addons/web/static/lib/fontawesome/css/font-awesome.css
              -->
         </tree>
     </field>
@@ -256,7 +283,7 @@ Ce champ fonction peut être utile pr débugger :
     <field name="model">sale.order</field>
     <field name="arch" type="xml">
         <!-- date_start => field must be a datetime ? -->
-        <calendar string="Sales Orders" color="state" date_start="date_order">
+        <calendar string="Sales Orders" color="state" date_start="date_order" mode="month">
             <!-- list fields displayed on the calendar sticker -->
             <field name="partner_id"/>
             <field name="amount_total"/>
@@ -267,10 +294,11 @@ Ce champ fonction peut être utile pr débugger :
 
 <!-- GRAPH -->
 <!-- http://fr.slideshare.net/openobject/business-intelligence-35790564 -->
+<!-- POUR V8 : en v9/10, on a une vue dédié pour pivot -->
 <record id="stay_graph" model="ir.ui.view">
     <field name="name">stay.line.graph</field>
     <field name="model">stay.line</field>
-    <field name="arch"  type="xml">
+    <field name="arch" type="xml">
         <graph string="Stay Lines" type="pivot" heatmap_mode="row">
             <!-- type= correspond au type par défaut du graph
             Autres possibilités : type="bar" (default), type="pie", type="line"
@@ -288,6 +316,19 @@ Ce champ fonction peut être utile pr débugger :
             <!-- Ce sont les mesures qui seront sélectionnées par défaut
             Sinon, il propose tt les champs int et float -->
         </graph>
+    </field>
+</record>
+
+<!-- PIVOT v9/10 -->
+<record id="donation_pivot" model="ir.ui.view">
+    <field name="name">donation.pivot</field>
+    <field name="model">donation.donation</field>
+    <field name="arch" type="xml">
+        <pivot string="Donations" type="pivot"> <!-- attribut disable_linking="True" pour supprimer le drill-through -->
+            <field name="donation_date" interval="month" type="col"/>
+            <field name="country_id" type="row"/>
+            <field name="amount_total_company_currency" type="measure"/>
+        </pivot>
     </field>
 </record>
 
@@ -332,6 +373,13 @@ Ce champ fonction peut être utile pr débugger :
     <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/> <!-- groups_id : M2M -->
 </record>
 
+<record id="partner_form_act_window_view" model="ir.actions.act_window.view">
+    <field name="sequence" eval="1"/>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="partner_form"/>
+    <field name="act_window_id" ref="partner_action"/>
+</record>
+
 <!-- MENU -->
 <!-- déclanche une action -->
 <menuitem id="fr_intrastat_product_menu"
@@ -359,6 +407,8 @@ MRP : base.menu_mrp_root
     <field name="groups_id" eval="[(4, ref('stock.group_stock_user'))]"/>
     <!-- replace groups -->
     <field name="groups_id" eval="[(6, 0, [ref('base.group_hr_manager')])]"/>
+    <!-- change parent -->
+    <field name="parent_id" ref="account.menu_finance"/>  <!-- TRAP: syntax is parent in <menuitem> and parent_id here -->
 </record>
 
 <!-- Replace original group by another one -->

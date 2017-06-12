@@ -1,23 +1,29 @@
 # -*- coding: utf-8 -*-
-# © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from openerp import models, fields, api, tools, _
-from openerp.exceptions import ValidationError, RedirectWarning
+from odoo import models, fields, api, tools, _
+from odoo.exceptions import ValidationError, RedirectWarning
 from openerp.exceptions import Warning as UserError
-# v9
-from openerp.exceptions import UserError, RedirectWarning, ValidationError
+# v9/v10
+from odoo.exceptions import UserError, RedirectWarning, ValidationError
 
-import openerp.addons.decimal_precision as dp
-from openerp.tools import float_compare, float_is_zero, float_round
-from openerp.tools import file_open
-from openerp import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
+import odoo.addons.decimal_precision as dp
+from odoo.tools import float_compare, float_is_zero, float_round
+from odoo.tools import file_open
+from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import logging
 
+
+import logging
 logger = logging.getLogger(__name__)
+
+try:
+    import phonenumbers
+except ImportError:
+    logger.debug('Cannot import phonenumbers')
 
 
 class ProductCode(models.Model):
@@ -50,9 +56,9 @@ class ProductCode(models.Model):
         super(crm_claim, self).__init__(pool, cr)
         self._columns['user_id'].string = 'Employee in charge'
 
-    def init(self, cr):
+    def init(self):
         # Exécuté à chaque installation du module
-        cr.execute(
+        self._cr.execute(
             "UPDATE account_journal SET allow_date=true "
             "WHERE allow_date <> true")
 
@@ -83,21 +89,31 @@ class ProductCode(models.Model):
             name=name, args=args, operator=operator, limit=limit)
 
     @api.model
-    def default_get(self, fields):
-        res = super(OvhInvoiceGet, self).default_get(fields)
+    def default_get(self, fields_list):
+        res = super(OvhInvoiceGet, self).default_get(fields_list)
         accounts = []
         ovh_accounts = self.env['ovh.account'].search(
             [('company_id', '=', self.env.user.company_id.id)])
         for account in ovh_accounts:
+            # en v8:
             accounts.append({
                 'ovh_account_id': account.id,
                 'password': account.password,
             })
+            # en v10:
+            accounts.append((0, 0, {'ovh_account_id': account.id, 'password': account.password,}))
         # to set the value for a O2M fields, you need to return:
+        # v8 :
         # res = {'o2m_field': [
         #       {'field1': field1val1, 'field2': field2val1},
         #       {'field1': field1val2, 'field2': field2val2}]
         #   }
+        # v10:
+        # res = {'o2m_field': [
+        #         (0, 0, {'field1': field1val1, 'field2': field2val1},
+        #         (0, 0, {'field1': field1vaxx, 'field2': field2vayy},
+        #         ]
+        #       }
         res.update(account_ids=accounts)
         return res
 
@@ -117,7 +133,8 @@ class ProductCode(models.Model):
             # On utilise un autre M2M pour le mettre à jour, on peut faire
             # self.champ_M2M_ids.ids -> ça donne la liste des IDs
             # M2O : recordset (ou ID)
-            # O2M : ??
+            # O2M : exemple v10 dans purchase/models/account_invoice.py
+            # méthode purchase_order_change()
             # là, Odoo va jouer automatiquement le @api.onchange du champ delivery_id
             # pas besoin d'appeler le onchange de delivery_id dans notre code
         # Here, all form values are set on self
@@ -230,7 +247,7 @@ class ProductCode(models.Model):
     @api.model
     def _default_account(self):
         return valeur_par_defaut
-        # M2O : retourne un recordset
+        # M2O : retourne un recordset (NOTE: apparemment, en v8, il veut un ID !)
         #       ATTENTION, si on veut un M2O à False, il ne pas que la fonction
         #       _default_account retourne False mais self.env['..'].browse(False)
         # O2M : retourne une liste de dict contenant la valeur des champs
@@ -263,7 +280,8 @@ class ProductCode(models.Model):
     sequence = fields.Integer(default=10)
     # track_visibility = always ou onchange
     amount_untaxed = fields.Float(
-        'Amount untaxed', digits=dp.get_precision('Account'))
+        'Amount untaxed', digits=dp.get_precision('Account'),
+        group_operator="avg")  # Utile pour un pourcentage par exemple
     # digits=(precision, scale)   exemple (16, 2)
     # Scale est le nombre de chiffres après la virgule
     # quand le float est un fields.float ou un fields.function,
@@ -310,7 +328,7 @@ class ProductCode(models.Model):
     price_subtotal = fields.Float(
         string='Amount', digits= dp.get_precision('Account'),
         store=True, readonly=True, compute='_compute_price')
-    # Exemple de champ function non stocké
+    # Exemple de champ function non stocké avec fonction inverse
     loud = fields.Char(
         store=False, compute='_compute_loud', inverse='_inverse_loud',
         search='_search_loud')
@@ -463,7 +481,8 @@ class ProductCode(models.Model):
         # c'est en fait "unique or null"
         (
             'currency_rate_max_delta_positive',
-            'CHECK (currency_rate_max_delta >= 0)',
+            'CHECK(currency_rate_max_delta >= 0)',
+            # check an interval: CHECK(probability >= 0 and probability <= 100)
             "The value of the field '...' must be positive or 0."),
         # Exemple de neutralisation de la contrainte check_name native :
         (
@@ -593,6 +612,9 @@ raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 # Récupérer une action sous forme de dico
 action = self.env['ir.actions.act_window'].for_xml_id('stock', 'action_package_view')
 
+# Récupérer un action pour affichage d'un rapport:
+action = self.env['report'].get_action(self, 'report_name')  # 1er arg = recordset, ID ou liste d'IDs
+
 ### INHERIT
 class SaleOrderLine(orm.Model):
     _inherit = 'sale.order.line'
@@ -603,6 +625,9 @@ class SaleOrderLine(orm.Model):
 
 # si la classe hérite de mail.thread: on peut écrire un msg dans le chatter par cette simple ligne:
 picking.message_post(_("The picking has been re-opened and set to draft state"))
+# v10
+message = _("This transfer has been created from the point of sale session: <a href=# data-oe-model=pos.order data-oe-id=%d>%s</a>") % (order.id, order.name)
+return_picking.message_post(body=message)
 # proto complet
 def message_post(self, cr, uid, thread_id, body='', subject=None, type='notification', subtype=None, parent_id=False, attachments=None, context=None, content_subtype='html', **kwargs)
 
@@ -624,13 +649,19 @@ def machin(cr, uid, ids, context=None):
 
 # Conversion de devises
 from_currency.with_context(date=date).compute(amount_to_convert, to_currency, round=True)
-# Conversion d'UoM
+# Conversion d'UoM v9
 In class product.uom
 def _compute_qty(self, cr, uid, from_uom_id, qty, to_uom_id=False, round=True, rounding_method='UP')
 return qty
-# the same method with uom as objects instead of ID (to be prefered)
+# the same method with uom as objects instead of ID (to be prefered) v9
 def _compute_qty_obj(self, cr, uid, from_unit, qty, to_unit, round=True, rounding_method='UP', context=None)
 return qty
+
+# Conversion d'UoM v10
+In class product.uom
+@api.multi
+def _compute_quantity(self, qty, to_unit, round=True, rounding_method='UP'):
+
 def _compute_price(self, cr, uid, from_uom_id, price, to_uom_id=False)
 return price
 
@@ -642,8 +673,14 @@ value1 > value2 : returns 1
 value1 == value2 : returns 0
 
 exemple:
-precision = self.env['decimal.precision'].precision_get('Account')
-float_compare(credit_sum, debit_sum, precision_digits=precision)
+prec = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+# Other avail decimal prec in v10:
+# Product Price
+# Discount
+# Stock Weight
+float_compare(credit_sum, debit_sum, precision_digits=prec)
+# Currency / Monetary fields
+float_compare(amount, 12, precision_rounding=currency.rounding)
 
 float_is_zero(value, precision_digits=None, precision_rounding=None)
 
@@ -701,3 +738,27 @@ return True or False
 
 # Lire une entrée du fichier de config du serveur Odoo
 idir = tools.config.get('invoice2data_templates_dir', False)
+
+# Pour avoir la string d'un champ sélection
+self._fields['state'].convert_to_export(self.state, self.env)
+
+# force client-side reload (update user menu and current view)
+return {
+    'type': 'ir.actions.client',
+    'tag': 'reload',
+    }
+
+# Sequence : si la séquence utilise range_year, on peut forcer une date qui ne soit pas la date du jour :
+
+self.env['ir.sequence'].with_context(ir_sequence_date='2015-10-09').next_by_code('sale.orde')
+# en v10, la création automatique des ir.sequence.date_range ne se fait que sur des périodes annuelles ; si on veut autre chose, il faut les créer à la main. Pour avoir la création automatique, il suffit que "use_date_range" soit coché.
+# On peut utiliser %(current_year)s si on veut toujours l'année du jour et pas l'année de la facture (quand elle est != date du jour)
+# On peut utiliser %(range_year)s si on veut l'année du début du range dans lequel se trouve notre date et lieu de l'année de la date.
+
+self.env['account.analytic.account'].search_read([('type', '=', 'contract')], ['code'])
+result: [{'code': u'113966', 'id': 14}, {'code': u'1485427485', 'id': 16}, {'code': u'AA001', 'id': 2}, {'code': u'AA002', 'id': 3}]
+
+Ca renvoie comme un read:
+Pour un M2O : 'account_id': (508, u'627100 Frais sur titres (achat, vente, garde)'
+
+for move in self.filtered(lambda move: move.product_id.cost_method != 'real' and not move.origin_returned_move_id):

@@ -37,11 +37,13 @@ Problème : quand on fait un update du module, il va re-créer le record même s
 
 -->
 
+<!-- V8 ONLY -->
 <record id="donation_seq_type" model="ir.sequence.type">
     <field name="name">Donation Number</field>
     <field name="code">donation.donation</field>
 </record>
 
+<!-- v8 and v10 -->
 <record id="donation_seq" model="ir.sequence">
     <field name="name">Donation</field>
     <field name="code">donation.donation</field>

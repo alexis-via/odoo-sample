@@ -44,6 +44,8 @@ Menu Format->Paragraph :  Onglet Enchainement (Text Flow) : Insérer : Type = Pa
 
 Pour code barre ou image :
 Cadre, onglet "option" : mettre dans le champ "Nom" :
+image: asimage(company.logo or False, size_x=80, size_y=80, hold_ratio=True)
+
 image: asimage(pack.get_128_barcode(thickness=2), 0)
 ou
 image: barcode(l.prodlot_id and l.prodlot_id.name or '0', 'code128', 'None', 25)

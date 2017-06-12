@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  © 2016 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+  © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
 
@@ -9,9 +9,6 @@
 
 <!-- pour remplacer un rapport existant -->
 <record id="sale.report_sale_order" model="ir.actions.report.xml">
-    <field name="name">Quotation / Order</field>
-    <field name="model">sale.order</field>
-    <field name="report_name">sale.order</field>
     <field name="report_type">aeroo</field>
     <field name="in_format">oo-odt</field>
     <!-- available in formats :
@@ -20,7 +17,7 @@
         genshi-raw
     -->
     <field name="report_rml">report_aeroo_sale/report/quotation.odt</field>
-    <field name="parser_state">default</field>
+    <field name="parser_state">default</field> <!-- 'default' par défaut, mais il faut quand même le mettre -->
     <!-- si parseur : parser_state=loc et ajouter
     <field name="parser_loc">nom_du_module/report/proforma_invoice.py</field>
     -->
@@ -33,6 +30,10 @@
         report_aeroo.report_mimetypes_raw
         v8 only
         report_aeroo.report_mimetypes_pdf_odt
+        report_aeroo.report_mimetypes_pdf_ods
+        report_aeroo.report_mimetypes_doc_odt
+        report_aeroo.report_mimetypes_xls_odt  (petite erreur de XMLID, la logique serait plutôt _xls_ods)
+        report_aeroo.report_mimetypes_csv_ods
         v7 only
         report_aeroo_ooo.report_mimetypes_pdf_odt
         report_aeroo_ooo.report_mimetypes_pdf_ods
