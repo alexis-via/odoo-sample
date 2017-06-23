@@ -1,0 +1,90 @@
+#!/bin/bash
+
+#set -x
+
+DB_PROD=prod
+WORKDIR=/home/odoo
+FILESTOREDIR=/home/odoo/erp/data-dir/filestore
+EXTENSION=.sql
+
+if [ $# -ne 1 ]
+then
+    echo "Usage : db-duplicate db_name"
+    exit 1
+fi
+
+db_name=${1}
+
+if [ "${db_name}" == $DB_PROD ]
+then
+    echo "Are you crazy ?!?"
+    exit 2
+fi
+
+
+if [ -e $WORKDIR/$db_name$EXTENSION ]; then
+    echo "File $WORKDIR/$db_name$EXTENSION already exists. Delete it."
+    exit 1
+fi
+
+if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'" $DB_PROD)" == '1' ]
+then
+    echo "Database $db_name already exists. Delete it ? (y/n)"
+    read answer_db
+    if [ $answer_db == 'y' ]; then
+        echo -n "Deleting database $db_name ... "
+        dropdb $db_name
+        echo "done."
+    else
+        echo "Delete the database $db_name manually and restart the script."
+        exit 1
+    fi
+else
+    echo "Database $db_name doesn't already exist."
+fi
+
+if [ -d $FILESTOREDIR/$db_name ]; then
+    echo "Filestore directory $FILESTOREDIR/$db_name already exists."
+    echo "Delete it ? (y/n)"
+    read answer
+    if [ $answer == 'y' ]; then
+        echo -n "Deleting directory $FILESTOREDIR/$db_name ... "
+        rm -rf $FILESTOREDIR/$db_name
+        echo "done."
+    else
+        echo "Please delete the filestore directory $FILESTOREDIR/$db_name manually and restart the script."
+        exit 1
+    fi
+fi
+
+if [ -d $FILESTOREDIR/$DB_PROD ]; then
+    echo "Prod filestore directory $FILESTOREDIR/$DB_PROD found."
+else
+    echo "Prod filestore directory $FILESTOREDIR/$DB_PROD NOT found"
+    exit 1
+fi
+
+echo -n "Dumping production database to file $WORKDIR/$db_name$EXTENSION ... "
+pg_dump -f $WORKDIR/$db_name$EXTENSION $DB_PROD
+echo "done."
+echo -n "Creating database ${db_name} ... "
+createdb ${db_name}
+psql ${db_name} < $WORKDIR/$db_name$EXTENSION
+echo "done."
+echo -n "Updating database ${db_name} for test environnement ... "
+psql -c "update ir_cron set active=False" ${db_name}
+psql -c "UPDATE ir_config_parameter SET value='TEST' where key='ribbon.name'" ${db_name}
+#psql -c "update pos_config set proxy_ip=False, iface_payment_terminal=False, iface_print_via_proxy=False, iface_customer_display=False" ${db_name}
+echo "done."
+
+echo -n "Copying filestore from $FILESTOREDIR/$DB_PROD to $FILESTOREDIR/$db_name ... "
+cp -R $FILESTOREDIR/$DB_PROD $FILESTOREDIR/$db_name
+echo "done."
+
+if [ -e $WORKDIR/$db_name$EXTENSION ]; then
+    echo -n "Deleting database dump ... "
+    rm -f $WORKDIR/$db_name$EXTENSION
+    echo "done."
+fi
+
+exit 0

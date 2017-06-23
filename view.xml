@@ -137,6 +137,9 @@
                     <field name="test_field_many2one" context="{'search_default_partner_id': [partner_id]}"/>
                     <!-- search_default_xxxx : xxxx est le 'name' du filtre dans la vue search -->
                     <field name="intrastat_uom_id" attrs="{'invisible': [('is_fiscal_only', '=', True)], 'required': [('is_fiscal_only', '=', False)]}" groups="l10n_fr_intrastat_product.group_detailed_intrastat_product" />
+                    <!-- attrs sur un champ one2many sans valeur :
+                    v8 : ('quant_package_ids', '=', [(6, False, [])])
+                    v10 (non testé) : ('quant_package_ids', '=', [])
                     <!-- Exemple de champ "intégrés" avec commentaires après -->
                     <label string="Impregnation Report Beads / Fragrance" for="testing_impregnation_beads_percentage"/> <!-- sur un label, quand on a for="champ", le string sera en gras. Si on n'a pas mis de string, la string du champ sera utilisée -->
                     <div>

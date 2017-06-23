@@ -6,7 +6,7 @@ Pour un M2M:
 
 Pour un M2O:
 - xmlid (en tête : company_id/id)
-- ID (en tête : company_id)
+- ID (en tête : company_id ; en v10: company_id/.id)
 - name_search (en tête : company_id)
 
 Pour un O2M:
