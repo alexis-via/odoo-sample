@@ -25,8 +25,8 @@
     <field name="name">Manager</field>
     <field name="category_id" ref="base.module_category_warehouse_management"/>
     <field name="implied_ids" eval="[(4, ref('group_stock_user'))]"/>
-    <!-- Automatically add admin to this group -->
-    <field name="users" eval="[(4, ref('base.user_root'))]"/>
+    <!-- Automatically add admin to this group and default_user (v10 only) -->
+    <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.default_user'))]"/>
 </record>
 
 </data>
@@ -37,6 +37,7 @@
 <record id="base.default_user" model="res.users">
     <field name="groups_id" eval="[(4, ref('group_stock_user'))]"/>
 </record>
+
 
 <!-- RULES -->
 <record id="fr_intrastat_service_rule" model="ir.rule">
