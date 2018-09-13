@@ -3,9 +3,9 @@
 #set -x
 
 DB_PROD=prod
+DATADIR_PROD=/home/odoo/erp/data-dir
+DATADIR_TEST=/home/odoo/data-dir-test
 WORKDIR=/home/odoo
-FILESTOREDIR=/home/odoo/erp/data-dir/filestore
-EXTENSION=.sql
 
 if [ $# -ne 1 ]
 then
@@ -22,8 +22,8 @@ then
 fi
 
 
-if [ -e $WORKDIR/$db_name$EXTENSION ]; then
-    echo "File $WORKDIR/$db_name$EXTENSION already exists. Delete it."
+if [ -e $WORKDIR/$db_name.sql ]; then
+    echo "File $WORKDIR/$db_name.sql already exists. Delete it."
     exit 1
 fi
 
@@ -43,33 +43,33 @@ else
     echo "Database $db_name doesn't already exist."
 fi
 
-if [ -d $FILESTOREDIR/$db_name ]; then
-    echo "Filestore directory $FILESTOREDIR/$db_name already exists."
+if [ -d $DATADIR_TEST/filestore/$db_name ]; then
+    echo "Filestore directory $DATADIR_TEST/filestore/$db_name already exists."
     echo "Delete it ? (y/n)"
     read answer
     if [ $answer == 'y' ]; then
-        echo -n "Deleting directory $FILESTOREDIR/$db_name ... "
-        rm -rf $FILESTOREDIR/$db_name
+        echo -n "Deleting directory $DATADIR_TEST/filestore/$db_name ... "
+        rm -rf $DATADIR_TEST/filestore/$db_name
         echo "done."
     else
-        echo "Please delete the filestore directory $FILESTOREDIR/$db_name manually and restart the script."
+        echo "Please delete the filestore directory $DATADIR_TEST/filestore/$db_name manually and restart the script."
         exit 1
     fi
 fi
 
-if [ -d $FILESTOREDIR/$DB_PROD ]; then
-    echo "Prod filestore directory $FILESTOREDIR/$DB_PROD found."
+if [ -d $DATADIR_PROD/filestore/$DB_PROD ]; then
+    echo "Prod filestore directory $DATADIR_PROD/filestore/$DB_PROD found."
 else
-    echo "Prod filestore directory $FILESTOREDIR/$DB_PROD NOT found"
+    echo "Prod filestore directory $DATADIR_PROD/filestore/$DB_PROD NOT found"
     exit 1
 fi
 
-echo -n "Dumping production database to file $WORKDIR/$db_name$EXTENSION ... "
-pg_dump -f $WORKDIR/$db_name$EXTENSION $DB_PROD
+echo -n "Dumping production database to file $WORKDIR/$db_name.sql ... "
+pg_dump -f $WORKDIR/$db_name.sql $DB_PROD
 echo "done."
 echo -n "Creating database ${db_name} ... "
 createdb ${db_name}
-psql ${db_name} < $WORKDIR/$db_name$EXTENSION
+psql ${db_name} < $WORKDIR/$db_name.sql
 echo "done."
 echo -n "Updating database ${db_name} for test environnement ... "
 psql -c "update ir_cron set active=False" ${db_name}
@@ -77,13 +77,13 @@ psql -c "UPDATE ir_config_parameter SET value='TEST' where key='ribbon.name'" ${
 #psql -c "update pos_config set proxy_ip=False, iface_payment_terminal=False, iface_print_via_proxy=False, iface_customer_display=False" ${db_name}
 echo "done."
 
-echo -n "Copying filestore from $FILESTOREDIR/$DB_PROD to $FILESTOREDIR/$db_name ... "
-cp -R $FILESTOREDIR/$DB_PROD $FILESTOREDIR/$db_name
+echo -n "Copying filestore from $DATADIR_PROD/filestore/$DB_PROD to $DATADIR_TEST/filestore/$db_name ... "
+cp -R $DATADIR_PROD/filestore/$DB_PROD $DATADIR_TEST/filestore/$db_name
 echo "done."
 
-if [ -e $WORKDIR/$db_name$EXTENSION ]; then
+if [ -e $WORKDIR/$db_name.sql ]; then
     echo -n "Deleting database dump ... "
-    rm -f $WORKDIR/$db_name$EXTENSION
+    rm -f $WORKDIR/$db_name.sql
     echo "done."
 fi
 
