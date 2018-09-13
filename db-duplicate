@@ -73,7 +73,7 @@ psql ${db_name} < $WORKDIR/$db_name.sql
 echo "done."
 echo -n "Updating database ${db_name} for test environnement ... "
 psql -c "update ir_cron set active=False" ${db_name}
-psql -c "UPDATE ir_config_parameter SET value='TEST' where key='ribbon.name'" ${db_name}
+psql -c "UPDATE ir_config_parameter SET value='TEST<br/>{db_name}' where key='ribbon.name'" ${db_name}
 #psql -c "update pos_config set proxy_ip=False, iface_payment_terminal=False, iface_print_via_proxy=False, iface_customer_display=False" ${db_name}
 echo "done."
 
