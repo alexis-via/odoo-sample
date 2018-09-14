@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-# © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# Copyright 2018 Akretion France (http://www.akretion.com/)
+# @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import models, fields, api, tools, _
-from odoo.exceptions import ValidationError, RedirectWarning
-from openerp.exceptions import Warning as UserError
-# v9/v10
+from odoo import api, fields, models, tools, _
 from odoo.exceptions import UserError, RedirectWarning, ValidationError
+# v8
+from openerp.exceptions import Warning as UserError
 
 import odoo.addons.decimal_precision as dp
 from odoo.tools import float_compare, float_is_zero, float_round
 from odoo.tools import file_open
+from odoo.tools.misc import formatLang  # CAUTION: it is not the same method as in the report ! Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False, currency_obj=False)
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
@@ -35,6 +36,10 @@ class ProductCode(models.Model):
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
+    # v10 only
+     _name = 'purchase.order'
+     _inherit = ['purchase.order', 'base.ubl']
+
     _track = {  # V7 and V8 / deprecated in v9
         'state': {
             'l10n_fr_intrastat_service.declaration_done':
@@ -51,16 +56,17 @@ class ProductCode(models.Model):
         cr.execute("UPDATE account_journal SET allow_date=True")
         return init_res
 
-    # Pour hériter juste une propriété d'un champ :
-    def __init__(self, pool, cr):
-        super(crm_claim, self).__init__(pool, cr)
-        self._columns['user_id'].string = 'Employee in charge'
-
     def init(self):
         # Exécuté à chaque installation du module
         self._cr.execute(
             "UPDATE account_journal SET allow_date=true "
             "WHERE allow_date <> true")
+
+    @api.model_cr  # v10 (not v8)
+    def init(self):
+    tools.drop_view_if_exists(self._cr, self._table)
+    self._cr.execute("""CREATE or REPLACE VIEW %s as (SELECT ...""")
+
 
     # DEPRECATED ? Apparemment, il faut ajouter un champ fonction "display_name"
     @api.multi
@@ -95,13 +101,12 @@ class ProductCode(models.Model):
         ovh_accounts = self.env['ovh.account'].search(
             [('company_id', '=', self.env.user.company_id.id)])
         for account in ovh_accounts:
-            # en v8:
-            accounts.append({
-                'ovh_account_id': account.id,
-                'password': account.password,
-            })
-            # en v10:
+            # en v8 et v10:
             accounts.append((0, 0, {'ovh_account_id': account.id, 'password': account.password,}))
+            # en v8, ça marche aussi sans [(0, 0, {})] en donnant directement [{}]
+        # return date as string (not datetime)
+        # M2M : v10 : list of IDs ou [(6, 0, IDs)]
+        # O2M : ID
         # to set the value for a O2M fields, you need to return:
         # v8 :
         # res = {'o2m_field': [
@@ -247,11 +252,12 @@ class ProductCode(models.Model):
     @api.model
     def _default_account(self):
         return valeur_par_defaut
-        # M2O : retourne un recordset (NOTE: apparemment, en v8, il veut un ID !)
-        #       ATTENTION, si on veut un M2O à False, il ne pas que la fonction
+        # M2O : retourne un recordset ou un ID (ou False)
+        # (NOTE: apparemment, en v8, il veut un ID)
+        # OUTDATED (?) : ATTENTION, si on veut un M2O à False, il ne pas que la fonction
         #       _default_account retourne False mais self.env['..'].browse(False)
         # O2M : retourne une liste de dict contenant la valeur des champs
-        # M2M : retrourne un recordset multiple ?
+        # M2M : retourne un recordset multiple ?
         # date : string ou objet datetime
 
     # Fonction pour fields.selection
@@ -288,7 +294,7 @@ class ProductCode(models.Model):
     # on met l'option : digits=dp.get_precision('Account')
     # Autres valeurs possibles pour get_precision : product/product_data.xml
     # Product Price, Discount, Stock Weight, Product Unit of Measure,
-    # Product UoS
+    # Product UoS (v8 only)
     # fields.Monetary is only in version >= 9.0
     debit = fields.Monetary(default=0.0, currency_field='company_currency_id')
     start_date = fields.Date(
@@ -334,7 +340,9 @@ class ProductCode(models.Model):
         search='_search_loud')
     account_id = fields.Many2one('account.account', string='Account',
         required=True, domain=[('type', 'not in', ['view', 'closed'])],
-        default=_default_account)
+        default=lambda self: self._default_account())
+        # L'utilisation de lambda permet d'hériter la fonction _default_account() sans
+        # hériter le champ. Sinon, on peut aussi utiliser default=_default_account
     company_id = fields.Many2one(
         'res.company', string='Company',
         ondelete='cascade', required=True,
@@ -355,7 +363,7 @@ class ProductCode(models.Model):
     # Champ Relation
     company_currency_id = fields.Many2one(
         'res.currency', string='Currency', related='company_id.currency_id',
-        store=True)
+        store=True, compute_sudo=True)
     # ATTENTION, en nouvelle API, on ne peut PAS faire un fields.Char qui
     # soit un related d'un fields.Selection (bloque le démarrage d'Odoo
     # sans message d'erreur !)
@@ -417,8 +425,7 @@ class ProductCode(models.Model):
         # Pour convertir une datetime UTC en datetime de la timezone du
         # context (clé 'tz'), ou, si elle n'est pas présente, dans la timezone
         # de l'utilisateur:
-        # datetime_in_tz = fields.datetime.context_timestamp(
-        #    cr, uid, timestamp, context=context)
+        # datetime_in_tz_dt = fields.datetime.context_timestamp(self, date_time_dt)
         # Datetime en UTC en string : fields.Datetime.now()
     }
 
@@ -612,7 +619,7 @@ raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 # Récupérer une action sous forme de dico
 action = self.env['ir.actions.act_window'].for_xml_id('stock', 'action_package_view')
 
-# Récupérer un action pour affichage d'un rapport:
+# Récupérer un action pour affichage d'un rapport (qweb ou py3o ou autre)
 action = self.env['report'].get_action(self, 'report_name')  # 1er arg = recordset, ID ou liste d'IDs
 
 ### INHERIT
@@ -661,6 +668,10 @@ return qty
 In class product.uom
 @api.multi
 def _compute_quantity(self, qty, to_unit, round=True, rounding_method='UP'):
+
+@api.multi
+def _compute_price(self, price, to_unit):
+
 
 def _compute_price(self, cr, uid, from_uom_id, price, to_uom_id=False)
 return price
@@ -736,6 +747,12 @@ attach = self.env['ir.attachment'].create({
 self.create_uid.has_group('account.group_account_manager')
 return True or False
 
+# Check ir.model.access
+self.env['pos.config'].check_access_rights('read', raise_exception=True)
+
+# Check ir.rules
+my_partner.check_access_rule('read')
+
 # Lire une entrée du fichier de config du serveur Odoo
 idir = tools.config.get('invoice2data_templates_dir', False)
 
@@ -762,3 +779,17 @@ Ca renvoie comme un read:
 Pour un M2O : 'account_id': (508, u'627100 Frais sur titres (achat, vente, garde)'
 
 for move in self.filtered(lambda move: move.product_id.cost_method != 'real' and not move.origin_returned_move_id):
+
+self.read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)
+
+le(s) champ(s) présent dans groupby doit aussi être présent dans fields
+lazy: if true, the results are only grouped by the first groupby and the
+remaining groupbys are put in the __context key. If false, all the groupbys are
+done in one call
+
+Exemple:
+res = self.env['stock.quant'].read_group([('location_id', 'in', locs.ids)], ['product_id', 'qty'], ['product_id'])
+for re in res:
+    product_id = re['product_id'][0]
+    qty = re['qty']
+

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-# © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# Copyright 2018 Akretion France (http://www.akretion.com/)
+# @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 {
     'name': 'Account Cut-off Prepaid',
     'version': '10.0.1.0.0',
-    'category': 'Accounting & Finance',
+    'category': 'Accounting',  # Sales, Warehouse, Manufacturing, Purchases, Human Resources
     'license': 'AGPL-3',
     'summary': 'Prepaid Expense, Prepaid Revenue',  # v7: size=64, v8: no size limit
     'description': """
@@ -34,7 +35,7 @@ This module has been written by Alexis de Lattre from Akretion
     ],
     'post_init_hook': 'update_bank_journals',
     'uninstall_hook': 'street3_uninstall_hook',
-    'demo': ['product_demo.xml'],
+    'demo': ['demo/product.xml'],
     'test': ['test/sale_stock_users.yml'],
     'qweb': ['static/src/xml/*.xml'],
     'css': ['static/src/css/*.css'],  # only in v7 (replaced by XML file in v8

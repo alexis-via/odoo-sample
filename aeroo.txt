@@ -48,9 +48,11 @@ image: asimage(company.logo or False, size_x=80, size_y=80, hold_ratio=True)
 
 image: asimage(pack.get_128_barcode(thickness=2), 0)
 ou
-image: barcode(l.prodlot_id and l.prodlot_id.name or '0', 'code128', 'None', 25)
+image: barcode(l.prodlot_id and l.prodlot_id.name or '0', code_type='code128', height=25)
 'code128' ou 'code39' ou 'ean13'
-ATTENTION, si on veut mettre 2 x le même code barre dans un rapport, comme il faut que chaque cadre est un nom unique, il faut changer légèrement la formulation de l'appel de fonction barcode()
+ATTENTION, si on veut mettre 2 x le même code barre dans un rapport, comme il faut que chaque cadre ait un nom unique, il faut changer légèrement la formulation de l'appel de fonction barcode()
+
+Autre solution : utiliser une police code barre type "code128.ttf" et la mettre sur le serveur dans /usr/local/share/fonts et redémarrer le libreoffice qui tourne en tâche de fond
 
 Bloc addresse en v7
 

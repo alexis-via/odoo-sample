@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2017 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# © 2018 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from openerp.osv import orm, fields
@@ -636,6 +636,9 @@ Simply use the ID of target record, which must already exist, or ``False`` to re
 # -> ('route_ids', '=', 7) doit en fait se comprendre pour un M2M en route_ids.ids contient ha_lib_route_id (et ça peut contenir d'autres IDs)
 # donc la recherche ci-dessous donne en fait tous les produits qui contiennent la route ha_lib_route_id ou ha_lib_et_vpc_route_id.
 
+# Filtered
+line.procurement_ids.filtered(lambda r: r.state != 'cancel')
+
 ### Get an XMLID
 # en v8
 res_id = self.pool['ir.model.data'].xmlid_to_res_id(
@@ -690,7 +693,7 @@ button_confirm correspond au champ "signal" sur la workflow.transition
 # result : [2, 4, 8, 10, 14, 16, 20, 22, 26, 28, 32, 34, 38]
 
 #### SAFE EVAL
-from openerp.tools.safe_eval import safe_eval
+from odoo.tools.safe_eval import safe_eval
 # 1er arg : la string
 # 2e arg : un dico avec pour chaque début de string, l'obj openerp correspondant
 safe_eval('sepa_export.payment_order_ids[0].reference', {'sepa_export': gen_args['sepa_export']})
