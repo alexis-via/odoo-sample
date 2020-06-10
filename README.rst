@@ -1,3 +1,13 @@
+NEW FORMAT :
+DESCRIPTION.rst
+INSTALL.rst
+CONFIGURE.rst
+USAGE.rst
+HISTORY.rst
+ROADMAP.rst
+CONTRIBUTORS.rst
+CREDITS.rst
+
 .. image:: https://img.shields.io/badge/license-AGPL--3-blue.png
    :target: https://www.gnu.org/licenses/agpl
    :alt: License: AGPL-3

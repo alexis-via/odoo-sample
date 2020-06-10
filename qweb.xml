@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<template>
+
+    <t t-extend="XmlReceipt">
+        <t t-jquery="t[t-if='receipt.shop.name']" t-operation="replace"/>
+        <t t-jquery="t[t-if='receipt.company.contact_address']" t-operation="replace"/>
+        <t t-jquery="t[t-if='receipt.company.phone']" t-operation="replace"/>
+        <t t-jquery="t[t-if='receipt.cashier']" t-operation="replace">
+                <div>Abbaye ND de Randol</div>
+        </t>
+
+</template>
+
+<t t-if="widget.subcategories.length > 0">
+<span t-field="o.amount_untaxed" t-field-options='{"widget": "monetary", "display_currency": "o.currency_id"}'/>  <!-- ATTENTION on ne peut PAS intervertir les ' et les " -->
+
+<!--On peut même convertir à la volée apparemment -->
+t-field-options='{
+    "widget": "monetary",
+    "from_currency": "website.currency_id",
+    "display_currency": "user_id.partner_id.property_product_pricelist.currency_id"
+    }'
+
+t-field-options='{"widget": "image", "class": "img-rounded"}'
+
+t-field-options='{"widget": "monetary", "display_currency": "quotation.pricelist_id.currency_id"}'
+
+t-field-options='{
+    "widget": "contact",
+    "fields": ["address", "name", "phone", "email"]
+    }'
+
+<!-- héritage d'un rapport Qweb (à l'intérieur d'un <openerp><data>) -->
+<template id="report_credit_control_summary_document" inherit_id="account_credit_control.report_credit_control_summary_document">
+    <xpath expr="//span[@t-field='l.amount_due']" position="attributes">
+        <attribute name="t-field-options">{"widget": "monetary", "display_currency": "l.currency_id or l.company_id.currency_id"}</attribute>
+    </xpath> 
+</template>
+

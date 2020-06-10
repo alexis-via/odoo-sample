@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright 2018 Akretion France (http://www.akretion.com/)
+# Copyright 2020 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
-# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import UserError, RedirectWarning, ValidationError
@@ -11,7 +11,6 @@ from openerp.exceptions import Warning as UserError
 import odoo.addons.decimal_precision as dp
 from odoo.tools import float_compare, float_is_zero, float_round
 from odoo.tools import file_open
-from odoo.tools.misc import formatLang  # CAUTION: it is not the same method as in the report ! Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False, currency_obj=False)
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
@@ -36,11 +35,12 @@ class ProductCode(models.Model):
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
+    _inherit = ['mail.thread', 'mail.activity.mixin']  # V12
     # v10 only
      _name = 'purchase.order'
      _inherit = ['purchase.order', 'base.ubl']
 
-    _track = {  # V7 and V8 / deprecated in v9
+    _track = {  # V7 and V8 / in v9+, replaced by _track_subtype(self, init_values)
         'state': {
             'l10n_fr_intrastat_service.declaration_done':
             lambda self, cr, uid, obj, ctx=None: obj.state == 'done',
@@ -56,13 +56,19 @@ class ProductCode(models.Model):
         cr.execute("UPDATE account_journal SET allow_date=True")
         return init_res
 
+    @api.model_cr
     def init(self):
-        # Exécuté à chaque installation du module
+        # Exécuté à chaque installation et reload du module
         self._cr.execute(
             "UPDATE account_journal SET allow_date=true "
             "WHERE allow_date <> true")
+        # Contrainte d'unicité restreinte à une certaine valeur
+        self._cr.execute(
+            '''
+            CREATE UNIQUE INDEX IF NOT EXISTS single_email_primary ON res_partner_phone (partner_id, type) WHERE (type='8_email_primary')
+            ''')
 
-    @api.model_cr  # v10 (not v8)
+    @api.model_cr  # v10 v12 (not v8)
     def init(self):
     tools.drop_view_if_exists(self._cr, self._table)
     self._cr.execute("""CREATE or REPLACE VIEW %s as (SELECT ...""")
@@ -86,11 +92,11 @@ class ProductCode(models.Model):
             self, name='', args=None, operator='ilike', limit=80):
         if args is None:
             args = []
-        if name:
-            refs = self.search(
+        if name and operator == 'ilike':
+            recs = self.search(
                 [('code', '=', name)] + args, limit=limit)
-            if refs:
-                return refs.name_get()
+            if recs:
+                return recs.name_get()
         return super(StayRefectory, self).name_search(
             name=name, args=args, operator=operator, limit=limit)
 
@@ -234,9 +240,10 @@ class ProductCode(models.Model):
             order.total = order.untaxed + order + taxes
 
     # Champ fonction inverse='_inverse_price'
-    @api.one
+    @api.onchange('name')  # add @api.onchange on an inverse method to have it apply immediately and not upon save
     def _inverse_loud(self):
-        self.name = (self.loud or '').lower()  # MAJ du ou des autres champs
+        for rec in self:
+            rec.name = (rec.loud or '').lower()  # MAJ du ou des autres champs
 
     # Champ fonction search='_search_price'
     def _search_loud(self, operator, value):
@@ -283,11 +290,13 @@ class ProductCode(models.Model):
         groups='base.group_user')
     # OU groups=['base.group_user', 'base.group_hr_manager']
     # groups = XMLID : restriction du read/write et invisible ds les vues
+    # v13: track_visibility='onchange' => tracking=X
     sequence = fields.Integer(default=10)
     # track_visibility = always ou onchange
     amount_untaxed = fields.Float(
         'Amount untaxed', digits=dp.get_precision('Account'),
         group_operator="avg")  # Utile pour un pourcentage par exemple
+    # v13 : digits='Product Unit of Measure'
     # digits=(precision, scale)   exemple (16, 2)
     # Scale est le nombre de chiffres après la virgule
     # quand le float est un fields.float ou un fields.function,
@@ -314,7 +323,7 @@ class ProductCode(models.Model):
     # Pour ajouter des champs à un fields.Selection existant:
     # fields.Selection(
     #    selection_add=[('new_key1', 'My new key1'), ('new_key2', 'My New Key2')])
-    picture = fields.Binary(string='Picture')
+    picture = fields.Binary(string='Picture', attachment=True)
     # Pour fields.binary, il existe une option filters='*.png, *.gif',
     # qui restreint les formats de fichiers sélectionnables dans
     # la boite de dialogue, mais ça ne marche pas en GTK (on
@@ -346,8 +355,8 @@ class ProductCode(models.Model):
     company_id = fields.Many2one(
         'res.company', string='Company',
         ondelete='cascade', required=True,
-        default=lambda self: self.env['res.company']._company_default_get(
-            'product.code'))
+        default=lambda self: self.env['res.company']._company_default_get()
+        default=lambda self: self.env.company)  # v13
         # si on veut que tous les args soient nommés : comodel_name='res.company'
     user_id = fields.Many2one(
         'res.users', string='Salesman', default=lambda self: self.env.user)
@@ -363,7 +372,7 @@ class ProductCode(models.Model):
     # Champ Relation
     company_currency_id = fields.Many2one(
         'res.currency', string='Currency', related='company_id.currency_id',
-        store=True, compute_sudo=True)
+        store=True)  # option related_sudo=True by default
     # ATTENTION, en nouvelle API, on ne peut PAS faire un fields.Char qui
     # soit un related d'un fields.Selection (bloque le démarrage d'Odoo
     # sans message d'erreur !)
@@ -386,9 +395,9 @@ class ProductCode(models.Model):
         'res.partner', 'product_code_partner_rel', 'code_id', 'partner_id',
         'Related Partners')
     # 2e arg = nom de la table relation
-    # 3e arg ou id1 = nom de la colonne dans la table relation
+    # 3e arg ou column1 = nom de la colonne dans la table relation
     # pour stocker l'ID du product.code
-    # 4e arg ou id2 = nom de la colonne dans la table relation
+    # 4e arg ou column2 = nom de la colonne dans la table relation
     # pour stocker l'ID du res.partner
     # OU
     partner_ids = fields.Many2many(
@@ -418,14 +427,21 @@ class ProductCode(models.Model):
 
         # Si on veut l'utiliser dans du code :
         # fields.Date.context_today(self)
-        # ça renvoie la date du jour sous forme de STR
+        # -> v8 à v11 ça renvoie la date du jour sous forme de STR dans la TZ de l'utilisateur
+        # -> v12 : ça renvoie la date du jour sous forme d'obj datetime dans la TZ du user
+        # fields.Date.today()
+        # -> ça renvoie la date du jour en GMT ??
+        # v12 : conversion datetime en date
+        # fields.Date.to_date(line.datetime_order)
+        # v12 : conversion date en datetime
+        # fields.Datetime.to_datetime(line.end_date)
 
         # Pour avoir la date et l'heure LOCALE de l'utilisateur en datetime:
         # fields.Datetime.context_timestamp(self, datetime.now())
         # Pour convertir une datetime UTC en datetime de la timezone du
         # context (clé 'tz'), ou, si elle n'est pas présente, dans la timezone
         # de l'utilisateur:
-        # datetime_in_tz_dt = fields.datetime.context_timestamp(self, date_time_dt)
+        # datetime_in_tz_dt = fields.Datetime.context_timestamp(self, date_time_dt)
         # Datetime en UTC en string : fields.Datetime.now()
     }
 
@@ -434,12 +450,16 @@ class ProductCode(models.Model):
     # on récupère un recordset en sortie
 
     @api.model  # equivalent de (self, cr, uid, vals, context=None)
-    @api.returns('self')  # quand une fonction renvoi un recordset, on doit dire ici quel est le model de ce recordset
     def create(self, vals):
         if vals.get('name', '/') == '/':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'hr.expense.expense')
         return super(ObjClass, self).create(vals)
+
+    # Starting from v12, we can also use that:
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
 
     # Qd on appelle un write, pour un champ M2O, on met l'ID et non le recordset
     @api.multi  # équivalent de (self, cr, uid, ids, values, context=None)
@@ -456,6 +476,9 @@ class ProductCode(models.Model):
                         "set it back to draft before deleting it.")
                     % donation.number)
         return super(DonationDonation, self).unlink()
+
+    @api.model
+    def search(self, args, offset=0, limit=None, order=None, count=False):
 
     @api.one
     def copy(self, default=None):
@@ -490,7 +513,7 @@ class ProductCode(models.Model):
             'currency_rate_max_delta_positive',
             'CHECK(currency_rate_max_delta >= 0)',
             # check an interval: CHECK(probability >= 0 and probability <= 100)
-            "The value of the field '...' must be positive or 0."),
+            "The value of the field '...' must be positive or null."),
         # Exemple de neutralisation de la contrainte check_name native :
         (
             'check_name',
@@ -515,7 +538,9 @@ class ProductCode(models.Model):
     # il ne bouclera qu'une fois. Par contre, le résultat sera mis dans une séquence
     # donc ça marche pas si on renvoie une action
 
-    # in v9
+    # in v9+
+    # Link between mail.message.subtype and the state of the recordset
+    # mail.message.subtype is used for subscription
     @api.multi
     def _track_subtype(self, init_values):
         self.ensure_one()
@@ -552,6 +577,9 @@ domain = [('id', 'in', self.ids), ('parent_id', '=', False)]
 roots = self.search(domain)
 
 roots.write({'modified': True})
+
+# search sur active=True ET active=False
+self.with_context(active_test=False).search(domain)
 
 @api.one
 def cancel(self):
@@ -593,7 +621,7 @@ self.env.uid # shortcut : recs._uid
 self.env.context # shortcut: recs._context
 
 self.env.user  # current user as a record
-self.env.ref('base.group_user')   # resolve XML ID, renvoie un recordset (pas un ID)
+self.env.ref('base.group_user', raise_if_not_found=True)   # resolve XML ID, renvoie un recordset (pas un ID) ; raise_if_not_found=True par défaut
 self.env['res.partner']  # equivalent de self.pool['res.partner']
 
 # rebrowse recs with different parameters
@@ -618,9 +646,49 @@ raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 
 # Récupérer une action sous forme de dico
 action = self.env['ir.actions.act_window'].for_xml_id('stock', 'action_package_view')
+action = self.env.ref('stock.action_package_view').read()[0]
+ex:
+action = self.env.ref('account.action_invoice_tree1').read()[0]
+action.update({
+    'views': [(self.env.ref('account.invoice_form').id, 'form')],
+    'view_mode': 'form,tree,kanban,calendar',
+    'res_id': out_invoice.id,
+    })
 
 # Récupérer un action pour affichage d'un rapport (qweb ou py3o ou autre)
+# en v10
 action = self.env['report'].get_action(self, 'report_name')  # 1er arg = recordset, ID ou liste d'IDs
+# en v12
+action = self.env.ref('sale.action_report_saleorder')\
+            .with_context({'discard_logo_check': True}).report_action(self)
+
+# To get a report file as binary :
+# v12, taken from mail/models/mail_template.py, method generate_email()
+if report.report_type in ['qweb-html', 'qweb-pdf']:
+    result, format = report.render_qweb_pdf([res_id])
+else:
+    res = report.render([res_id])
+    if not res:
+        raise UserError(_('Unsupported report type %s found.') % report.report_type)
+    result, format = res
+
+# Action pour récupérer un fichier qui a été généré par Odoo sur un objet (exemple : wizard FEC) :
+# v8
+
+action = action = {
+    'name': u'Export ComptaFirst',
+    'type': 'ir.actions.act_url',
+    'url': "web/binary/saveas/?model=account.move.export.comptafirst&id=%d&filename_field=filename&field=file_data&download=true&filename=%s" % (self.id, self.filename),
+    'target': 'self',
+    }
+# en v9+
+action = {
+    'name': 'FEC',
+    'type': 'ir.actions.act_url',
+    'url': "web/content/?model=account.fr.fec&id=%d&filename_field=filename&field=fec_data&download=true&filename=%s" % (self.id, self.filename),
+    'target': 'self',
+    }
+
 
 ### INHERIT
 class SaleOrderLine(orm.Model):
@@ -656,6 +724,8 @@ def machin(cr, uid, ids, context=None):
 
 # Conversion de devises
 from_currency.with_context(date=date).compute(amount_to_convert, to_currency, round=True)
+# a partir v12
+from_currency._convert(from_amount, to_currency, company, date, round=True)
 # Conversion d'UoM v9
 In class product.uom
 def _compute_qty(self, cr, uid, from_uom_id, qty, to_uom_id=False, round=True, rounding_method='UP')
@@ -788,8 +858,42 @@ remaining groupbys are put in the __context key. If false, all the groupbys are
 done in one call
 
 Exemple:
-res = self.env['stock.quant'].read_group([('location_id', 'in', locs.ids)], ['product_id', 'qty'], ['product_id'])
-for re in res:
-    product_id = re['product_id'][0]
-    qty = re['qty']
+TODO print re et res
+def _compute_weight(self):
+    res = self.env['olive.arrival.line'].read_group([('palox_id', 'in', self.ids)], ['palox_id', 'olive_qty'], ['palox_id'])
+    for re in res:
+        self.browse(re['palox_id'][0]).weight = re['olive_qty']
+        # Pour avoir juste le nb d'occurences, lire 'palox_id_count'
+
+Champ O2M
+line_ids = fields.One2many(
+    'account.invoice.line', 'result_id', 'Commission Lines',
+    readonly=True)
+
+@api.depends('line_ids.commission_amount')
+def _compute_amount_total(self):
+    rg_res = self.env['account.invoice.line'].read_group([('result_id', 'in', self.ids)], ['result_id', 'commission_amount'], ['result_id'])
+    mapped_data = dict([(x['result_id'][0], x['commission_amount']) for x in rg_res])
+    for rec in self:
+        rec.amount_total = mapped_data.get(rec.id, 0)
+
+def _compute_sale_count(self):
+    rg_res = self.env['sale.order'].read_group(
+            [('agreement_id', 'in', self.ids),],
+            ['agreement_id'], ['agreement_id'])
+        mapped_data = dict(
+            [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
+        for agreement in self:
+           agreement.sale_count = mapped_data.get(agreement.id, 0)
+
+from odoo.tools.misc import formatLang
+# CAUTION: it is not the same method as in the report ! It is only for numbers, not dates.
+Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False, currency_obj=False)
+price_unit_formatted = formatLang(
+    self.with_context(lang=lang).env, self.price_unit, dp='Mileage Price',
+    monetary=True, currency_obj=self.company_id.currency_id)
+
+self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default_path')
+
+account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
 

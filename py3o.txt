@@ -1,0 +1,196 @@
+Deprecated method IrActionsReportXml._lookup_report in module odoo.addons.report_py3o.models.ir_actions_report_xml
+
+Définition du rapport sortie ODT
+================================
+
+<record id="account.account_invoices" model="ir.actions.report.xml">
+    <field name="name">Invoice</field>
+    <field name="model">account.invoice</field>
+    <field name="report_name">account.report_invoice</field>
+    <field name="report_type">py3o</field>
+    <field name="py3o_filetype">odt</field>  <!-- format de sortie -->
+    <field name="module">my_custom_module_base</field>
+    <field name="py3o_template_fallback">report/account_invoice.odt</field>
+</record>
+
+Définition du rapport sortie PDF
+================================
+
+<record id="local_py3o_server" model="py3o.server">
+    <field name="url">http://localhost:8765/form</field>
+</record>
+
+<record id="account.account_invoices" model="ir.actions.report.xml">
+    <field name="name">Invoice</field>
+    <field name="model">account.invoice</field>
+    <field name="report_name">account.report_invoice</field>
+    <field name="report_type">py3o</field>
+    <field name="py3o_filetype">pdf</field> <!-- format de sortie -->
+    <field name="py3o_server_id" ref="local_py3o_server"/>
+    <field name="module">3sortho_base</field>
+    <field name="py3o_template_fallback">report/account_invoice.odt</field>
+</record>
+
+
+Rapport ODS
+===========
+
+<record id="partner_advanced_export" model="ir.actions.report.xml">
+    <field name="name">Export détaillé ODS</field>
+    <field name="model">res.partner</field>
+    <field name="report_name">cimade.partner_advanced_export</field>
+    <field name="report_type">py3o</field>
+    <field name="py3o_filetype">ods</field>
+    <field name="py3o_multi_in_one" eval="True"/>
+    <field name="module">cimade_profile</field>
+    <field name="py3o_template_fallback">report/partner_advanced_export.ods</field>
+</record>
+
+Pour insérer un champ
+=====================
+Insertion > Champ > Autre Champ  (Ctrl + F2)
+
+Onglet "Variables"
+Type = Champ d'utilisateur
+Nom : py3o.o.company_id.name
+Valeur : < Tél siège Cimade >
+Format : Texte
+
+Boucle en début de doc :
+py3o://for="o in objects"
+py3o://function="setLang('fr_FR')"
+
+Pour insérer une fonction
+=========================
+2 solutions :
+
+1) hyperlien :
+  . Cible : py3o://for="(tax_label, tax_amount) in o._get_tax_amount_by_group()"
+  . Texte : for="(tax_label, tax_amount) in o._get_tax_amount_by_group()"
+
+2) champ fonction
+  Ctrl + F2
+  Onglet "Fonctions"
+  Type = Champ de saisie
+  Annotation = py3o://for="(tax_label, tax_amount) in o._get_tax_amount_by_group()"
+  Cliquer sur "Insérer"
+  Il ouvre un pop-up :
+    . champ du haut : py3o://for="(tax_label, tax_amount) in o._get_tax_amount_by_group()"
+    . champ du bas : libellé qui apparaitre dans le document (convention dans py3o-sample-report : nom entre crochets)
+
+Pour insérer une image
+======================
+Insérer un cadre :
+Onglet "Options", mettre dans le champ "Nom":
+py3o.image(o.image, 'png', width='2cm', height='2cm', isb64=True)
+OU
+py3o.image(b64decode(o.image), 'png', width='2cm', height='2cm')
+Il ne garde pas l'aspect ratio ; il suffit de ne mettre qu'un seul des 2 arg width / height
+
+IF
+==
+py3o://if="o.company_id.phone"
+afficher py3o.o.company_id.phone
+py3o:///if
+
+FOR
+===
+py3o://for="l in o.invoice_line_ids"
+py3o:///for
+
+ATTENTION : quand on met des FOR ou IF dans un tableau, s'assurer que l'option "Autoriser le fractionnement des lignes sur plusieurs pages et colonnes est DECOCHE
+Sinon ça fait des erreurs disant que l'instruction py3o if ou for est en double... ce qui est en fait pas le cas.
+
+FormatLang :
+============
+py3o://function="formatLang(o.amount_total, monetary=True, currency_obj=o.currency_id)"
+py3o://function="formatLang(o.date, date=True)"
+py3o://function="formatLang(o.quantity, dp='Product Unit of Measure')"
+
+Rappel proto formatLang v10:
+formatLang(self, value, digits=None, date=False, date_time=False, grouping=True, monetary=False, dp=False, currency_obj=False)
+
+Rappel précisions décimales v10:
+Product Price
+Discount
+Stock Weight
+Product Unit of Measure
+
+Afficher date et heure du jour:
+py3o://function="formatLang(time.strftime('%Y-%m-%d %H:%M:%S'), date_time=True)"
+
+v12
+py3o://function="o_format_date(o.date_order, lang_code=lang)"
+proto de o_format_date : _format_date(self, value, lang_code=False, date_format=False)
+proto de o_format_lang: _format_lang(self, value, lang_code=False, digits=None, grouping=True,
+                     monetary=False, dp=False, currency_obj=False,
+                     no_break_space=True)
+
+Afficher la date du jour :
+py3o://function="o_format_date(time.strftime('%Y-%m-%d'), lang_code=lang)"
+
+TODO : Afficher la date + l'heure du moment
+
+Adresse :
+=========
+py3o://function="format_multiline_value(o.partner_id._display_full_address())"
+py3o://function="format_multiline_value(o.partner_id._display_full_address(details=['name', 'address']))"
+
+Champ Selection
+===============
+Pour afficher le label d'un champ selection QUI A UNE VALEUR:
+py3o://function="o.type and dict(o.fields_get('type', 'selection')['type']['selection'])[o.type] or 'False'"
+
+Pour rappel :
+self.env['account.banking.mandate'].fields_get('type')
+=> retourne :
+{'type': {'selection': [('recurrent', u'R\xe9current'), ('oneoff', u'One-Off')]}}
+La traduction a été faite
+
+Variables/functions utilisables
+===============================
+- b64decode
+- report_xml (donne l'object ir.actions.report.xml ; utiliser report_xml.report_name pour avoir le nom technique du rapport)
+- format_multiline_value
+- html_sanitize
+
+
+Styles
+======
+Il faut bien utiliser des styles dans le document. Voilà les styles que j'utilise:
+(*) = styles natifs
+En-tête : En-tête (*)
+Titre du document : titre 1 (*)
+Adresse envoi: Address
+Blocs d'adresse et d'infos diverses en haut :
+ - Contenu de tableau (*)
+ - Titre de tableau (*)
+ - Table header center
+Tableau principal:
+ - Table main content left
+ - Table main content right
+ - Table main header
+Tableau des totaux:
+ - Table totals header
+ - Table totals content
+ - Table totals content highlight
+Tableau des taxes/paiements :
+ - Table bottom small header
+ - Table bottom small content right
+ - Table bottom small content left
+ - Table bottom small content center
+Texte normal: Corps de texte (*)
+Notes légale en bas de document: Note de fin (* ?)
+Petite ligne de séparation: Small new line
+Pied de page: Pied de page (*)
+
+Barcode
+=======
+Barcode simple avec police de caractères :
+Mettre les fichiers .ttf dans /usr/local/share/fonts/
+On peut les récupérer dans mon home ~/.fonts
+Redémarrer LO
+
+LO hints
+========
+Pour supprimer un retour à la ligne après un tableau : se mettre dans la dernière cellule du tableau et faire : Ctrl + shift + del

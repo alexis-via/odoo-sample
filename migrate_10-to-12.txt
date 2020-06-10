@@ -1,0 +1,29 @@
+Remove # -*- coding: utf-8 -*-
+find . -name "*.py" -exec sed -i "/#.*coding\: /d" {} \;
+
+2to3 -wnj4 --no-diffs .
+
+Date in datetime
+
+Remove workflows
+
+Config pages : only res.config.settings
+
+ir.value client_print_multi => binding_type = report and binding_model_id
+
+ir.actions.report.xml -> ir.actions.report
+
+ir.cron :
+<field name="model_id" ref="model_account_invoice_download_account"/>
+<field name="state">code</field>
+<field name="code">model.get_next_mail()</field>
+
+tree colors => decoration-
+
+v12 : if inherit create(), check if can use @api.model_create_multi
+
+v12 : related fields are readonly by default
+
+_inherit = ['mail.thread']   => ['mail.thread', 'mail.activity.mixin']
+
+ajouter dans chatter <field name="activity_ids" widget="mail_activity"/> (au milieu des 2 autres)

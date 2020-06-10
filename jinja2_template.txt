@@ -1,0 +1,22 @@
+Utilisé dans les mail.template de Odoo depuis la vXX
+
+Mais en fait, ça n'a pas l'air d'utiliser la syntaxe officielle Jinja :
+
+http://jinja.pocoo.org/docs/dev/templates/
+
+{% if user.user_id is odd %}
+
+{% else %}
+
+{% endif %}
+
+{% for item in items %}
+    {{ item }}
+{% endfor %}
+
+{% for user in users if not user.hidden %}
+
+Commentaire :
+{# ...   #}
+
+

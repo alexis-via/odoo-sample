@@ -1,0 +1,25 @@
+ir.rule :
+<field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+
+tracking=True (or integer for order)
+
+ir.attachment : no more datas_fname (use 'name' for filename)
+
+super()
+
+replace 
+default=lambda self: self.env["res.company"]._company_default_get()
+by
+default=lambda self: self.env.company
+
+Remove archive buttons from form views
+
+fields.Float( digits=dp.get_precision() => digits='')
+
+manifest : 'maintainers': ['alexis-via']
+
+CHECK car souvent oublié dans portage vers v12 :
+
+_inherit = ['mail.thread']   => ['mail.thread', 'mail.activity.mixin']
+
+ajouter dans chatter <field name="activity_ids" widget="mail_activity"/> (au milieu des 2 autres)
