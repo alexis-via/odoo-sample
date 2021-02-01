@@ -33,6 +33,11 @@
             <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
             <attribute name="readonly">1</attribute>
         </xpath>
+        <!-- MOVE a field to a new position
+        if using xpath for position="after", must use also xpath for position="move" -->
+        <field name="target_field" position="after">
+            <field name="my_field" position="move"/>
+        </field>
     </field>
 </record>
 
@@ -87,6 +92,7 @@
                 <field name="%(report_proforma)d" string="Print Pro Forma" type="action" />
             </header>
             <sheet>
+                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>  <!-- New for v13+  -->
                 <div class="oe_button_box" name="button_box">
                     <!-- replaces the active field starting from v9
                     No code to write -->
@@ -114,6 +120,7 @@
                     <field name="company_id" invisible="not context.get('asterisk_server_main_view')" groups="base.group_multi_company"/>
                     <!-- pour groups=, il faut toujours mettre "nom du module.XMLID du groupe", même si le groupe est défini dans le même module. -->
                     <field name="ip_address" />
+                    <field name="date" options="{'datepicker': {'warn_future': true}}" />
                     <field name="partner_id" context="{'show_address': 1}" options="{'always_reload': 1}"/> <!-- Pour montrer l'adresse, il faut les clés spéciales dans context ET dans options -->
                     <field name="email" widget="email"/>
                     <field name="date" options="{'datepicker': {'warn_future': true}}"/> <!-- datepicker à partir de v13 -->
@@ -148,7 +155,9 @@
                     <field name="invoice_id" context="{'form_view_ref': 'account.invoice_form', 'tree_view_ref': 'account.invoice_tree'}"/>
                     <!-- clés form_view_ref et tree_view_ref pour forcer une certaine vue -->
                     <field name="test_field_many2one" context="{'search_default_partner_id': [partner_id]}"/>
-                    <!-- search_default_xxxx : xxxx est le 'name' du filtre dans la vue search -->
+                        <!-- search_default_xxxx : xxxx est le 'name' du filtre dans la vue search
+                        sur une vue form, on peut faire un search_default conditionnel:
+                            'search_default_service': type == 'service' -->
                     <field name="intrastat_uom_id" attrs="{'invisible': [('is_fiscal_only', '=', True)], 'required': [('is_fiscal_only', '=', False)]}" groups="l10n_fr_intrastat_product.group_detailed_intrastat_product" />
                     <!-- attrs sur un champ one2many sans valeur :
                     v8 : ('quant_package_ids', '=', [(6, False, [])])
@@ -224,7 +233,7 @@
                 <attribute name="colors">blue:state=='draft';black:state=='confirm'</attribute>
             </tree>
              -->
-            <field name="start_date" />
+            <field name="start_date" optional="hide">  <!-- hide or show -->
             <field name="end_date" />
             <field name="sequence" widget="handle"/>  <!-- à partir v10 -->
             <field name="on_order" attrs="{'invisible':[('on_order','=', True)]}"/>
@@ -232,6 +241,7 @@
             pas la colonne mais ça rend invisible la valeur
             Pour masquer la colonne, il faut faire : invisible="context.get('tutu')" -->
             <field name="total_fiscal_amount" sum="Total fiscal amount" />
+            <field name="picking_status" decoration-success="picking_status == 'delivered'" decoration-info="picking_status == 'to_deliver'" decoration-warning="picking_status == 'partially_delivered'" decoration-danger="picking_status == 'cancel'" widget="badge" optional="show"/>
             <button name="%(project_action_item_timesheet_action)d"
                 type="action" string="Progress" states="todo,progress"
                 icon="terp-accessories-archiver"/>
@@ -310,7 +320,7 @@ Ce champ fonction peut être utile pr débugger :
     <field name="model">sale.order</field>
     <field name="arch" type="xml">
         <!-- date_start => field must be a datetime ? -->
-        <calendar string="Sales Orders" color="state" date_start="date_order" date_stop="date_end" mode="month">
+        <calendar string="Sales Orders" color="state" date_start="date_order" date_stop="date_end" mode="month" quick_add="false">
             <!-- list fields displayed on the calendar sticker -->
             <field name="partner_id"/>
             <field name="amount_total"/>
@@ -331,16 +341,8 @@ Ce champ fonction peut être utile pr débugger :
             Autres possibilités : type="bar" (default), type="pie", type="line"
             pour "bar" : orientation="vertical" stacked="True"
             -->
-            <!-- pour les "row", il prend tt les champs sur lesquels on a un group_by dans la vue de recherche" -->
-<!-- operator="+" -->
-            <field name="date" type="row" interval="month"/> <!-- si on met un champ de dimension là, cette dimension sera active par défaut pour les lignes; elle doit se trouver dans un group_by du search -->
-            <field name="partner_id" type="col"/> <!-- cette dimension sera active par défault pour les colonnes -->
-            <!-- interval pour être day, week, month, quarter, year -->
+            <field name="date" interval="month"/>
             <field name="lunch_qty" type="measure"/>
-            <field name="dinner_qty" type="measure"/>
-            <field name="bed_night_qty" type="measure"/>
-            <!-- Ce sont les mesures qui seront sélectionnées par défaut
-            Sinon, il propose tt les champs int et float -->
         </graph>
     </field>
 </record>
@@ -360,8 +362,10 @@ Ce champ fonction peut être utile pr débugger :
     </field>
 </record>
 <!--
-To have count by default : add in context the 'measures' key
+To have count by default in v12 : add in context the 'measures' key
 <field name="context">{'pivot_measures': ['__count']}</field>
+Same in v10 : <pivot display_quantity="True">
+-->
 
 <!-- ACTION -->
 <record id="fr_intrastat_product_action" model="ir.actions.act_window">
@@ -518,6 +522,24 @@ MRP : base.menu_mrp_root
             src_model="donation.donation"
             view_mode="form"
             target="new" />
+
+<!-- v14+  -->
+<!-- Start a wizard from list view -->
+<record id="action_validate_account_move" model="ir.actions.act_window">
+    <field name="name">Post entries</field>
+    <field name="res_model">validate.account.move</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="validate_account_move_view"/>
+    <field name="context">{}</field>
+    <field name="target">new</field>
+    <field name="help">This wizard will validate all journal entries selected. Once journal entries are validated, you can not update them anymore.</field>
+    <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
+    <field name="binding_model_id" ref="account.model_account_move" />
+    <field name="binding_view_types">list</field>
+</record>
+
+
+
 
 <!-- After installation of the module, open a specific menu -->
 <!-- This requires ir.actions.client + ir.actions.todo with id="base.open_menu" -->

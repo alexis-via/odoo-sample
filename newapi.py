@@ -4,7 +4,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models, tools, _
-from odoo.exceptions import UserError, RedirectWarning, ValidationError
+from odoo.exceptions import UserError, ValidationError
 # v8
 from openerp.exceptions import Warning as UserError
 
@@ -32,6 +32,7 @@ class ProductCode(models.Model):
     _description = "Product code"
     _rec_name = "display_name"  # Nom du champ qui fait office de champ name
     _order = "name, id desc"
+    _check_company_auto = True
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
@@ -56,7 +57,7 @@ class ProductCode(models.Model):
         cr.execute("UPDATE account_journal SET allow_date=True")
         return init_res
 
-    @api.model_cr
+    @api.model_cr  # Don't put api.model_cr on v14
     def init(self):
         # Exécuté à chaque installation et reload du module
         self._cr.execute(
@@ -89,7 +90,7 @@ class ProductCode(models.Model):
     # operator : operator for name criteria
     @api.model
     def name_search(
-            self, name='', args=None, operator='ilike', limit=80):
+            self, name='', args=None, operator='ilike', limit=100):  # 80 in v13-
         if args is None:
             args = []
         if name and operator == 'ilike':
@@ -129,14 +130,13 @@ class ProductCode(models.Model):
         return res
 
 
-    # Fonction on_change NON déclarée dans la vue form/tree
-    # ATTENTION : apparemment, on ne peut pas avoir à la fois un
-    # on_change='' dans la vue XML et un api.onchange pour le même champ
-    # car dans ce cas seul le on_change='' est joué
     @api.onchange('partner_id')
     def _onchange_partner(self):
         if self.partner_id:
             self.delivery_id = self.partner_id  # MAJ d'un autre champ
+            # OU
+            vals = {'delivery_id': self.partner_id.id}
+            self.update(vals)
             # M2M : 2 possibilités :
             # - liste d'IDs, mais ça va AJOUTER les ids, comme (4, [IDs])
             # - [(6, 0, [IDs])], ce qui va remplacer les ids
@@ -161,44 +161,13 @@ class ProductCode(models.Model):
             'champ1': "[('product_id', '=', product_id)]",
             'champ2': "[]"},
             }
+        # si on a besoin de changer le contexte (astuce qui peut être utile
+        # pour ne pas déclancher en cascade les autres api.onchange qui filtreraient
+        # sur le contexte
+        self.env.context = self.with_context(olive_onchange=True).env.context
+        # astuce trouvée sur https://github.com/odoo/odoo/issues/7472
         return res
         # si je n'ai ni warning ni domain, je n'ai pas besoin de faire un return
-
-    # Fonction on_change déclarée dans la vue form/tree
-    @api.multi
-    def product_id_change(self, cr, uid, ids, champ1, champ2, context):
-        # ATTENTION : a priori, on ne doit pas utiliser ids dans le code de la
-        # fonction, car quand on fait un on_change avant le save, ids = []
-        # Dans la vue XML :
-        # <field name="product_id"
-        #        on_change="product_id_change(champ1, champ2, context)" />
-        # Piège : quand un champ float est passé dans un on_change,
-        # si la personne avait tapé un entier, il va être passé en argument en
-        # tant que integer et non en tant que float!
-
-        raise orm.except_orm()
-        # => il ne remet PAS l'ancienne valeur qui a déclanché le on_change
-
-        # Pour mettre à jour des valeurs :
-        return {'value': {'champ1': updated_value1, 'champ2': updated_value2}}
-        # => à savoir : les onchange de 'champ1' et 'champ2' sont joués à
-        # leur tour car leur valeur a été changée
-        # si ces nouveaux on_change changent le product_id,
-        # le product_id_change ne sera pas rejoué
-
-        # Pour mettre un domaine :
-        return {'domain': {
-            'champ1': "[('product_id', '=', product_id)]",
-            'champ2': "[]"},
-            }
-        # l'intégralité du domaine est dans une string
-
-        # Pour retourner un message de warning :
-        return {'warning': {
-            'title': _('Le titre du msg de warn'),
-            'message': _("Ce que j'ai à te dire %s") % (text)}}
-        # Pour ne rien faire
-        return False  # return True, ça marche en 7.0 mais ça bug en 6.1
 
     # La fonction de calcul du champ function price_subtotal
     @api.one  # auto-loop decorator
@@ -310,6 +279,8 @@ class ProductCode(models.Model):
         string='Start Date', copy=False, default=fields.Date.context_today,
         index=True)
     # similaire : fields.Datetime and fields.Time
+    start_datetime = fields.Datetime(
+        string='Start Date and Time', default=fields.Datetime.now)
     # index=True => the field will be indexed in the database
     # (much faster when you search on that field)
     type = fields.Selection([
@@ -323,6 +294,8 @@ class ProductCode(models.Model):
     # Pour ajouter des champs à un fields.Selection existant:
     # fields.Selection(
     #    selection_add=[('new_key1', 'My new key1'), ('new_key2', 'My New Key2')])
+    # v14 : ondelete={"new_key1": "set default"}
+    # other possible options for ondelete: set null, cascade (delete the records !)
     picture = fields.Binary(string='Picture', attachment=True)
     # Pour fields.binary, il existe une option filters='*.png, *.gif',
     # qui restreint les formats de fichiers sélectionnables dans
@@ -349,9 +322,12 @@ class ProductCode(models.Model):
         search='_search_loud')
     account_id = fields.Many2one('account.account', string='Account',
         required=True, domain=[('type', 'not in', ['view', 'closed'])],
-        default=lambda self: self._default_account())
+        default=lambda self: self._default_account(),
+        check_company=True)
         # L'utilisation de lambda permet d'hériter la fonction _default_account() sans
         # hériter le champ. Sinon, on peut aussi utiliser default=_default_account
+        # Possibilité d'hériter un domaine:
+        # domain=lambda self: [('reconcile', '=', True), ('user_type_id.id', '=', self.env.ref('account.data_account_type_current_assets').id), ('deprecated', '=', False)]
     company_id = fields.Many2one(
         'res.company', string='Company',
         ondelete='cascade', required=True,
@@ -451,6 +427,8 @@ class ProductCode(models.Model):
 
     @api.model  # equivalent de (self, cr, uid, vals, context=None)
     def create(self, vals):
+        if 'company_id' in vals:  # v14
+            self = self.with_company(vals['company_id'])
         if vals.get('name', '/') == '/':
             vals['name'] = self.env['ir.sequence'].next_by_code(
                 'hr.expense.expense')
@@ -726,14 +704,6 @@ def machin(cr, uid, ids, context=None):
 from_currency.with_context(date=date).compute(amount_to_convert, to_currency, round=True)
 # a partir v12
 from_currency._convert(from_amount, to_currency, company, date, round=True)
-# Conversion d'UoM v9
-In class product.uom
-def _compute_qty(self, cr, uid, from_uom_id, qty, to_uom_id=False, round=True, rounding_method='UP')
-return qty
-# the same method with uom as objects instead of ID (to be prefered) v9
-def _compute_qty_obj(self, cr, uid, from_unit, qty, to_unit, round=True, rounding_method='UP', context=None)
-return qty
-
 # Conversion d'UoM v10
 In class product.uom
 @api.multi
@@ -743,8 +713,6 @@ def _compute_quantity(self, qty, to_unit, round=True, rounding_method='UP'):
 def _compute_price(self, price, to_unit):
 
 
-def _compute_price(self, cr, uid, from_uom_id, price, to_uom_id=False)
-return price
 
 # FLOAT
 float_compare(value1, value2, precision_digits=None, precision_rounding=None)
@@ -772,6 +740,11 @@ float_round(value, precision_digits=None, precision_rounding=None, rounding_meth
 rounding_method = 'UP' ou 'HALF-UP'
 
 exemple : float_round(1.3298, precision_digits=precision)
+
+## Méthodes sur l'objet currency (v10+)
+is_zero()
+compare_amounts()
+round()
 
 # Tools
 from openerp.tools import file_open
@@ -809,8 +782,9 @@ attach = self.env['ir.attachment'].create({
     'name': filename,
     'res_id': self.id,
     'res_model': self._name,
-    'datas': base64.encodestring(xml_string),
-    'datas_fname': filename,
+    'datas': base64.encodestring(xml_bytes),
+    OU 'raw': xml_bytes,
+    # 'datas_fname': filename,  # dropped in v14
     })
 
 # To know if a user is part of a group :
@@ -837,7 +811,10 @@ return {
 
 # Sequence : si la séquence utilise range_year, on peut forcer une date qui ne soit pas la date du jour :
 
+## v12-
 self.env['ir.sequence'].with_context(ir_sequence_date='2015-10-09').next_by_code('sale.orde')
+## v13+
+self.env['ir.sequence'].next_by_code('sale.orde', sequence_date='2015-10-09')
 # en v10, la création automatique des ir.sequence.date_range ne se fait que sur des périodes annuelles ; si on veut autre chose, il faut les créer à la main. Pour avoir la création automatique, il suffit que "use_date_range" soit coché.
 # On peut utiliser %(current_year)s si on veut toujours l'année du jour et pas l'année de la facture (quand elle est != date du jour)
 # On peut utiliser %(range_year)s si on veut l'année du début du range dans lequel se trouve notre date et lieu de l'année de la date.
@@ -850,6 +827,13 @@ Pour un M2O : 'account_id': (508, u'627100 Frais sur titres (achat, vente, garde
 
 for move in self.filtered(lambda move: move.product_id.cost_method != 'real' and not move.origin_returned_move_id):
 
+quant a un champ M2O package_id
+quants est un recordset de plusieurs quants
+quants.mapped('package_id') est un recordset de tous les packages liés à ces quants
+
+for inv in invoices.sorted(key='date_invoice'):
+for inv in invoices.sorted(reverse=True):
+
 self.read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)
 
 le(s) champ(s) présent dans groupby doit aussi être présent dans fields
@@ -858,14 +842,6 @@ remaining groupbys are put in the __context key. If false, all the groupbys are
 done in one call
 
 Exemple:
-TODO print re et res
-def _compute_weight(self):
-    res = self.env['olive.arrival.line'].read_group([('palox_id', 'in', self.ids)], ['palox_id', 'olive_qty'], ['palox_id'])
-    for re in res:
-        self.browse(re['palox_id'][0]).weight = re['olive_qty']
-        # Pour avoir juste le nb d'occurences, lire 'palox_id_count'
-
-Champ O2M
 line_ids = fields.One2many(
     'account.invoice.line', 'result_id', 'Commission Lines',
     readonly=True)
@@ -881,17 +857,20 @@ def _compute_sale_count(self):
     rg_res = self.env['sale.order'].read_group(
             [('agreement_id', 'in', self.ids),],
             ['agreement_id'], ['agreement_id'])
-        mapped_data = dict(
-            [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
-        for agreement in self:
-           agreement.sale_count = mapped_data.get(agreement.id, 0)
+    mapped_data = dict(
+        [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
+    for agreement in self:
+       agreement.sale_count = mapped_data.get(agreement.id, 0)
 
 from odoo.tools.misc import formatLang
 # CAUTION: it is not the same method as in the report ! It is only for numbers, not dates.
 Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False, currency_obj=False)
 price_unit_formatted = formatLang(
-    self.with_context(lang=lang).env, self.price_unit, dp='Mileage Price',
-    monetary=True, currency_obj=self.company_id.currency_id)
+    self.with_context(lang=lang).env, self.price_unit, currency_obj=self.company_id.currency_id)
+
+from odoo.tools.misc import format_date
+Proto: format_date(env, value, lang_code=False, date_format=False)
+'%s' % format_date(self.env, self.date)
 
 self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default_path')
 

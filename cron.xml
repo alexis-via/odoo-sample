@@ -13,11 +13,12 @@
     <field name="interval_number">1</field>
     <field name="interval_type">days</field>
     <field name="numbercall">-1</field> <!-- don't limit the number of calls -->
-    <field name="model_id" ref="model_account_invoice_download_account"/>
     <!-- v10 and lower -->
+    <field name="model" eval="'account.invoice.download.account'"/>
     <field name="function">run_cron</field>
     <field name="args">()</field>
     <!-- v11+  -->
+    <field name="model_id" ref="model_account_invoice_download_account"/>
     <field name="state">code</field>
     <field name="code">model.get_next_mail()</field>
 </record>

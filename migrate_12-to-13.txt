@@ -23,3 +23,5 @@ CHECK car souvent oublié dans portage vers v12 :
 _inherit = ['mail.thread']   => ['mail.thread', 'mail.activity.mixin']
 
 ajouter dans chatter <field name="activity_ids" widget="mail_activity"/> (au milieu des 2 autres)
+
+fields.Binary(attachment=False)

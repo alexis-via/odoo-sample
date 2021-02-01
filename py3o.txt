@@ -116,7 +116,8 @@ Discount
 Stock Weight
 Product Unit of Measure
 
-Afficher date et heure du jour:
+Afficher date (et heure) du jour:
+py3o://function="formatLang(time.strftime('%Y-%m-%d'), date=True)"
 py3o://function="formatLang(time.strftime('%Y-%m-%d %H:%M:%S'), date_time=True)"
 
 v12
