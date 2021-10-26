@@ -31,4 +31,20 @@
 </record>
 
 
+<!-- v14+ XLSX -->
+<record id="pos_details_xlsx_report" model="ir.actions.report">
+    <field name="name">Rapport PdV</field>
+    <field name="model">pos.details.wizard</field>
+    <field name="report_type">xlsx</field>
+    <field name="report_name">barroux_base.report_saledetails_xlsx</field>  <!-- module name.code -->
+    <field name="report_file">barroux_base.report_saledetails_xlsx</field>  <!-- identique à report_name -->
+</record>
+
+class PosDetailsSessionXlsx(models.AbstractModel):
+    _name = "report.barroux_base.report_saledetails_xlsx"  # = champ report_name
+    _inherit = "report.report_xlsx.abstract"
+    _description = "POS details Session XLSX"
+
+    def generate_xlsx_report(self, workbook, data, objects):
+
 </odoo>

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-# Copyright 2018 Akretion (Alexis de Lattre <alexis.delattre@akretion.com>)
+# Copyright 2021 Akretion France (http://www.akretion.com/)
+# @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 # This file should be placed in the "tests" subdir of the module
@@ -13,12 +13,15 @@
 # https://docs.python.org/2/library/unittest.html?highlight=unittest2
 
 from odoo.tests.common import TransactionCase
+from odoo.tests import tagged
 
-
+# @tagged is used to avoid bugs such as:
+# null value in column "sale_line_warn" violates not-null constraint
+@tagged('post_install', '-at_install')
 class TestFrIntrastatService(TransactionCase):
 
     def setUp(self):
-        super(TestFrIntrastatService, self).setUp()
+        super().setUp()
         # create data
 
     # WARNING: the name of the method must start with test ?
@@ -35,22 +38,22 @@ class TestFrIntrastatService(TransactionCase):
             des.total_amount, 540.0, precision_digits=precision), 0)
         self.assertEqual(des.num_decl_lines, 3)
         des.done()
-        self.assertEquals(des.state, 'done')
+        self.assertEqual(des.state, 'done')
         des.generate_xml()
         xml_des_files = self.env['ir.attachment'].search([
             ('res_id', '=', des.id),
             ('res_model', '=', 'l10n.fr.intrastat.service.declaration'),
             ('type', '=', 'binary'),
             ])
-        self.assertEquals(len(xml_des_files), 1)
+        self.assertEqual(len(xml_des_files), 1)
         xml_des_file = xml_des_files[0]
-        self.assertEquals(xml_des_file.datas_fname[-4:], '.xml')
+        self.assertEqual(xml_des_file.datas_fname[-4:], '.xml')
         xml_root = etree.fromstring(xml_des_file.datas.decode('base64'))
         company_vat_xpath = xml_root.xpath(
             '/fichier_des/declaration_des/num_tvaFr')
-        self.assertEquals(company_vat_xpath[0].text, company.vat)
+        self.assertEqual(company_vat_xpath[0].text, company.vat)
         lines_xpath = xml_root.xpath('/fichier_des/declaration_des/ligne_des')
-        self.assertEquals(len(lines_xpath), des.num_decl_lines)
+        self.assertEqual(len(lines_xpath), des.num_decl_lines)
 
 assertEqual(a, b)   a == b
 assertNotEqual(a, b)    a != b

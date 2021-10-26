@@ -22,3 +22,4 @@ ACCOUNT
 Invoicing and Payment : account.group_account_invoice
 Accoutant : account.group_account_user
 Manager : account.group_account_manager
+Readonly : account.group_account_readonly

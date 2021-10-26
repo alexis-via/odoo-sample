@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Akretion France (http://www.akretion.com/)
+# Copyright 2021 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from odoo import api, fields, models, tools, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError, ValidationError, RedirectWarning
 # v8
 from openerp.exceptions import Warning as UserError
 
 import odoo.addons.decimal_precision as dp
+from odoo.tools.misc import format_date, format_datetime, format_amount
 from odoo.tools import float_compare, float_is_zero, float_round
 from odoo.tools import file_open
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-
+from collections import defaultdict   # a = defaultdict(list)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -89,17 +90,14 @@ class ProductCode(models.Model):
     # name : object name to search for
     # operator : operator for name criteria
     @api.model
-    def name_search(
-            self, name='', args=None, operator='ilike', limit=100):  # 80 in v13-
+    def name_search(self, name='', args=None, operator='ilike', limit=100):  # 80 in v13-
         if args is None:
             args = []
         if name and operator == 'ilike':
-            recs = self.search(
-                [('code', '=', name)] + args, limit=limit)
+            recs = self.search([('code', '=', name)] + args, limit=limit)
             if recs:
                 return recs.name_get()
-        return super(StayRefectory, self).name_search(
-            name=name, args=args, operator=operator, limit=limit)
+        return super().name_search(name=name, args=args, operator=operator, limit=limit)
 
     @api.model
     def default_get(self, fields_list):
@@ -258,14 +256,15 @@ class ProductCode(models.Model):
         string='# of Digits', track_visibility='onchange', default=12,
         groups='base.group_user')
     # OU groups=['base.group_user', 'base.group_hr_manager']
-    # groups = XMLID : restriction du read/write et invisible ds les vues
+    # groups = XMLID : restriction du read/write et invisible ds les vues ET EXPORT
     # v13: track_visibility='onchange' => tracking=X
     sequence = fields.Integer(default=10)
     # track_visibility = always ou onchange
     amount_untaxed = fields.Float(
-        'Amount untaxed', digits=dp.get_precision('Account'),
+        'Amount untaxed', digits='Product Unit of Measure',
         group_operator="avg")  # Utile pour un pourcentage par exemple
     # v13 : digits='Product Unit of Measure'
+    # v12- : digits=dp.get_precision('Account')
     # digits=(precision, scale)   exemple (16, 2)
     # Scale est le nombre de chiffres après la virgule
     # quand le float est un fields.float ou un fields.function,
@@ -618,7 +617,7 @@ recs2 = self.sudo(user.id)
 recs2 = self.sudo()  # uid = SUPERUSER_ID
 
 # RedirectWarning
-action = self.env.ref('account.action_account_config')
+action = self.env.ref('account.action_account_config')  # ok v14
 msg = _('Cannot find a chart of accounts for this company, You should configure it. \nPlease go to Account Configuration.')
 raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 
@@ -633,12 +632,18 @@ action.update({
     'res_id': out_invoice.id,
     })
 
+# v14+
+action = self.env["ir.actions.actions"]._for_xml_id("stock.action_stock_rules_report")
+
 # Récupérer un action pour affichage d'un rapport (qweb ou py3o ou autre)
 # en v10
 action = self.env['report'].get_action(self, 'report_name')  # 1er arg = recordset, ID ou liste d'IDs
 # en v12
 action = self.env.ref('sale.action_report_saleorder')\
             .with_context({'discard_logo_check': True}).report_action(self)
+# en v14+, on éditer un rapport directement depuis un bouton, pas besoin de code:
+<button name="%(stock.action_report_delivery)d" string="Print" type="action"/>
+
 
 # To get a report file as binary :
 # v12, taken from mail/models/mail_template.py, method generate_email()
@@ -696,6 +701,9 @@ datetime.datetime(2014, 6, 15, ...)
 # QUESTIONS
 #Apparemment, qd une fonction a un décorateur @api.cr_uid_id_context (exemple : send_mail dans le modulle email_template), on ne peut l'appeler qu'avec l'ancienne API)
 #aussi @api.cr_uid_ids_context et @api.cr_uid_context
+
+# Génération d'un mail à partir d'un mail.template
+self.env.ref('mail_template_xmlid').send_mail(res_id)
 
 @api.cr_uid_ids_context
 def machin(cr, uid, ids, context=None):
@@ -830,6 +838,8 @@ for move in self.filtered(lambda move: move.product_id.cost_method != 'real' and
 quant a un champ M2O package_id
 quants est un recordset de plusieurs quants
 quants.mapped('package_id') est un recordset de tous les packages liés à ces quants
+# => plus nécessaire en v14: on peut utiliser quants.package_id
+# exemple en v14 : https://github.com/odoo/odoo/blob/14.0/addons/sale_mrp/models/sale.py#L18
 
 for inv in invoices.sorted(key='date_invoice'):
 for inv in invoices.sorted(reverse=True):
@@ -855,7 +865,7 @@ def _compute_amount_total(self):
 
 def _compute_sale_count(self):
     rg_res = self.env['sale.order'].read_group(
-            [('agreement_id', 'in', self.ids),],
+            [('agreement_id', 'in', self.ids)],
             ['agreement_id'], ['agreement_id'])
     mapped_data = dict(
         [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
@@ -868,11 +878,19 @@ Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=Fal
 price_unit_formatted = formatLang(
     self.with_context(lang=lang).env, self.price_unit, currency_obj=self.company_id.currency_id)
 
-from odoo.tools.misc import format_date
 Proto: format_date(env, value, lang_code=False, date_format=False)
 '%s' % format_date(self.env, self.date)
+# format_datetime is v13+ only
+format_datetime(env, value, tz=False, dt_format='medium', lang_code=False)
+'%s' % format_datetime(self.env, self.datetime_field)
+format_amount(env, amount, currency, lang_code=False)
+'%s' % format_amount(self.env, 12.42, invoice.currency_id)
+
 
 self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default_path')
 
 account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
 
+
+# v14+ test intrastat country :
+if country in self.env.ref('base.europe').country_ids

@@ -127,10 +127,14 @@ proto de o_format_lang: _format_lang(self, value, lang_code=False, digits=None, 
                      monetary=False, dp=False, currency_obj=False,
                      no_break_space=True)
 
+Pour amontant : o_format_lang(amount, currency_obj=xx lang_code=lang)
+
+Pour afficher l'heure, il faut date_format='%d/%m/%Y %H:%M'
+
 Afficher la date du jour :
 py3o://function="o_format_date(time.strftime('%Y-%m-%d'), lang_code=lang)"
 
-TODO : Afficher la date + l'heure du moment
+TODO : Afficher la date + l'heure du moment dans la timezone de l'utilisateur
 
 Adresse :
 =========
@@ -141,6 +145,9 @@ Champ Selection
 ===============
 Pour afficher le label d'un champ selection QUI A UNE VALEUR:
 py3o://function="o.type and dict(o.fields_get('type', 'selection')['type']['selection'])[o.type] or 'False'"
+
+A essayer (vu en v12) :
+rental._fields['state'].convert_to_export(rental.state, rental)
 
 Pour rappel :
 self.env['account.banking.mandate'].fields_get('type')

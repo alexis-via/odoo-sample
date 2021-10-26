@@ -3,7 +3,7 @@
 import git
 import os
 
-version = 12
+version = 14
 
 repos = {
 
@@ -17,6 +17,7 @@ repos = {
         'intrastat': 'https://github.com/OCA/intrastat',
         'telephony': 'https://github.com/OCA/connector-telephony',
         'usability': 'https://github.com/akretion/odoo-usability',
+        'py3o-report-templates': 'https://github.com/akretion/odoo-py3o-report-templates',
         'viewer-groups': 'https://github.com/akretion/odoo-viewer-groups',
         'l10n-france': 'https://github.com/OCA/l10n-france',
         'procurement-suggest': 'https://github.com/akretion/procurement-suggest',
@@ -47,8 +48,10 @@ repos = {
         'account-financial-tools': 'https://github.com/OCA/account-financial-tools',
         'account-invoicing': 'https://github.com/OCA/account-invoicing',
         'bank-statement-import': 'https://github.com/OCA/bank-statement-import',
+        'account-reconcile': 'https://github.com/OCA/account-reconcile',
         'bank-statement-reconcile-simple': 'https://github.com/akretion/bank-statement-reconcile-simple',
         'bank-payment': 'https://github.com/OCA/bank-payment',
+        'credit-control': 'https://github.com/OCA/credit-control',
         }
 
 os.mkdir('symlink')

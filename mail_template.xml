@@ -22,7 +22,7 @@
         Here is
         % if ctx.get('proforma'):
             in attachment your pro-forma invoice
-        % else
+        % else:
             the ${doc_name} <strong>${object.name}</strong>
         % endif
         % if object.origin:
@@ -31,7 +31,7 @@
         amounting in <strong>${format_amount(object.amount_total, object.pricelist_id.currency_id)}</strong>
         from ${object.company_id.name}.
         ${format_date(object.date)}
-        $format_tz(dt, tz=False, format=False)
+        ${format_tz(dt, tz=False, format=False)}
         <br /><br />
         Do not hesitate to contact us if you have any question.
     </p>

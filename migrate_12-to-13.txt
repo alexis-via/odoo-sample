@@ -25,3 +25,16 @@ _inherit = ['mail.thread']   => ['mail.thread', 'mail.activity.mixin']
 ajouter dans chatter <field name="activity_ids" widget="mail_activity"/> (au milieu des 2 autres)
 
 fields.Binary(attachment=False)
+
+
+Changements importants du modèle de donnée :
+** account.invoice -> account.move
+date_invoice -> invoice_date
+number -> name
+name -> ref
+payment_term_id -> invoice_payment_term_id
+ -> invoice_incoterm_id
+user_id -> invoice_user_id
+date_due -> invoice_date_due
+
+<tree multi_edit="1"
