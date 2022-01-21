@@ -1,0 +1,24 @@
+https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-15.0
+
+
+mail template : qweb pour le corps, une syntaxe proche pour les autres champs (subject, email_from, email_to) avec {{ }} au lieu de ${}
+
+Gros changements JS ?
+
+test : SavepointCase -> TransactionCase
+
+post-install.py : virer "with api.Environment.manage():"
+
+* dans le manifest :
+
+"assets": {
+   "web.assets_backend": ["path to .js or css, like /module_name/static/src/...",...],
+   "web.assets_qweb": ["path to .xml, like /module_name/static/src/...",...],
+   "...": [...],
+},
+
+=============
+
+Main Datamodel changes :
+- res.partner :
+- account.move : narration passé en HTML

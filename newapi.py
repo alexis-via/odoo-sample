@@ -295,6 +295,8 @@ class ProductCode(models.Model):
     #    selection_add=[('new_key1', 'My new key1'), ('new_key2', 'My New Key2')])
     # v14 : ondelete={"new_key1": "set default"}
     # other possible options for ondelete: set null, cascade (delete the records !)
+    # Pour afficher la valeur 'lisible' du champ selection (v12+):
+    # rec._fields['type'].convert_to_export(rec.type, rec)
     picture = fields.Binary(string='Picture', attachment=True)
     # Pour fields.binary, il existe une option filters='*.png, *.gif',
     # qui restreint les formats de fichiers sélectionnables dans
@@ -662,7 +664,10 @@ action = action = {
     'name': u'Export ComptaFirst',
     'type': 'ir.actions.act_url',
     'url': "web/binary/saveas/?model=account.move.export.comptafirst&id=%d&filename_field=filename&field=file_data&download=true&filename=%s" % (self.id, self.filename),
-    'target': 'self',
+    'target': 'new',
+    # important d'avoir target "new" (et non "self") pour éviter un bug où
+    # les raise UserError ne produisent plus de pop-up... jusqu'à reload
+    # de la page Web d'Odoo
     }
 # en v9+
 action = {
@@ -877,6 +882,8 @@ from odoo.tools.misc import formatLang
 Proto: formatLang(env, value, digits=None, grouping=True, monetary=False, dp=False, currency_obj=False)
 price_unit_formatted = formatLang(
     self.with_context(lang=lang).env, self.price_unit, currency_obj=self.company_id.currency_id)
+qty_formatted = formatLang(
+    self.with_context(lang=lang).env, self.qty_done, dp='Product Unit of Measure')
 
 Proto: format_date(env, value, lang_code=False, date_format=False)
 '%s' % format_date(self.env, self.date)
@@ -888,9 +895,22 @@ format_amount(env, amount, currency, lang_code=False)
 
 
 self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default_path')
+# WARNING: It the value of the param is True or False, get_param() will return
+# 'True' or 'False' as strings !
 
 account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
 
 
 # v14+ test intrastat country :
 if country in self.env.ref('base.europe').country_ids
+
+# v15 translation
+raise UserError(_("partner {partner_name} in company {company_name}").format(partner_name=partner_name, company_name=company_name))
+# or
+format_vals = {'partner_name': self.partner_id.name, 'company_name': self.company_id.name}
+raise UserError(_("partner {partner_name} in company {company_name}").format(**format_vals)
+
+try:
+    xml_check_xsd(xml_byte, flavor="factur-x", level=ns["level"])
+except Exception as e:
+    raise UserError(str(e)) from e

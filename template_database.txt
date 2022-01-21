@@ -1,0 +1,23 @@
+When I generate a template database :
+- dev_profile module
+- langs FR and EN
+. config lang US : date dd/mm/YYYY
+- Company : EUR and France (ok par défaut)
+- pages de config :
+ . general : multi-société
+ . crm : leads
+ . sale : remise, multi-uom, 3 address, warnings, proforma, quotation validity, incoterms, invoicing policy=delivered
+ . purchase : warning, bill control = received (defaut)
+ . stock : multi-emplacement, routes, warning
+ . account : multi-currency, VIES, analytic
+ . pos : stock in real time
+- ajouter dans le groupe "Show full accounting features"
+- l10n_fr_account_tax_unece
+- Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale)
+- Mettre à jour les payment modes avec les 2 journaux de banque
+- Fiscal position : décocher VAT required sur domestique france
+- créer 1 fiscal year
+-date ranges
+- account groups à 2 niveaux
+- désinstaller l10n_fr_fec
+- désinstaller account_edi

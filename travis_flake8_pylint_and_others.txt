@@ -1,0 +1,44 @@
+
+Pylint
+======
+Pour désactiver sur un fichier entier: à mettre à n'import quel endroit du fichier:
+
+# pylint: skip-file
+
+Prettier
+========
+
+Fichier .prettierignore à la racine du projet:
+
+account_invoice_import_facturx/tests/files/*
+
+FLAKE8
+======
+
+Pour désactiver sur une ligne :
+
+example = lambda: 'example'  # noqa: E731
+
+# noqa: E731,E123
+
+Pour désactiver sur un fichier entier : mettre à n'importe quel endroit du fichier:
+# flake8: noqa
+ou
+# flake8: noqa: C901
+
+Pour une fonction particulière :
+
+def my_method(self):  # noqa: C901
+
+OU
+def my_method(  # noqa: C901
+    self,
+    arg1,
+    arg2,
+):
+
+def _check_chorus_attachments(self):
+    # https://communaute.chorus-pro.gouv.fr/pieces-jointes-dans-chorus-pro-quelques-regles-a-respecter/  # noqa: B950
+
+
+

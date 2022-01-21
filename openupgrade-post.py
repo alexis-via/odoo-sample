@@ -20,7 +20,7 @@
 #
 ##############################################################################
 
-from openerp.openupgrade import openupgrade
+from openupgradelib import openupgrade
 from openerp import pooler, SUPERUSER_ID
 import logging
 

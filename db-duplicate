@@ -72,8 +72,10 @@ createdb ${db_name}
 psql ${db_name} < $WORKDIR/$db_name.sql
 echo "done."
 echo -n "Updating database ${db_name} for test environnement ... "
-psql -c "update ir_cron set active=False" ${db_name}
+psql -c "UPDATE ir_cron SET active=False" ${db_name}
 psql -c "UPDATE ir_config_parameter SET value='TEST<br/>{db_name}' where key='ribbon.name'" ${db_name}
+# Max TCP port is 65535, so I set 66000 (no constrain on Odoo)
+psql -c "UPDATE ir_mail_server SET smtp_port=66000" ${db_name}
 #psql -c "update pos_config set proxy_ip=False, iface_payment_terminal=False, iface_print_via_proxy=False, iface_customer_display=False" ${db_name}
 echo "done."
 

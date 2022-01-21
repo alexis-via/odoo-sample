@@ -1,0 +1,37 @@
+https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-14.0
+
+
+<act_window> et <report> = full def
+
+ACL sur transient
+
+Fiscal-year : OCA modules don't need to know about account.fiscal.year. They only need to call res.company.compute_fiscalyear_dates() method to get the fiscal year dates.
+depending on what is installed the dates will come from the OCA module or the EE module
+
+force_company => with_company
+
+self.env.user_id.company_id => self.env.company
+
+fields.Float(digits=dp.get_precision('Stock Weight') => digits='Stock Weight'
+
+fields.Selection(selection_add=[]) => ondelete={"new_key1": "set default"}
+
+=============
+
+Main Datamodel changes :
+- res.partner : removed use_parent_address
+  customer => customer_rank > 0 (module account)
+  supplier => supplier_rank > 0 (module account)
+
+- account.move :
+  . post() => action_post()
+  .type => move_type (out_invoice, out_refund)
+  . invoice_sent => is_move_sent ?
+  . invoice_partner_bank_id => partner_bank_id
+  . all amount fields have changed name !
+
+_check_company_auto = True et check_company=True et domain=[('company_id', '=', company_id)]
+
+account.group_account_readonly : ajout des ACLs 1,0,0,0
+
+<tree multi_edit="1" (déjà possible en v13)

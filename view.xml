@@ -33,7 +33,7 @@
             <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
             <attribute name="readonly">1</attribute>
         </xpath>
-        <!-- MOVE a field to a new position
+        <!-- MOVE a field to a new position (ne marche pas en v10... à partir de quelle version ça marche ??
         if using xpath for position="after", must use also xpath for position="move" -->
         <field name="target_field" position="after">
             <field name="my_field" position="move"/>
@@ -125,6 +125,7 @@
                     <field name="ip_address" />
                     <field name="date" options="{'datepicker': {'warn_future': true}}" />
                     <field name="partner_id" context="{'show_address': 1}" options="{'always_reload': 1}"/> <!-- Pour montrer l'adresse, il faut les clés spéciales dans context ET dans options -->
+                    <field name="account_id" context="{'default_reconcile': True}"/>  <!-- TODO can we set an XML in context on a field in form view ? -->
                     <field name="email" widget="email"/>
                     <field name="date" options="{'datepicker': {'warn_future': true}}"/> <!-- datepicker à partir de v13 -->
                     <field name="port" />
@@ -223,8 +224,9 @@
         decoration-success (green)
         decoration-warning (orange pâle)
          -->
-        <!-- ajout possible : edit="0" create="0" delete="0" multi_edit="1"
+        <!-- ajout possible : edit="0" create="0" delete="0" multi_edit="1" import="0"
         editable="top/bottom" : rend la vue liste éditable, avec création de nouveaux records en haut ou en bas de la liste
+        limit="100" : nombre de lignes affichées par défaut sur une "page"
         -->
         <!-- COLORS :
             - on peut utiliser current_date : red:date < current_date
@@ -274,7 +276,12 @@
             v10: -> 4.5.0
             v11 et v12 et v14: -> 4.7.0
             cf addons/web/static/lib/fontawesome/css/font-awesome.css
-             -->
+            -->
+            <groupby name="product_id">  <!-- to get a button on a groupby section, cf stock.valuation.layer -->
+                <field name="cost_method" invisible="1"/>
+                <field name="quantity_svl" invisible="1"/>
+                <button name="action_revaluation" icon="fa-plus" title="Add Manual Valuation" type="object" attrs="{'invisible':['|', ('cost_method', '=', 'standard'), ('quantity_svl', '&lt;=', 0)]}" />
+            </groupby>
         </tree>
     </field>
 </record>
@@ -401,7 +408,7 @@ Same in v10 : <pivot display_quantity="True">
     [('in_date', '&lt;=', datetime.datetime.combine(context_today() + relativedelta(years=-1), datetime.time(0, 0, 0))), ('in_date', '&gt;', datetime.datetime.combine(context_today() + relativedelta(years=-2), datetime.time(0, 0, 0)))]"/>
     More info @odony in https://github.com/odoo/odoo/issues/6469
     -->
-    <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
+    <field name="context">{'tutu': True, 'default_is_loan': True, 'search_default_is_loan': True, 'active_test': False, 'search_default_category_id': ref('base.module_category_accounting_localizations_account_charts')}</field>  <!-- ce contexte sera valable pour l'objet de l'action, mais pas pour les one2many de cet objet
     Le default_xxx permet de mettre une valeur par defaut lors de la création d'un record depuis cette entrée de menu
     search_default_xxx : active le filtre de recherche dont le name est xxx
     Pour un group_by, il faut mettre directement la bonne instruction dans le context:

@@ -17,6 +17,7 @@ def set_department_on_partner(cr, registry):
     So, when it computes the field on module installation, the
     departments are not available in the DB, so the department_id field
     on res.partner stays null. This post_install script fixes this."""
+    # en v15, on n'utilise plus le "with api.Environment.manage()"
     with api.Environment.manage():
         env = api.Environment(cr, SUPERUSER_ID, {})
         fr_countries = env['res.country'].search(

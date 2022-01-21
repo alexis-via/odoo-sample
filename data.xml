@@ -79,5 +79,11 @@ alter sequence ir_sequence_xxx RESTART WITH 420;
 
 <delete id="stock.access_stock_tracking_sales_user" model="ir.model.access"/>
 
+<!-- noupdate="1" -->
+<record id="mooncard_partner_match_rule" model="ir.config_parameter" forcecreate="False">
+    <field name="key">mooncard.partner_match_rule</field>
+    <field name="value">contain</field>
+</record>
+
 </data>
 </odoo>
