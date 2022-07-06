@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Akretion France (http://www.akretion.com/)
+# Copyright 2022 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -13,7 +13,7 @@ from odoo.tools.misc import format_date, format_datetime, format_amount
 from odoo.tools import float_compare, float_is_zero, float_round
 from odoo.tools import file_open
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
-
+from textwrap import shorten  # shorten(assign.partner_name, 20, placeholder='...')
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict   # a = defaultdict(list)
@@ -101,7 +101,7 @@ class ProductCode(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-        res = super(OvhInvoiceGet, self).default_get(fields_list)
+        res = super().default_get(fields_list)
         accounts = []
         ovh_accounts = self.env['ovh.account'].search(
             [('company_id', '=', self.env.user.company_id.id)])
@@ -171,6 +171,8 @@ class ProductCode(models.Model):
     @api.one  # auto-loop decorator
     @api.depends('price_unit', 'discount', 'invoice_line_tax_id', 'quantity',
         'product_id', 'invoice_id.partner_id', 'invoice_id.currency_id')
+    @api.depends_context('company')
+    @api.depends_context('uid')
     # @api.depends est utilisé pour: invalidation cache, recalcul, onchange
     # donc, maintenant, le fait d'avoir un champ calculé fait qu'il est
     # automatiquement mis à jour dans la vue quand un de ses champs 'depends'
@@ -206,8 +208,8 @@ class ProductCode(models.Model):
             order.taxes = sum(line.taxes for line in order.lines)
             order.total = order.untaxed + order + taxes
 
-    # Champ fonction inverse='_inverse_price'
-    @api.onchange('name')  # add @api.onchange on an inverse method to have it apply immediately and not upon save
+    # Champ fonction inverse='_inverse_loud' lié au champ 'loud'
+    @api.onchange('loud')  # add @api.onchange on an inverse method to have it apply immediately and not upon save
     def _inverse_loud(self):
         for rec in self:
             rec.name = (rec.loud or '').lower()  # MAJ du ou des autres champs
@@ -788,14 +790,17 @@ attachments = self.env['ir.attachment'].search([
     ])
 attachment = attachments[0]
 filename = attachment.datas_fname
-file_itself = attachment.datas.decode('base64')
+# en python2 :
+file_itself = attachment.datas.decode('base64')  # py2
+# en python3 :
+file_itself = base64.decodebytes(attachment.datas)
 # Create attachment
 import base64
 attach = self.env['ir.attachment'].create({
     'name': filename,
     'res_id': self.id,
     'res_model': self._name,
-    'datas': base64.encodestring(xml_bytes),
+    'datas': base64.encodebytes(xml_bytes),
     OU 'raw': xml_bytes,
     # 'datas_fname': filename,  # dropped in v14
     })
@@ -814,7 +819,7 @@ my_partner.check_access_rule('read')
 idir = tools.config.get('invoice2data_templates_dir', False)
 
 # Pour avoir la string d'un champ sélection
-self._fields['state'].convert_to_export(self.state, self.env)
+self._fields['state'].convert_to_export(self.state, self)
 
 # force client-side reload (update user menu and current view)
 return {
@@ -875,7 +880,7 @@ def _compute_sale_count(self):
     mapped_data = dict(
         [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
     for agreement in self:
-       agreement.sale_count = mapped_data.get(agreement.id, 0)
+        agreement.sale_count = mapped_data.get(agreement.id, 0)
 
 from odoo.tools.misc import formatLang
 # CAUTION: it is not the same method as in the report ! It is only for numbers, not dates.
@@ -885,12 +890,11 @@ price_unit_formatted = formatLang(
 qty_formatted = formatLang(
     self.with_context(lang=lang).env, self.qty_done, dp='Product Unit of Measure')
 
-Proto: format_date(env, value, lang_code=False, date_format=False)
+Proto: format_date(env, value, lang_code=False, date_format=False)  # v12+
 '%s' % format_date(self.env, self.date)
-# format_datetime is v13+ only
-format_datetime(env, value, tz=False, dt_format='medium', lang_code=False)
+format_datetime(env, value, tz=False, dt_format='medium', lang_code=False)  # v13+
 '%s' % format_datetime(self.env, self.datetime_field)
-format_amount(env, amount, currency, lang_code=False)
+format_amount(env, amount, currency, lang_code=False)  # v13+
 '%s' % format_amount(self.env, 12.42, invoice.currency_id)
 
 
@@ -905,6 +909,8 @@ account_recordset = self.env['ir.property'].get('property_account_payable_id', '
 if country in self.env.ref('base.europe').country_ids
 
 # v15 translation
+# plus simple
+raise UserError(_("partner {partner_name} in company {company_name}", partner_name=partner_name, company_name=company_name))
 raise UserError(_("partner {partner_name} in company {company_name}").format(partner_name=partner_name, company_name=company_name))
 # or
 format_vals = {'partner_name': self.partner_id.name, 'company_name': self.company_id.name}
@@ -914,3 +920,52 @@ try:
     xml_check_xsd(xml_byte, flavor="factur-x", level=ns["level"])
 except Exception as e:
     raise UserError(str(e)) from e
+
+# Creation of account.move on v14+
+# currency_id : toujours renseigné, même si company currency
+# amount_currency: toujours renseigné dans la monnaie de currency_id, positif si debit, négatif si crédit
+
+# Reconcile on v14
+# when the method reconcile() generate a full reconcile, it creates both an account.partial.reconcile and an account.full.reconcile. It returns {'partials': account.partial.reconcile(3,), 'tax_cash_basis_moves': account.move(), 'full_reconcile': account.full.reconcile(2,)}
+
+# I read a datetime UTC from a fields.Datetime of Odoo and I convert it to local time:
+import pytz
+datetime_aware_utc = pytz.utc.localize(self.arrival_datetime)
+tz = pytz.timezone(self.env.user.tz)
+datetime_aware_local = datetime_aware_utc.astimezone(tz)
+print('local hour', datetime_aware_local.hour)
+print('local date', datetime_aware_local.date()
+
+from babel.dates import format_date, format_datetime, format_time
+#  https://babel.pocoo.org/en/latest/dates.html
+> format_date(date_dt, 'short', locale='fr')
+'21/04/2022'
+> format_date(date_dt, 'medium', locale='fr')
+'21 avr. 2022'
+> format_date(date_dt, 'long', locale='fr')
+'21 avril 2022'
+> format_date(date_dt, 'full', locale='fr')
+'jeudi 21 avril 2022'
+# valeur par défaut : 'medium'
+> format_date(date_dt, "EEEE d MMMM yyyy", locale='fr')
+'jeudi 21 avril 2022'
+# M : mois en chiffre
+# MM : mois en chiffre sur 2 chiffres
+# MMM : mois en lettres abrégé
+# MMMM : mois en lettres
+# MMMMM : mois en 1 lettre (nul !)
+# E : jour de la semaine abrégé
+# EEEE : jour de la semaine 'full' vendredi
+# a : AM ou PM
+# h : heure 1-12
+# H : heure 0-23
+# mm : minutes sur 2 chiffres
+# ss : secondes sur 2 chiffres
+> format_datetime(datetime.now(), locale='fr')
+'21 avr. 2022 à 20:22:36'
+> format_datetime(datetime.now(), locale='fr', format='long')
+'21 avril 2022 à 20:22:45 UTC'
+> format_datetime(datetime.now(), locale='fr', format='full')
+'jeudi 21 avril 2022 à 20:22:48 Temps universel coordonné'
+
+# 

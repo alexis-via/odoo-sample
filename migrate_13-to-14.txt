@@ -10,7 +10,7 @@ depending on what is installed the dates will come from the OCA module or the EE
 
 force_company => with_company
 
-self.env.user_id.company_id => self.env.company
+self.env.user_id.company_id => self.env.company (self.env.company existe déjà en v13 !)
 
 fields.Float(digits=dp.get_precision('Stock Weight') => digits='Stock Weight'
 

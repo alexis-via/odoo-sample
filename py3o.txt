@@ -123,6 +123,7 @@ py3o://function="formatLang(time.strftime('%Y-%m-%d %H:%M:%S'), date_time=True)"
 v12
 py3o://function="o_format_date(o.date_order, lang_code=lang)"
 proto de o_format_date : _format_date(self, value, lang_code=False, date_format=False)
+proto de o_format_datetime : _format_date(self, value, tz=False, dt_format="medium", lang_code=False)  # v14+
 proto de o_format_lang: _format_lang(self, value, lang_code=False, digits=None, grouping=True,
                      monetary=False, dp=False, currency_obj=False,
                      no_break_space=True)
@@ -134,7 +135,11 @@ Pour afficher l'heure, il faut date_format='%d/%m/%Y %H:%M'
 Afficher la date du jour :
 py3o://function="o_format_date(time.strftime('%Y-%m-%d'), lang_code=lang)"
 
+Afficher la date et l'heure du jour :  A TESTER
+py3o://function="o_format_datetime(time.gmtime(), lang_code=lang)"
+
 TODO : Afficher la date + l'heure du moment dans la timezone de l'utilisateur
+=> créer une méthode sur res.users ?
 
 Adresse :
 =========
@@ -197,6 +202,9 @@ Barcode
 Barcode simple avec police de caractères :
 Mettre les fichiers .ttf dans /usr/local/share/fonts/
 On peut les récupérer dans mon home ~/.fonts
+Utilisation de Librebarcode : https://github.com/graphicore/librebarcode
+Exemple d'utilisation de la font Librefont EAN13 : maylis (purchase.order spécial)
+Attention, chaque police de code barre à ses spécificités ; il faut lire la doc pour savoir quoi mettre comme texte pour que la police donne le résultat attendu !
 Redémarrer LO
 
 LO hints

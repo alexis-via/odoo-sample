@@ -12,6 +12,8 @@ default=lambda self: self.env["res.company"]._company_default_get()
 by
 default=lambda self: self.env.company
 
+self.env.user.company_id => self.env.company
+
 Remove archive buttons from form views
 
 fields.Float( digits=dp.get_precision() => digits='')

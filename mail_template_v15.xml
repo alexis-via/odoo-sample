@@ -14,20 +14,18 @@
 <div style="margin: 0px; padding: 0px;">
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
         % set doc_name = 'quotation' if object.state in ('draft', 'sent') else 'order'
-        Dear ${object.partner_id.name}
+        Dear
             <t t-if="object.partner_id.parent_id">
-                    <t t-out="object.partner_id.parent_id.name">)
+                    <t t-out="object.partner_id.parent_id.name">Nom du partenaire</t>)
             </t>
         <br /><br />
         Here is
-        % if ctx.get('proforma'):
-            in attachment your pro-forma invoice
-        % else:
+        <t if="ctx.get('proforma')">
+                in attachment your pro-forma invoice
+        </t>
+        <t t-else="">
             the ${doc_name} <strong>${object.name}</strong>
-        % endif
-        % if object.origin:
-            (with reference: ${object.origin} )
-        % endif
+        </t>
         amounting in <strong>${format_amount(object.amount_total, object.pricelist_id.currency_id)}</strong>
         from ${object.company_id.name}.
         ${format_date(object.date)}
@@ -41,8 +39,13 @@
 </record>
 
 
-Variations :
+Variations (mail/models/mail_render_mixin.py method _render_eval_context) :
 user
 ctx
 lang
 object
+format_date
+format_datetime
+format_time
+format_amount
+format_duration

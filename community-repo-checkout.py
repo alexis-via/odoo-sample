@@ -12,7 +12,6 @@ repos = {
         'community-data-files': 'https://github.com/OCA/community-data-files',
 
         # technical / general
-        'contract': 'https://github.com/OCA/contract',
         'edi': 'https://github.com/OCA/edi',
         'intrastat': 'https://github.com/OCA/intrastat',
         'telephony': 'https://github.com/OCA/connector-telephony',
@@ -20,7 +19,6 @@ repos = {
         'py3o-report-templates': 'https://github.com/akretion/odoo-py3o-report-templates',
         'viewer-groups': 'https://github.com/akretion/odoo-viewer-groups',
         'l10n-france': 'https://github.com/OCA/l10n-france',
-        'procurement-suggest': 'https://github.com/akretion/procurement-suggest',
         'purchase-workflow': 'https://github.com/OCA/purchase-workflow',
         'sale-workflow': 'https://github.com/OCA/sale-workflow',
         'reporting-engine': 'https://github.com/OCA/reporting-engine',
@@ -30,6 +28,7 @@ repos = {
         'server-env': 'https://github.com/OCA/server-env',
         'server-tools': 'https://github.com/OCA/server-tools',
         'server-ux': 'https://github.com/OCA/server-ux',
+        'report-print-send': 'https://github.com/OCA/report-print-send',
         'web': 'https://github.com/OCA/web',
 
         # stock
@@ -52,6 +51,7 @@ repos = {
         'bank-statement-reconcile-simple': 'https://github.com/akretion/bank-statement-reconcile-simple',
         'bank-payment': 'https://github.com/OCA/bank-payment',
         'credit-control': 'https://github.com/OCA/credit-control',
+        'mooncard': 'https://github.com/akretion/odoo-mooncard-connector',
         }
 
 os.mkdir('symlink')
@@ -65,7 +65,7 @@ path.append(os.path.join(cur_dir, 'symlink'))
 for repo_name, repo_url in repos.items():
     print(repo_name)
     remote_branch = '%d.0' % version
-    repo = git.Repo.clone_from(repo_url, repo_name, branch=remote_branch)
+    repo = git.Repo.clone_from(repo_url, repo_name, branch=remote_branch, single_branch=True)
 
     path.append(os.path.join(cur_dir, repo_name))
     test_path.append('../' + repo_name)

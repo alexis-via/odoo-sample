@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright (C) 2020 Akretion France (http://www.akretion.com/)
+  Copyright (C) 2022 Akretion France (http://www.akretion.com/)
   @author: Alexis de Lattre <alexis.delattre@akretion.com>
   The licence is in the file __manifest__.py
 -->
@@ -18,13 +18,14 @@
     />
 
 
-            <!-- v14+  -->
+<!-- v14+  -->
 <record id="report_account_check_deposit" model="ir.actions.report">
     <field name="name">Check Deposit</field>
     <field name="model">account.check.deposit</field>
     <field name="report_type">qweb-pdf</field> <!-- qweb-html or qweb-text -->
     <field name="report_name">account_check_deposit.report_checkdeposit</field>
     <field name="report_file">account_check_deposit.report_checkdeposit</field>
+    <!-- "print_report_name" only works in form view, not in tree view -->
     <field name="print_report_name">'check_deposit-%s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
     <field name="binding_model_id" ref="model_account_check_deposit" />
     <field name="binding_type">report</field>  <!-- default value -->
@@ -41,7 +42,7 @@
 </record>
 
 class PosDetailsSessionXlsx(models.AbstractModel):
-    _name = "report.barroux_base.report_saledetails_xlsx"  # = champ report_name
+    _name = "report.barroux_base.report_saledetails_xlsx"  # = 'report.' + champ report_name
     _inherit = "report.report_xlsx.abstract"
     _description = "POS details Session XLSX"
 

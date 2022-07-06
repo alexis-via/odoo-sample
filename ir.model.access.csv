@@ -23,3 +23,19 @@ Invoicing and Payment : account.group_account_invoice
 Accoutant : account.group_account_user
 Manager : account.group_account_manager
 Readonly : account.group_account_readonly
+
+SALE
+sales_team.group_sale_salesman
+sales_team.group_sale_manager
+
+STOCK
+stock.group_stock_user
+stock.group_stock_manager
+
+PURCHASE
+purchase.group_purchase_user
+purchase.group_purchase_manager
+
+MRP
+mrp.group_mrp_user
+mrp.group_mrp_manager

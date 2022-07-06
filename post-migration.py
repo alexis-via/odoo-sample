@@ -35,6 +35,14 @@ def migrate(cr, version):
                     continue
                 config.partner_id = partner_id
 
+        domain = "['|',('company_id','=',False),('company_id','in',company_ids)]"
+        rule = env.ref(
+            "account_asset_management.account_asset_profile_multi_company_rule",
+            raise_if_not_found=False,
+        )
+        if rule:
+            rule.write({"domain_force": domain})
+
 # Explications :
 # Il faut créer un sous-répertoire "migrations/7.0.0.2/" et mettre ce script dedans:
 # le script sera alors exécuté pour openerp 7.0, quand on met à jour le module vers la version 0.2 (pour les numéros de version type '10.0.1.0.2', pas besoin de préfixer le nom du sous-répertoire avec le numéro de version majeur d'Odoo... elle est déjà dans le numéro lui-même)

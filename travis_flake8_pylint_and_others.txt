@@ -5,6 +5,10 @@ Pour désactiver sur un fichier entier: à mettre à n'import quel endroit du fi
 
 # pylint: skip-file
 
+Pour désactiver sur une ligne:
+
+record.create_date  # pylint: disable=pointless-statement
+
 Prettier
 ========
 
