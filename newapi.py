@@ -33,7 +33,7 @@ class ProductCode(models.Model):
     _description = "Product code"
     _rec_name = "display_name"  # Nom du champ qui fait office de champ name
     _order = "name, id desc"
-    _check_company_auto = True
+    _check_company_auto = True  # to combine with check_company=True on fields definition
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
@@ -272,7 +272,7 @@ class ProductCode(models.Model):
     # quand le float est un fields.float ou un fields.function,
     # on met l'option : digits=dp.get_precision('Account')
     # Autres valeurs possibles pour get_precision : product/product_data.xml
-    # Product Price, Discount, Stock Weight, Product Unit of Measure,
+    # Product Price, Discount, Stock Weight, Volume, Product Unit of Measure,
     # Product UoS (v8 only)
     # fields.Monetary is only in version >= 9.0
     debit = fields.Monetary(default=0.0, currency_field='company_currency_id')
@@ -836,6 +836,15 @@ self.env['ir.sequence'].next_by_code('sale.orde', sequence_date='2015-10-09')
 # en v10, la création automatique des ir.sequence.date_range ne se fait que sur des périodes annuelles ; si on veut autre chose, il faut les créer à la main. Pour avoir la création automatique, il suffit que "use_date_range" soit coché.
 # On peut utiliser %(current_year)s si on veut toujours l'année du jour et pas l'année de la facture (quand elle est != date du jour)
 # On peut utiliser %(range_year)s si on veut l'année du début du range dans lequel se trouve notre date et lieu de l'année de la date.
+## v14
+# ATTENTION, ne PAS passer la date en argument de next_by_id() ou next_by_code(), mais la passer dans le context .with_context(ir_sequence_date=date).next_by_id()
+# Si on passe la date en argument, la date s'applique à la sequence mais PAS au préfixe
+# Si on passe la date via le contexte, la date s'applique à la sequence ET au préfixe
+date = fields.Date.from_string('2021-12-25')
+prefix = 'F-%(year)s-%(month)s-'
+use_date_range = yes du 01/07/2021 au 30/06/2022 next number 42
+self.env['ir.sequence'].browse(94).next_by_id('2021-12-25') => F-2022-07-42 (si on fait ça en juillet 2022)
+self.env['ir.sequence'].browse(94).with_context(ir_sequence_date='2021-12-25').next_by_id() => F-2021-12-42
 
 self.env['account.analytic.account'].search_read([('type', '=', 'contract')], ['code'])
 result: [{'code': u'113966', 'id': 14}, {'code': u'1485427485', 'id': 16}, {'code': u'AA001', 'id': 2}, {'code': u'AA002', 'id': 3}]
@@ -909,7 +918,9 @@ account_recordset = self.env['ir.property'].get('property_account_payable_id', '
 if country in self.env.ref('base.europe').country_ids
 
 # v15 translation
-# plus simple
+# encore plus simple
+_("My %(label)s is from %(partner)s") % {"label": label, "partner": partner}
+# plus simple = CE QUE JE PREFERE
 raise UserError(_("partner {partner_name} in company {company_name}", partner_name=partner_name, company_name=company_name))
 raise UserError(_("partner {partner_name} in company {company_name}").format(partner_name=partner_name, company_name=company_name))
 # or
@@ -968,4 +979,25 @@ from babel.dates import format_date, format_datetime, format_time
 > format_datetime(datetime.now(), locale='fr', format='full')
 'jeudi 21 avril 2022 à 20:22:48 Temps universel coordonné'
 
-# 
+# NewID
+# Il y a 3 types de recordset:
+# 1) NewID : on vient de cliquer sur create, l'enregistrement n'est pas encore créé et n'a pas d'ID
+print(record)= stay.room.assign(<NewId 0x7fb6147e39d0>,)
+bool(record)= True
+record.id= NewId_0x7fb6147e39d0
+record._origin.id = False
+type(record.id) = <class 'odoo.models.NewId'>
+# 2) NewID_6 : l'enregistrement a déjà été créé par le passé et il est en cours d'édition
+print(record) = stay.room.assign(<NewId origin=7>,)
+bool(record) = True
+record.id = NewId_7
+record._origin.id = 7
+type(record.id) = <class 'odoo.models.NewId'>
+# 3) normal
+print(record) = stay.room.assign(7,)
+bool(record)= True
+record.id = 7
+record._origin.id= 7
+type(assign.id) = <class 'int'>
+# Test if a recordset is a newID:
+if not isinstance(st.id, models.NewId)

@@ -62,9 +62,11 @@ Pour un bloc de code (attention à la ligne vide entre .. code:: et le début du
       print "TOTO"
 
 Include image:
-.. figure:: static/description/ex_report_template.png
+.. figure:: ../static/description/ex_report_template.png
    :scale: 80 %
    :alt: Sample report template
+
+The path must be relative ; Odoo will generate an absolute path when generating the README.rst
 
 Installation
 ============

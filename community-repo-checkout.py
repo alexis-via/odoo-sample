@@ -3,7 +3,9 @@
 import git
 import os
 
-version = 14
+version = input('Odoo version : ')
+assert len(version) == 2
+assert version.isdigit()
 
 repos = {
 
@@ -13,7 +15,7 @@ repos = {
 
         # technical / general
         'edi': 'https://github.com/OCA/edi',
-        'intrastat': 'https://github.com/OCA/intrastat',
+        'intrastat': 'https://github.com/OCA/intrastat-extrastat',
         'telephony': 'https://github.com/OCA/connector-telephony',
         'usability': 'https://github.com/akretion/odoo-usability',
         'py3o-report-templates': 'https://github.com/akretion/odoo-py3o-report-templates',
@@ -30,12 +32,17 @@ repos = {
         'server-ux': 'https://github.com/OCA/server-ux',
         'report-print-send': 'https://github.com/OCA/report-print-send',
         'web': 'https://github.com/OCA/web',
+        'web-api': 'https://github.com/OCA/web-api',
 
-        # stock
+        # stock/mrp
         'stock-logistics-barcode': 'https://github.com/OCA/stock-logistics-barcode',
         'stock-logistics-warehouse': 'https://github.com/OCA/stock-logistics-warehouse',
         'stock-logistics-workflow': 'https://github.com/OCA/stock-logistics-workflow',
         'stock-logistics-tracking': 'https://github.com/OCA/stock-logistics-tracking',
+        'manufacture': 'https://github.com/OCA/manufacture',
+
+        # POS
+        'pos': 'https://github.com/OCA/pos',
 
         # accounting
         'account-move-import': 'https://github.com/akretion/account-move-import',
@@ -45,6 +52,7 @@ repos = {
         'account-closing': 'https://github.com/OCA/account-closing',
         'account-financial-reporting': 'https://github.com/OCA/account-financial-reporting',
         'account-financial-tools': 'https://github.com/OCA/account-financial-tools',
+        'account-fiscal-rule': 'https://github.com/OCA/account-fiscal-rule',
         'account-invoicing': 'https://github.com/OCA/account-invoicing',
         'bank-statement-import': 'https://github.com/OCA/bank-statement-import',
         'account-reconcile': 'https://github.com/OCA/account-reconcile',
@@ -64,7 +72,7 @@ path.append(os.path.join(cur_dir, 'symlink'))
 
 for repo_name, repo_url in repos.items():
     print(repo_name)
-    remote_branch = '%d.0' % version
+    remote_branch = '%s.0' % version
     repo = git.Repo.clone_from(repo_url, repo_name, branch=remote_branch, single_branch=True)
 
     path.append(os.path.join(cur_dir, repo_name))

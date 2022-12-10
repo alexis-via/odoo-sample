@@ -13,7 +13,7 @@
 # https://docs.python.org/2/library/unittest.html?highlight=unittest2
 
 from odoo.exceptions import UserError
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import TransactionCase, SavepointCase
 from odoo.tests import tagged
 
 # @tagged is used to avoid bugs such as:
@@ -21,8 +21,10 @@ from odoo.tests import tagged
 @tagged('post_install', '-at_install')
 class TestFrIntrastatService(TransactionCase):
 
-    def setUp(self):
-        super().setUp()
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
         # create data
 
     # WARNING: the name of the method must start with test ?

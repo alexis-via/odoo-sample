@@ -17,6 +17,8 @@ When I generate a template database :
 - Mettre à jour les payment modes avec les 2 journaux de banque
 - Fiscal position : décocher VAT required sur domestique france
 - créer 1 fiscal year
+- picking type : incoming : cocher "use existing lots" + create lots
+                 outgoing : cocher "show detailed operatoins"
 -date ranges
 - account groups à 2 niveaux
 - désinstaller l10n_fr_fec

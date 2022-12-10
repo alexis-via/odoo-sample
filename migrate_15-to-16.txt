@@ -1,0 +1,24 @@
+https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-16.0
+
+precompute=True
+
+index = ??
+
+remplacer les onchange par compute= avec precompute=True et readonly=False
+
+héritage create en batch pour éviter un warning au démarrage
+@api.model_create_multi
+def create(self, vals_list):
+
+
+
+=============
+
+Main Datamodel changes :
+- analytic revolution
+- suppresion de stock.inventory
+- res.partner :
+- account.account : user_type_id => account_type (selection)
+- stock.move.line : product_uom_qty -> reserved_uom_qty
+- supplierinfo : name -> partner_id
+- sale.order : compte ana descendu à la ligne

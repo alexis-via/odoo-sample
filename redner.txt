@@ -1,0 +1,71 @@
+sudo apt install python3-jsonschema
+
+Modules Odoo :
+2 projets à cloner. Attention, le module Odoo n'est pas contenu dans un sous-répertoire !
+* module "redner"
+hg clone ssh://hg@orus.io/xcg/odoo-modules/redner
+attention, la branche par défaut est la 15.0
+puis se mettre sur la branche 13.0
+* module "converter" :
+hg clone ssh://hg@orus.io/xcg/odoo-modules/converter  (la branche par défaut est la 13.0)
+
+
+Créer les ir.config_parameters suivants :
+
+redner.api_key
+redner.server_url : https://redner-demo.cloudcrane.io/
+redner.account : alexis.delattre@akretion.com
+
+Mustache :
+
+triple {{{ pour avoir du HTML "pur" avec < au lieu de &lt;
+
+IF : 
+
+{{#person}}
+  Imprimer seulement si
+{{/person}}
+
+IF ELSE :
+
+{{#repo}}
+  <b>{{name}}</b>
+{{/repo}}
+{{^repo}}
+  Là, c'est le ELSE
+{{/repo}}
+
+Commentaire (ignoré) :
+{{! ignore me }}
+
+Date et datetime :
+Champ de type "Modèle"/Odoo Template :
+${format_date(object.date)}
+${format_datetime(object.date_order)}
+
+Champ monétaire :
+${format_amount(object.amount_untaxed, object.currency_id)}
+
+Champ Selection (comme py3o) :
+${dict(object.fields_get('type', 'selection')['type']['selection'])[object.type]}
+
+Champs date/montant en formattage LibreOffice :
+Dans LibreOffice :
+Ctrl+F2
+Champ utilisateur
+Nom : __amount_untaxed__  => dans les substitutions redner, le champ sera 'amount_untaxed'
+Valeur : on peut laisser vide
+Format : le format qu'on a choisi
+Dans Odoo : type "Field", Expression 'amount_untaxed'
+
+Image :
+
+ATTENTION : dans les champs de type "Modèle/Odoo Template", on ne peut appeler que des fonction publiques, pas de fonctions privées.
+Donc, pour _display_address(), il suffit de définir dans res.partner une fonction display_address() (sans le underscore) qui appelle la fonction avec le underscore.
+
+Questions prioritaires
+- champ fields.Text AVEC retours à la ligne
+
+Questions moins prioritaires :
+- lire le report_name : passer par une "constante" ?
+- image

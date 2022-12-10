@@ -17,6 +17,11 @@ post-install.py : virer "with api.Environment.manage():"
    "...": [...],
 },
 
+try:
+except Exception as e:
+    raise UserError(_("tutu")) from None
+raise 
+
 =============
 
 Main Datamodel changes :

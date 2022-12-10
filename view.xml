@@ -29,14 +29,19 @@
         </notebook>
         <xpath expr="//field[@name='product_id']" position="attributes">
             <!-- expr : expr="//header//a[hasclass('navbar-brand')]" -->
+            <!-- expr="//button[@name='action_invoice_sent' and not(hasclass('oe_highlight'))] -->
             <attribute name="editable">bottom</attribute>
             <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
             <attribute name="readonly">1</attribute>
         </xpath>
         <!-- MOVE a field to a new position (ne marche pas en v10... à partir de quelle version ça marche ??
-        if using xpath for position="after", must use also xpath for position="move" -->
-        <field name="target_field" position="after">
-            <field name="my_field" position="move"/>
+            if using xpath for position="after", must use also xpath for position="move"
+            In the example below:
+                initial order : partner_id | ref
+                new order : ref | partner_id
+                -->
+        <field name="ref" position="after">
+            <field name="partner_id" position="move"/>
         </field>
     </field>
 </record>
@@ -183,6 +188,13 @@
                     <div>
                         <field name="hunt_commission_rate" class="oe_inline"/> %%
                     </div>
+                    <!-- à partir de la v16 -->
+                    <label for="product_uom_qty"/>
+                    <div class="o_row">
+                        <field name="product_uom_qty"/>
+                        <field name="product_uom" options="{'no_open': True, 'no_create': True}" groups="uom.group_uom"/>
+                     </div>
+
                     <!-- button to start a wizard : -->
                     <button type="action" name="%(action_xmlid)d" string="Start wizard" />
                     <!-- button with confirm pop-up -->
@@ -395,7 +407,6 @@ Same in v10 : <pivot display_quantity="True">
 <record id="fr_intrastat_product_action" model="ir.actions.act_window">
     <field name="name">Intrastat Product</field>
     <field name="res_model">report.intrastat.product</field>
-<!--    <field name="view_type">form</field>  Tree type to use for the tree view : set to 'tree' for a hierarchical tree view, or 'form' for a regular list view (default) -->
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_customer', '=', True)]</field>
     <!-- Here is what is possible to do to handle dates in a domain in XML :
@@ -440,13 +451,20 @@ Same in v10 : <pivot display_quantity="True">
 </record>
 
 <!-- MENU -->
-<!-- déclanche une action -->
+<!-- déclenche une action -->
 <menuitem id="fr_intrastat_product_menu"
     parent="intrastat_base.menu_intrastat_base_root"
     action="fr_intrastat_product_tree_action"
     sequence="50"
     groups="group_stock_manager" />
-    <!-- For top-level menu entries : add web_icon="module_name,static/description/icon.png"  -->
+    <!-- For top-level menu entries : add web_icon="module_name,static/description/icon.png"
+        The top-level icons can be generated with the script oca-gen-addon-icon
+        from https://github.com/OCA/maintainer-tools/pull/491
+        A exécuter depuis le répertoire racine du module, et il va écrire
+        sur static/description/icon.png
+        oca-gen-addon-icon --addon-dir=. --format png --icon-extra='{"fa fa-church": {"position": "absolute", "top": "30px", "left": "20px", "font-size": "70px"}}' --icon-color pink
+        cf https://github.com/OCA/maintainer-tools/pull/491
+        -->
 
 <!-- menu parent -->
 <menuitem id="" name="" parent="" sequence="" />

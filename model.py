@@ -443,7 +443,7 @@ TERM_OPERATORS = ('=', '!=', '<=', '<', '>', '>=', '=?', '=like', '=ilike',
 # plus précis
 # starts with AB is [('field','=like','AB%')]
 # ends with AB is [('field','=like','%AB')]
-# 'child_of', 'ID') => matche sur les enfants ET l'ID
+# 'child_of', ID) => matche sur les enfants ET l'ID
 # =? : idem que '=' mais renvoie True si la partie de droite est False ou None
 
 # Récupérer une clé du fichier de config du serveur Odoo
