@@ -1,0 +1,69 @@
+Réplication asynchrone PostgreSQL
+=================================
+
+https://gridscale.io/en/community/tutorials/postgresql-10-master-slave-replication/
+
+A faire sur MASTER
+==================
+
+Créer un utilisateur de la base postgreSQL dédié à la replication :
+
+CREATE ROLE pgreplica WITH REPLICATION LOGIN;
+
+\password pgreplica
+<définir le mot de passe>
+
+Editer postgresql.conf :
+
+listen_address = '*'
+wal_level = replica
+archive_mode = on
+archive_command = 'rsync -a %p postgres@<IP_slave>:/var/lib/postgresql/10/main/archive/%f'
+max_wal_senders = 3
+wal_keep_segments = 64
+
+Créer des clés SSH SANS passphrase pour l'utilisateur postgres : en tant que postgres :
+ssh-keygen
+
+Copier la clé publique dans /var/lib/postgresql/.ssh/authorized_keys du slave.
+
+Créer le répertoire archive :
+mkdir -p /var/lib/postgresql/10/main/archive/
+chmod 700 /var/lib/postgresql/10/main/archive/
+chown -R postgres:postgres /var/lib/postgresql/10/main/archive/
+
+Editer pg_hba.conf et ajouter une ligne (attention à l'ordre) :
+
+hostssl   replication     pgreplica         <IP_slave>/32             md5
+
+systemctl stop postgresql
+systemctl start postgresql
+
+A faire sur SLAVE
+=================
+
+Editer postgresql.conf
+
+hot_standby = on
+
+systemctl stop postgresql
+
+cd /var/lib/postgresql/10/
+mv main main-backup
+
+Le sous-répertoire 'main' sera re-créé automatiquement avec la commande pg_basebackup.
+
+Copier la base de master vers slave : sur slave en tant qu'utilisateur postgres :
+pg_basebackup -h <IP_master> -D /var/lib/postgresql/10/main/ -P -U pgreplica --wal-method=stream
+
+Copier /usr/share/postgresql/10/recovery.conf.sample vers /var/lib/postgresql/10/main/recovery.conf
+Vérifier les droits du fichier (utilisateur postgres, droits 640)
+
+=====
+standby_mode = 'on'
+primary_conninfo = 'host=<IP_master> port=5432 user=pgreplica password=[your password]'
+trigger_file = '/etc/postgres-is-now-master'
+archive_cleanup_command = 'pg_archivecleanup /var/lib/postgresql/10/main/archive/ %r'
+======
+
+systemctl start postgresql

@@ -1,0 +1,391 @@
+INSTALLATION Odoo v14 sur Ubuntu 20.04 LTS
+==============================================
+
+MINIMUM packages pour Odoo
+==========================
+
+sudo apt install postgresql wait-for-it node-less python3-git python3-tz python3-dateutil python3-psycopg2 python3-werkzeug python3-decorator python3-unittest2 python3-jinja2 python3-docutils python3-openid python3-unidecode python3-passlib python3-psutil python3-serial python3-reportlab python3-pip python3-lxml python3-dev python3-cups python3-bs4 python3-unicodecsv python3-simplejson python3-xlrd python3-mock python3-xlsxwriter python3-html2text python3-suds python3-libsass python3-pypdf2 python3-xlwt python3-babel python3-num2words python3-polib python3-odf python3-astor python3-openpyxl git vim
+
+Pour account_invoice_import_simple_pdf :
+
+sudo apt install python3-fitz
+
+TODO clarifier sur gevent/greenlet :
+
+Pour faire marcher le longpolling avec python3.8 de Ubuntu 20.04
+sudo pip3 install greenlet==0.4.17
+sudo pip3 install gevent==20.9.0
+
+<frozen importlib._bootstrap>:219: RuntimeWarning: greenlet.greenlet size changed, may indicate binary incompatibility. Expected 144 from C header, got 152 from PyObject
+
+=> pour l'instant, j'essaye avec les paquets ubuntu : python3-gevent python3-greenlet
+
+(note : pour que le longpolling marche, il faut aussi workers > 0 et le block /longpolling dans le fichier de config nginx)
+
+Facultatif mais conseillé sur tout serveur:
+sudo apt install molly-guard fail2ban
+
+sudo pip3 install --upgrade flake8
+sudo pip3 install --ignore-installed git+https://github.com/OCA/openupgradelib.git@master
+sudo pip3 install --upgrade vatnumber
+sudo pip3 install --upgrade python-stdnum
+sudo pip3 install --upgrade ofxparse
+sudo pip3 install --upgrade phonenumbers
+sudo pip3 install --upgrade oca-decorators
+sudo pip3 install --upgrade factur-x
+Pour l'import de factures PDF :
+sudo pip3 install regex==2022.3.2
+sudo pip3 install dateparser==1.1.1
+sudo pip3 install --upgrade pdfplumber
+Si on veut installer le connecteur Asterisk :
+sudo pip3 install --upgrade py-Asterisk
+
+Téléchargement Odoo
+===================
+
+Récupérer la branche git:
+git clone -b 14.0 --single-branch https://github.com/OCA/OCB odoo
+
+Wkhtmltopdf
+===========
+Infos à jour sur https://github.com/odoo/odoo/wiki/Wkhtmltopdf
+
+Paquets nécessaires pour wkhtml2pdf
+sudo apt install fontconfig libxrender1 xfonts-75dpi xfonts-base poppler-utils
+
+wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.focal_amd64.deb
+sudo dpkg -i wkhtmltox_0.12.5-1.focal_amd64.deb
+
+Note : poppler-utils fournit 'pdf2text' qui permet l'indexation par le module document
+
+(ne pas prendre 0.12.3 ou 0.12.4, car ça fait des bugs sur les titre de colonne des grands livres / balances)
+
+PostgreSQL
+==========
+
+Créer l'utilisateur postgres ayant le même nom que l'utilisateur système qui va lancer odoo (car, dans Debian/Ubuntu, il y a par défaut dans hba.conf la méthode d'authentification "peer" pour la connexion via socket unix, donc si on est loggé en tant qu'utilisateur 'odoo' sur le système, on pourra se connecter à postgres avec le même utilisateur sans ré-authentification)
+
+$ sudo su
+$ su - postgres
+$ createuser -s odoo
+
+Vérifier que la locale français est installé :
+(ça permet d'avoir la langue qui se met bien en %d/%m/%Y à l'install)
+locale -a
+Si ce n'est pas le cas, l'ajouter :
+locale-gen fr_FR.UTF-8
+Eventuellement, la mettre par défaut :
+update-locale LANG=fr_FR.UTF-8
+Plus d'infos : https://www.thomas-krenn.com/en/wiki/Configure_Locales_in_Ubuntu
+
+Démarrage automatique
+=====================
+
+Script de démarrage :
+
+copier init-odoo-options sous le nom /etc/init.d/odoo
+
+Personnaliser les paramètres de config situés à l'intérieur du script, qui donnent notamment le chemin vers odoo.py, le chemin vers le fichier de config et l'utilisateur qui va lancer odoo.py
+
+sudo update-rc.d odoo defaults
+
+(pour enlever : sudo update-rc.d odoo remove)
+
+Logrotate
+=========
+
+Règle logrotate
+Copie logrotate-odoo en tant que /etc/logrotate.d/odoo
+chown root:root /etc/logrotate.d/odoo
+
+En cas d'ennui de CSS manquante sur rapports qweb (https://github.com/odoo/odoo/issues/1105 et https://github.com/odoo/docker/issues/24) :
+Dans Settings > Parameters > System Parameters : créer une clé :
+clé : report.url
+valeur : http://0.0.0.0:8069
+
+Fichier de config
+=================
+
+Pour générer un fichier de config de base:
+./odoo-bin -s
+=> ça génère un fichier de base ~/.odoorc  (sur odoo v8 : ~/.openerp_serverrc)
+
+* Modifs sur le fichier de config:
+admin_passwd = <mettre un mdp très solide>
+without_demo = True
+limit_time_cpu = 2000
+limit_time_real = 3600
+unaccent = True
+proxy_mode = True
+data_dir = /home/odoo/erp/data-dir
+logfile = /var/log/odoo/odoo-server.log
+db_name = prod
+dbfilter = ^prod$
+
+* exemple si on veut du multi-worker:
+
+workers = 5
+max_cron_threads = 2  (= valeur par défaut)
+limit_memory_hard = 2684354560  (valeur par défaut, qui est + élevée que sur les anciennes versions)
+limit_memory_soft = 2147483648  (valeur par défaut)
+limit_request = 8192
+
+Dupliquer le fichier de config de prod pour le serveur de test :
+db_name = test1
+dbfilter = ^test.*
+http_port = 7069
+longpolling_port = 7072
+data_dir = /home/odoo/data-dir-test
+logfile = False
+workers = 0
+
+Tuning postgres
+===============
+https://wiki.postgresql.org/wiki/Performance_Optimization
+http://www.revsys.com/writings/postgresql-performance.html
+cf mon fichier postgresql-optims.txt
+
+Proxy nginx pour HTTPS
+======================
+
+sudo apt install nginx
+
+Copier nginx-odoo-prod dans /etc/nginx/sites-available/odoo-prod
+
+Editer le fichier et personnaliser :
+le port d'écoute "server 127.0.0.1:8069" si Odoo n'est pas sur le port 8069
+server_name x 2
+Désactiver le ssl en attendant l'étape suivante
+
+sudo ln -s /etc/nginx/sites-available/odoo-prod /etc/nginx/sites-enabled/odoo-prod
+sudo service nginx reload
+
+
+Certificats let's encrypt
+=========================
+Doc : https://certbot.eff.org/#ubuntuxenial-nginx
+
+En root :
+
+apt install certbot (paquet qui remplace letsencrypt)
+
+letsencrypt certonly --webroot -w /var/www/html -d odoo.nuska.fr -d testodoo.nuska.fr
+
+=> entrer l'adresse email de l'administreur du domaine
+
+Si ça échoue avec :
+An unexpected error occurred:
+AttributeError: module 'lib' has no attribute 'X509_get_notAfter'
+Please see the logfiles in /var/log/letsencrypt for more details.
+=> pb de lib python pyopenssl apt vs pip ?  https://community.letsencrypt.org/t/lib-has-no-attributes/178494/2
+Solution :
+pip3 install --upgrade pyopenssl
+
+Ajouter dans /etc/crontab :
+
+8 2 * * * root /usr/bin/letsencrypt renew && service nginx reload
+
+ATTENTION, ne pas l'ajouter dans la cron perso du root (crontab -e), sinon le reload nginx ne s'exécute pas (je ne sais pas pourquoi !)
+
+Pour faire un test de renouvellement à la main :
+letsencrypt renew --dry-run --agree-tos
+
+Note: le message "WARNING:letsencrypt.client:Registering without email!" est normal.
+On doit avoir ensuite:
+Congratulations, all renewals succeeded. The following certs have been renewed.
+
+Activer le SSL dans les 2 fichiers /etc/nginx/sites-available/odoo-prod et odoo-test
+
+unattended-upgrades
+===================
+sudo apt install unattended-upgrades update-notifier-common
+activer unattended-upgrades :
+
+Editer /etc/apt/apt.conf.d/10periodic
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "5";
+APT::Periodic::Unattended-Upgrade "1";
+
+Configurer via /etc/apt/apt.conf.d/50unattended-upgrades
+
+EMAIL - envoi direct
+====================
+
+sudo apt install postfix
+=> Config "Site Internet"
+
+Suivre https://www.linuxbabe.com/mail-server/setting-up-dkim-and-spf
+commencer à la partie "Setting up DKIM"
+remplacer "default" par "odoo"
+remplacer 2048 par 1024
+
+Mettre à jour la DNS :
+- SPF
+- DKIM : odoo._domainkey.nuska.fr
+- DMARC
+- reverse DNS du serveur odoo  (chez OVH, si on veut que la reverse soit nuska.fr, il faut qu'une requête DNS sur nuska.fr pointe sur odoo => mettre odoo.nuska.fr en reverse ?)
+
+Vérifier la DNS :
+dig odoo._domainkey.nuska.fr TXT
+dig _dmarc.nuska.fr TXT
+vérifier la reverse
+
+Préparation de la base de prod
+==============================
+Désinstaller les modules :
+- iap
+- account_edi
+- partner_autocomplete
+Installer :
+- l10n_fr_account_tax_unece
+
+Mettre à jour les données sur res.company + partenaire associés
+Créer IBAN et BIC du partenaire de la société
+
+Passer sur chaque page de config de la compta
+
+Configurer le serveur d'envoi de mail (localhost)
+
+Supprimer les taxes inutiles (le faire au préalable sur position fiscale):
+- TVA à l'encaissement
+- 2,1% à la vente
+- 2,1% immobilisation
+- 8,5% ?
+
+Positions fiscales :
+Domestique - France : décocher "VAT required"
+Intra-EU B2B : vérifier que "VAT required" et "Intrastat" sont cochés
+
+Personnaliser les noms et code des journaux
+Supprimer le journal de stock (éditer la ir.property property_stock_journal au préalable) et le journal de TVA encaissement
+Lier les journaux de banque aux IBANs
+Séquences de facture
+Créer les groupes de compte
+créer le modes de paiement => mettre un mode de paiement par défaut sur client et fournisseur ?
+date range
+format de date en_US : %d/%m/%Y au lieu de %m/%d/%Y
+
+Moteur de rapport communautaire Py3o
+====================================
+
+py3o.template en py3 ; renderserver, fusion et le reste en py2
+
+sudo apt install ttf-mscorefonts-installer libgoogle-gson-java default-jre ure libreoffice-java-common libreoffice-writer fonts-symbola supervisor g++
+
+sudo pip3 install --upgrade py3o.template
+sudo pip3 install --upgrade py3o.formats
+
+
+ATTENTION, le reste est en python2 :
+
+sudo apt install python2 python2-dev
+wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+sudo python2 ./get-pip.py
+
+sudo pip2 install --upgrade service-identity
+sudo pip2 install JPype1==0.6.3
+sudo pip2 install --upgrade py3o.renderserver
+sudo pip2 install --upgrade py3o.fusion
+
+Copier les fichiers py3o-renderserver.conf py3o-fusion.conf libreoffice.conf dans /etc/supervisor/conf.d/
+
+chown root:root /etc/supervisor/conf.d/*.conf
+
+Vérifier que le répertoire /var/log/odoo existe bien
+
+sudo service supervisor reload
+
+Diagnostic et autres infos techs
+--------------------------------
+
+$ pip freeze|grep py3o
+py3o.formats==0.3
+py3o.fusion==0.8.9
+py3o.renderclient==0.3
+py3o.renderers.juno==0.8.1
+py3o.renderserver==0.5.2
+py3o.template==0.9.13
+py3o.types==0.1.1
+
+POUR EVITER les PDF trop gros (> 270 ko):
+
+sudo apt install ttf-mscorefonts-installer
+(sinon, il est obligé d'embarquer des polices "équivalents" à Arial, Times new roman, etc... ce qui prend pas mal de place)
+
+Si j'ai un message:
+ttf-mscorefonts-installer: processing...
+ttf-mscorefonts-installer: downloading http://downloads.sourceforge.net/corefonts/andale32.exe
+Err:1 http://downloads.sourceforge.net/corefonts/andale32.exe
+  400  Bad Request
+W: Can't drop privileges for downloading as file '/var/lib/update-notifier/package-data-downloads/partial/andale32.exe' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
+E: Failed to fetch https://vorboss.dl.sourceforge.net/project/corefonts/the fonts/final/andale32.exe  400  Bad Request
+
+E: Download Failed
+
+Note : Le message d'erreur peut être différent (ça dépend du miroir)
+
+=> Chopper le DEB en version 3.6 depuis Debian jessie : http://ftp.fr.debian.org/debian/pool/contrib/m/msttcorefonts/ttf-mscorefonts-installer_3.6_all.deb
+
+
+Si pb à l'install (ou upgrade) de py3o.template :
+
+sudo apt-get install libxslt-dev libxml2-dev libz-dev
+
+
+Py3o Fusion
+------------
+
+start-py3o-fusion --debug -s localhost
+
+Ecoute par défaut sur le port 8765
+
+On peut se connecter sur l'interface Web  http://localhost:8765/form
+Regarder sur la page "Test" que, sous target format, il y a "This server currently supports these formats: ods, odt, docx, doc, html, docbook, pdf, xls."
+
+Py3o Render server
+------------------
+
+=> il installe JPype1 par dépendance
+
+start-py3o-renderserver --java=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so --ure=/usr/lib --office=/usr/lib/libreoffice --driver=juno --sofficeport=8997
+
+start-py3o-renderserver --java=/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so --ure=/usr/lib --office=/usr/lib/libreoffice --driver=juno --sofficeport=8997 --sofficehost=127.0.0.1
+DEBUG:root:Starting JVM: /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so with options: -Djava.class.path=/usr/local/lib/python2.7/dist-packages/py3o/renderers/juno/py3oconverter.jar:/usr/lib/ure/share/java/juh.jar:/usr/lib/ure/share/java/jurt.jar:/usr/lib/ure/share/java/ridl.jar:/usr/lib/ure/share/java/unoloader.jar:/usr/lib/ure/share/java/java_uno.jar:/usr/lib/libreoffice/program/classes/unoil.jar -Xmx150M
+
+Ecoute par défaut sur le port 8994
+
+Libreoffice pour py3o
+---------------------
+
+libreoffice --nologo --norestore --invisible --headless --nocrashreport --nofirststartwizard --nodefault --accept="socket,host=localhost,port=8997;urp;"
+
+Ecoute sur le port 8997
+
+Les options --nocrashreport et --nofirststartwizard n'existent plus
+
+DEJA INSTALL sudo apt-get install python-jpype
+             ou pip install JPype1
+
+CONFIGURATION
+-------------
+Sur le rapport pour sortir en PDF :
+sortie : PDF
+local fusion : oui
+Fusion server : http://localhost:8765/form
+
+
+Diagnostic py3o
+---------------
+- libreoffice:
+nc localhost 8997
+eUrpProtocolProperties.UrpProtocolPropertiesTidC��B
+
+- fusion
+nc localhost 8765
+
+- renderserver
+nc localhost 8994
+{"message": {"value": "go", "metadata": {"multi_values": false, "type": "string", "compound": false}}, "type": {"value": "control", "metadata": {"multi_values": false, "type": "string", "compound": false}}}
+
+23/4/2018 : si on a un composant à redémarrer, commencer par py3o-renderserver (avec kill -9)

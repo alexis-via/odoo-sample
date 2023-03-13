@@ -1,0 +1,93 @@
+# Reverse proxy for Odoo
+# Nginx config file by Akretion
+# Written by Alexis de Lattre <alexis.delattre@akretion.com>
+# Inspired by
+# https://www.odoo.com/documentation/16.0/administration/install/deploy.html#https
+
+upstream odoo {
+    server 127.0.0.1:8069 weight=1 fail_timeout=3000s;
+}
+
+upstream odoochat {
+    server 127.0.0.1:8072 weight=1;
+}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen                      443 default_server ssl;
+    listen                      [::]:443 default_server ssl;
+    # List the DNS names from which you want to be able to access Odoo
+    server_name                 odoo.mycompany.fr;
+
+    # SSL on Nginx cf http://nginx.org/en/docs/http/configuring_https_servers.html
+    ssl_protocols               TLSv1.3 TLSv1.2;
+    ssl_certificate             /etc/letsencrypt/live/odoo.mycompany.fr/fullchain.pem;
+    ssl_certificate_key         /etc/letsencrypt/live/odoo.mycompany.fr/privkey.pem;
+
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    # Sometimes, Odoo can be slow to answer, for example when we ask him
+    # to generate a large accounting report... we set it to 30 min
+    proxy_read_timeout              1800s;
+    proxy_connect_timeout           1800s;
+    proxy_send_timeout              1800s;
+
+    # increase proxy buffer to handle some Odoo web requests
+    proxy_buffers 16 64k;
+    proxy_buffer_size 128k;
+
+    # Allow HTTP compression
+    client_max_body_size 64m;
+    gzip             on;
+    gzip_min_length  400;
+    gzip_proxied     expired no-cache no-store private auth;
+    gzip_types       text/css text/scss text/plain text/xml application/xml application/json application/javascript;
+
+    location /websocket {
+        proxy_pass http://odoochat;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        # Why do we repeat it here ?
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # doc for reverse proxy use : http://wiki.nginx.org/HttpProxyModule
+    location / {
+        # Nginx passes requests to Odoo
+        proxy_pass                      http://odoo;
+        # force timeouts if the backend dies
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+        # The parameter proxy_redirect is important if we use Odoo on localhost
+        proxy_redirect                  off;
+
+        # In some conditions, we don't want to use Nginx proxy cache functionnality
+        # Not supported on our version of Nginx
+        # proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;
+        # proxy_no_cache $http_pragma $http_authorization;
+        }
+}
+
+
+# Automatically redirect users from HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name odoo.mycompany.fr;
+    root /var/www/html;
+    location ~ /.well-known {
+        allow all;
+        }
+    location / {
+        rewrite ^/.*$ https://$host$request_uri? permanent;
+    }
+}

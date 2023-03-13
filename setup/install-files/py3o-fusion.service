@@ -1,0 +1,15 @@
+[Unit]
+Description=Py3o Fusion
+After=network.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+ExecStart=/usr/local/bin/start-py3o-fusion --debug -s localhost -i localhost
+KillMode=mixed
+Restart=always
+RestartSec=5  # number of seconds to attempt restart after failure
+
+[Install]
+WantedBy=multi-user.target

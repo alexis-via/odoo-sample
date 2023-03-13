@@ -1,0 +1,18 @@
+pip install pypdf (car le paquet "python-pypdf" plus fourni en paquets debian)
+
+modif /etc/supervisor/conf.d/py3o-renderserver.conf (modif du path vers libjvm : --java=/usr/lib/jvm/default-java/lib/server/libjvm.so)
+
+Supprimer les bases de test (pour gagner du temps)
+sudo pg_dropcluster 10 main --stop
+sudo pg_upgradecluster 9.5 main
+sudo pg_dropcluster 9.5 main
+
+sudo apt remove postgresql-9.5 postgresql-contrib-9.5 postgresql-client-9.5
+
+Si on veut refaire marcher wkhtmltopdf sans l'upgrader, il faut réinstaller libpng12-0 de xenial (160.4):
+
+https://packages.ubuntu.com/xenial/libpng12-0
+
+Refaire les optims postgres en v10
+
+Lendemain : vérifier que les backups fonctionnent

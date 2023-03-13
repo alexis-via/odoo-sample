@@ -1,0 +1,16 @@
+[Unit]
+Description=Libreoffice headless for Py3o
+After=network.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+ExecStart=nice -n 10 /usr/lib/libreoffice/program/soffice.bin --nologo --norestore --invisible --headless --nolockcheck --nodefault --accept="socket,host=localhost,port=8997;urp;"
+stdout_logfile=/var/log/odoo/libreoffice.log
+KillMode=mixed
+Restart=always
+RestartSec=5  # number of seconds to attempt restart after failure
+
+[Install]
+WantedBy=multi-user.target

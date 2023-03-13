@@ -1,0 +1,46 @@
+sudo apt-get install backup-manager
+
+export BM_ARCHIVE_TTL="8"   (nombre de jours de conservation)
+
+export BM_ARCHIVE_METHOD="tarball pgsql"
+
+export BM_TARBALL_DIRECTORIES="/etc /home/odoo/erp"
+
+export BM_PGSQL_DATABASES="prod"
+
+export BM_PGSQL_ADMINLOGIN="odoo"
+
+export BM_PGSQL_ADMINPASS=""  (mettre un mdp sur l'utilisateur odoo avec \password)
+
+SI transfert par scp:
+export BM_UPLOAD_METHOD="scp"
+export BM_UPLOAD_HOSTS="192.168.60.19"
+export BM_UPLOAD_DESTINATION="/Volumes/Time-Machine/odoo-backup"
+
+export BM_UPLOAD_SSH_USER="cell"
+export BM_UPLOAD_SSH_KEY="/root/.ssh/id_rsa"
+
+Si transfert par FTP :
+export BM_UPLOAD_METHOD="ftp"
+export BM_UPLOAD_FTP_USER="sd-90748"
+export BM_UPLOAD_FTP_PASSWORD="motdepasse"
+export BM_UPLOAD_FTP_HOSTS="dedibackup-dc3.online.net"
+export BM_UPLOAD_FTP_PURGE="true"
+export BM_UPLOAD_FTP_TTL=""
+export BM_UPLOAD_FTP_DESTINATION="backup-odoo"   (à créer au préalable ?)
+
+pas de burn :
+export BM_BURNING_METHOD="none"
+
+
+Pas de backup incrémental.
+
+
+Créer un fichier /etc/cron.daily/backup-manager:
+
+#!/bin/sh
+# cron script for backup-manager
+test -x /usr/sbin/backup-manager || exit 0
+/usr/sbin/backup-manager
+
+chmod 755 /etc/cron.daily/backup-manager

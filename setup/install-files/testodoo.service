@@ -1,0 +1,15 @@
+[Unit]
+Description=Odoo test instance
+Requires=postgresql.service
+After=network.target postgresql.service
+
+[Service]
+Type=forking
+User=odoo
+Group=odoo
+ExecStart=bash -c "/usr/bin/screen -S testodoo -dm bash -c 'cd /home/odoo/erp/odoo ; ./odoo-bin -c /home/odoo/erp/test.conf'"
+KillMode=mixed
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

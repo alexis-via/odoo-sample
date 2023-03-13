@@ -1,0 +1,14 @@
+[Unit]
+Description=Odoo
+Requires=postgresql.service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+ExecStart=/home/odoo/erp/odoo/odoo-bin --config /home/odoo/erp/prod.conf
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

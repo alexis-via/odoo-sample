@@ -1,0 +1,274 @@
+INSTALLATION Odoo v8/9/10 sur Ubuntu 18.04 LTS
+==============================================
+
+MINIMUM packages pour Odoo
+==========================
+
+sudo apt-get install postgresql node-less python-tz python-babel python-dateutil python-psycopg2 python-werkzeug python-decorator python-yaml python-unittest2 python-mako python-jinja2 python-requests python-docutils python-openid python-unidecode python-passlib python-pychart python-psutil python-serial python-reportlab python-pip python-lxml python-dev python-cups python-xlwt python-bs4 python-unicodecsv python-simplejson python-xlrd python-mock python-xlsxwriter git vim
+
+Facultatif mais conseillé sur tout serveur:
+sudo apt-get install molly-guard fail2ban
+
+sudo pip install --upgrade pypdf
+sudo pip install --upgrade flake8 (pour travailler)
+sudo pip install --upgrade openupgradelib (nécessaire pour certains modules OCA)
+sudo pip install --upgrade vatnumber  (ou sinon apt-get install python-vatnumber)
+sudo pip install --upgrade ofxparse (ou sinon apt-get install python-ofxparse)
+Si on veut installer base_phone :
+sudo pip install --upgrade phonenumbers
+Si on veut installer le connecteur Asterisk :
+sudo pip install --upgrade py-Asterisk
+Pour l'import de factures PDF :
+sudo pip install --upgrade invoice2data
+sudo pip install --upgrade factur-x  (ou depuis les sources GIT https://github.com/akretion/factur-x.git)
+sudo pip install --upgrade oca-decorators
+
+
+Pour faire marcher le longpolling avec python3.6 de Ubuntu 18.04 :
+sudo pip install gevent==1.1.2
+sudo pip install greenlet==0.4.10
+sudo pip install psycogreen==1.0
+
+
+Téléchargement Odoo
+===================
+
+Récupérer la branche git:
+* si on veut la branche officielle de l'éditeur : git clone https://github.com/odoo/odoo
+* si on veut OCB: git clone https://github.com/OCA/OCB
+
+Si on n'utilise pas la dernière version stable:
+cd odoo
+git checkout <version>
+
+Wkhtmltopdf
+===========
+https://github.com/odoo/odoo/wiki/Wkhtmltopdf
+
+Paquets nécessaires pour wkhtml2pdf
+sudo apt-get install fontconfig libxrender1 xfonts-75dpi xfonts-base poppler-utils
+
+wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb
+sudo dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb
+
+Note : poppler-utils fournit 'pdf2text' qui permet l'indexation par le module document
+
+(ne pas prendre 0.12.3 ou 0.12.4, car ça fait des bugs sur les titre de colonne des grands livres / balances)
+
+
+PostgreSQL
+==========
+
+Créer l'utilisateur postgres ayant le même nom que l'utilisateur système qui va lancer odoo (car, dans Debian/Ubuntu, il y a par défaut dans hba.conf la méthode d'authentification "peer" pour la connexion via socket unix, donc si on est loggé en tant qu'utilisateur 'odoo' sur le système, on pourra se connecter à postgres avec le même utilisateur sans ré-authentification)
+
+$ sudo su
+$ su - postgres
+$ createuser -s odoo
+
+Copier mon fichier de config git
+
+Vérifier que la locale français est installé :
+(ça permet d'avoir la langue qui se met bien en %d/%m/%Y à l'install)
+locale -a
+Si ce n'est pas le cas, l'ajouter :
+locale-gen fr_FR.UTF-8
+Eventuellement, la mettre par défaut :
+update-locale LANG=fr_FR.UTF-8
+Plus d'infos : https://www.thomas-krenn.com/en/wiki/Configure_Locales_in_Ubuntu
+
+Démarrage automatique
+=====================
+
+Script de démarrage :
+
+copier init-odoo-options sous le nom /etc/init.d/odoo
+
+Personnaliser les paramètres de config situés à l'intérieur du script, qui donnent notamment le chemin vers odoo.py, le chemin vers le fichier de config et l'utilisateur qui va lancer odoo.py
+
+sudo update-rc.d odoo defaults
+
+Logrotate
+=========
+
+Règle logrotate
+Copie logrotate-odoo en tant que /etc/logrotate.d/odoo
+chown root:root /etc/logrotate.d/odoo
+
+En cas d'ennui de CSS manquante sur rapports qweb (https://github.com/odoo/odoo/issues/1105 et https://github.com/odoo/docker/issues/24) :
+Dans Settings > Parameters > System Parameters : créer une clé :
+clé : report.url
+valeur : http://0.0.0.0:8069
+
+Fichier de config
+=================
+
+Pour générer un fichier de config de base:
+./odoo-bin -s
+=> ça génère un fichier de base ~/.odoorc  (sur odoo v8 : ~/.openerp_serverrc)
+
+Modifs sur le fichier de config:
+* without_demo = True
+
+* exemple si on veut du multi-worker:
+
+workers = 5
+max_cron_threads = 1
+limit_memory_hard = 1572864000
+limit_memory_soft = 1258291200
+limit_request = 8192
+limit_time_cpu = 2000
+limit_time_real = 2400
+
+* si on veut une recherche indépendante des accents:
+unaccent = True
+
+et il faut en plus exécuter dans la base postgres:
+
+# CREATE EXTENSION "unaccent";
+
+* si on veut filtrer sur certaines bases:
+dbfilter = ^prod$
+
+OU pour un serveur de test
+dbfilter = ^test.*
+
+* Mettre un mdp très solide pour "admin_passwd"
+
+* Créer un répertoire dédié pour la "data-dir" et personnaliser l'entrée dans le fichier de config:
+
+data_dir = /home/odoo/erp/data-dir
+
+* Personnaliser le fichier de log (attention, les logs ne seront alors plus affichés dans la sortie standard, donc à réserver à l'instance de prod):
+logfile = /var/log/odoo/odoo-server.log
+
+* Si on met un proxy Nginx devant Odoo:
+proxy_mode = True
+
+* Si on veut la géo-loc (link.tracker.click sur mass_mailing) :
+sudo apt install geoip-database-extra
+geoip_database = /usr/share/GeoIP/GeoIPCity.dat
+
+Git spécifique
+==============
+
+La meilleure option est probablement de faire une branche privée sur Gitlab (c'est gratuit).
+Sinon, si on tient à créer un repo git local pour les modules spécifiques du client :
+
+créer un sous-répertoire avec le nom court du client (encres par exemple) :
+mkdir encres
+cd encres
+mkdir git-repo
+cd git-repo
+git init --bare
+cd ..
+git clone git-repo test
+cd test
+git add xxx (ne pas oublier le fichier .gitignore)
+git commit -a (commit dans la branche master)
+git co master -b 10.0
+git push origin 10.0
+git clone git-repo prod
+cd prod
+git co origin/10.0 -b 10.0
+
+Tuning postgres
+===============
+https://wiki.postgresql.org/wiki/Performance_Optimization
+http://www.revsys.com/writings/postgresql-performance.html
+cf mon fichier postgresql-optims.txt
+
+Certificats let's encrypt
+=========================
+Doc : https://certbot.eff.org/#ubuntuxenial-nginx
+
+sudo apt install letsencrypt nginx
+
+letsencrypt certonly --webroot -w /var/www/html -d odoo.connit.fr -d test.odoo.connit.fr
+
+=> entrer l'adresse email de l'administreur du domaine
+
+Ajouter dans /etc/crontab :
+
+8 2 * * * root /usr/bin/letsencrypt renew && service nginx reload
+
+Pour faire un test de renouvellement à la main :
+sudo letsencrypt renew --dry-run --agree-tos
+
+Note: le message "WARNING:letsencrypt.client:Registering without email!" est normal.
+On doit avoir ensuite:
+Congratulations, all renewals succeeded. The following certs have been renewed.
+
+Certificats auto-signés
+=======================
+Pour générer une clé/certif SSL auto-signé :
+
+odoo@smlgp:~$ openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 1825 -nodes
+Generating a 2048 bit RSA private key
+...........................................................................................+++
+...............+++
+writing new private key to 'key.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:FR
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:Saint-Pierre de Clairac
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Monastere Sainte-Marie de la Garde
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:smlgp.intra.la-garde.org
+Email Address []:informatique@la-garde.org
+
+ATTENTION aux permissions de la clé privée :
+
+chown root:ssl-cert key.pem
+chmod 640 key.pem
+
+Proxy nginx pour HTTPS
+======================
+
+sudo apt-get install nginx
+
+Copier nginx-odoo-prod dans /etc/nginx/sites-available/odoo-prod
+
+Editer le fichier et personnaliser :
+le port d'écoute "server 127.0.0.1:8069" si Odoo n'est pas sur le port 8069
+server_name x 2
+Path des certificats SSL
+
+sudo ln -s /etc/nginx/sites-available/odoo-prod /etc/nginx/sites-enabled/odoo-prod
+sudo service nginx reload
+
+unattended-upgrades
+===================
+sudo apt-get install unattended-upgrades update-notifier-common
+activer unattended-upgrades :
+
+Editer /etc/apt/apt.conf.d/10periodic
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "5";
+APT::Periodic::Unattended-Upgrade "1";
+
+Configurer via /etc/apt/apt.conf.d/50unattended-upgrades
+
+
+NTP
+===
+
+Editer /etc/systemd/timesyncd.conf
+(Ubuntu 18.04 : paquet systemd ; ubuntu 20.04 paquet systemd-timesyncd)
+
+puis restart (pas de reload possible) :
+sudo systemctl restart systemd-timesyncd
+
+Pour vérifier l'état :
+timedatectl status
+Pour avoir plus de détail sur l'état avec des logs (qui sont sinon dans syslog) :
+systemctl status systemd-timesyncd
+
+

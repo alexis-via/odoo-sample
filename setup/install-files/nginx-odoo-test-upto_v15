@@ -1,0 +1,76 @@
+# Reverse proxy for Odoo TEST
+# Nginx config file by Akretion
+# Written by Alexis de Lattre <alexis.delattre@akretion.com>
+
+upstream testwebserver {
+    server 127.0.0.1:7069 weight=1 fail_timeout=3000s;
+}
+
+server {
+    listen                      443 ssl;
+    listen                      [::]:443 ssl;
+    # List the DNS names from which you want to be able to access Odoo TEST
+    # separated by spaces
+    # WARNING: don't forget to list also the short version of the DNS
+    # otherwise it will fallback on prod, which is marked as default_server
+    server_name                 test.odoo.connit.fr;
+
+    client_max_body_size 64m;
+    gzip             on;
+    gzip_min_length  400;
+    gzip_proxied     expired no-cache no-store private auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/javascript;
+
+    # SSL on Nginx cf http://nginx.org/en/docs/http/configuring_https_servers.html
+    ssl_protocols               TLSv1.3 TLSv1.2;
+    ssl_certificate             /etc/letsencrypt/live/odoo.connit.fr/fullchain.pem;
+    ssl_certificate_key         /etc/letsencrypt/live/odoo.connit.fr/privkey.pem;
+
+    # increase proxy buffer to handle some Odoo requests
+    proxy_buffers 16 64k;
+    proxy_buffer_size 128k;
+
+    location /longpolling {
+        proxy_pass http://127.0.0.1:7072;
+    }
+
+    # doc for reverse proxy use : http://wiki.nginx.org/HttpProxyModule
+    location / {
+        # Nginx passes requests to Odoo
+        proxy_pass                      http://testwebserver;
+        # force timeouts if the backend dies
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+        # The parameter proxy_redirect is important if we use odoo on localhost
+        proxy_redirect                  off;
+
+        # Cf https://www.odoo.com/documentation/12.0/setup/deploy.html#id7
+        # Sample file - Add Headers for odoo proxy mode
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+
+        # Sometimes, Odoo can be slow to answer, for example when we ask him
+        # to generate a large accounting report... we set it to 30 min
+        proxy_read_timeout              1800;
+
+        # In some conditions, we don't want to use Nginx proxy cache functionnality
+        # Not supported on our version of Nginx
+        # proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;
+        # proxy_no_cache $http_pragma $http_authorization;
+        }
+}
+
+# Automatically redirect users from HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name test.odoo.connit.fr;
+    root /var/www/html;
+    location ~ /.well-known {
+        allow all;
+        }
+    location / {
+        rewrite ^/.*$ https://$host$request_uri? permanent;
+    }
+}

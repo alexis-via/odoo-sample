@@ -1,0 +1,15 @@
+[Unit]
+Description=Py3o Render Server
+After=network.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+ExecStart=/usr/local/bin/start-py3o-renderserver --java=/usr/lib/jvm/default-java/lib/server/libjvm.so --ure=/usr/share --office=/usr/lib/libreoffice --driver=juno --sofficeport=8997 -i localhost
+KillMode=mixed
+Restart=always
+RestartSec=5  # number of seconds to attempt restart after failure
+
+[Install]
+WantedBy=multi-user.target

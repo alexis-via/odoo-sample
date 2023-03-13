@@ -1,0 +1,50 @@
+sudo apt-get install cups
+si HP : sudo apt-get install hplip
+sudo adduser odoo lpadmin
+BIG FAT WARNING : pour qu'il tienne compte du adduser, il faut faire :
+sudo killall cupsd (un restart ne suffit pas !!!)
+se connecter via localhost sur 631 pour administration (tunnel ssh)
+Editer /etc/cups/cupsd.conf
+
+http://192.9.202.243:631/
+(ne PAS mettre d'alias, sinon on a "bad request"
+
+
+Dans odoo :
+
+Configuration : Mettre à jour les imprimantes => il créé les imprimantes
+
+Sinon, en ligne de commande :
+
+lpadmin -p printer-name -v device-uri -m model -L location -E
+
+ATTENTION, le -E doit bien être à la fin
+
+Exemple pour un zebra réseau en "raw queue" (pas d'option -m) :
+lpadmin -p zebra-soa -v socket://scentys-z1-pprktbzcng.dynamic-m.com:9100 -L "Scentys SOA" -E
+
+lpoptions -p hp-magasin -o PageSize=A4
+
+Pour voir l'état des imprimantes :
+lpstat -p
+printer zebra-soa now printing zebra-soa-1.  enabled since ven. 18 déc. 2015 18:23:34 CET
+    The printer is not responding.
+
+Pour voir les options d'une imprimante : lpoptions -p zebra-soa
+
+Pour voir la queue d'impression :
+lpstat -o akretion-zebra-eth
+akretion-zebra-eth-120  alexis            3072   ven. 18 déc. 2015 18:34:24 CET
+
+=> j'ai 1 job ID 120
+
+Pour supprimer un job de la queue :
+lprm <job-id>
+pour les annuler tous : lprm -
+
+
+Dans Odoo
+
+Ajouter le user dans le bon groupe
+Paramètres dans les préf user
+Paramètre sur le rapport : 2ème onglet : impression + sélectionner imprimante : quand on appelle ce rapport, ça balance direct à l'imprimante
