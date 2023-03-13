@@ -79,11 +79,14 @@ Démarrage automatique
 
 Script de démarrage :
 
-copier init-odoo-options sous le nom /etc/init.d/odoo
+copier odoo.service (et éventuellement aussi testodoo.service) dans /etc/systemd/system
 
-Personnaliser les paramètres de config situés à l'intérieur du script, qui donnent notamment le chemin vers odoo.py, le chemin vers le fichier de config et l'utilisateur qui va lancer odoo.py
+chown root:root /etc/systemd/system/*odoo*service
 
-sudo update-rc.d odoo defaults
+Personnaliser les paramètres de config situés à l'intérieur du fichier .service, qui donnent notamment le chemin vers odoo.py, le chemin vers le fichier de config et l'utilisateur qui va lancer odoo.py
+
+sudo systemctl enable odoo
+sudo systemctl enable testodoo
 
 Logrotate
 =========
@@ -284,13 +287,16 @@ sudo pip2 install JPype1==0.6.3
 sudo pip2 install --upgrade py3o.renderserver
 sudo pip2 install --upgrade py3o.fusion
 
-Copier les fichiers py3o-renderserver.conf py3o-fusion.conf libreoffice.conf dans /etc/supervisor/conf.d/
+Copier les fichiers py3o-renderserver.service py3o-fusion.service libreoffice.service dans /etc/systemd/system/
 
-chown root:root /etc/supervisor/conf.d/*.conf
+chown root:root /etc/systemd/system/py3o*.service
+chown root:root /etc/systemd/system/libreoffice.service
 
 Vérifier que le répertoire /var/log/odoo existe bien
 
-sudo service supervisor reload
+sudo systemctl enable py3o-fusion
+sudo systemctl enable py3o-renderserver
+sudo systemctl enable libreoffice
 
 Diagnostic et autres infos techs
 --------------------------------
