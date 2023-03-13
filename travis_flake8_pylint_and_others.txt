@@ -9,6 +9,10 @@ Pour désactiver sur une ligne:
 
 record.create_date  # pylint: disable=pointless-statement
 
+Pour désactiver une règle dans un fichier XML:
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- pylint:disable=duplicate-xml-record-id -->
+
 Prettier
 ========
 

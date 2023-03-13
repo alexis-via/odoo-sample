@@ -61,7 +61,8 @@ Pour un bloc de code (attention à la ligne vide entre .. code:: et le début du
   if toto == titi:
       print "TOTO"
 
-Include image:
+Include image:  (don't forget empty line before .. figure::)
+
 .. figure:: ../static/description/ex_report_template.png
    :scale: 80 %
    :alt: Sample report template

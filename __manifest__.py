@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright 2022 Akretion France (http://www.akretion.com/)
+# Copyright 2023 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
@@ -27,10 +26,11 @@ This module has been written by Alexis de Lattre from Akretion
     'author': 'Akretion,Odoo Community Association (OCA)',
     'maintainers': ['alexis-via'],
     'contributors': '',  # text
+    "development_status": "Mature",
     'website': 'https://github.com/OCA/connector-telephony',
     'depends': ['account_cutoff_base'],
     'excludes': ['report_intrastat'],
-    'external_dependencies': {'python': ['phonenumbers', 'Asterisk']},
+    'external_dependencies': {'python': ['phonenumbers', 'Asterisk', "python-stdnum>=1.16"]},
     'data': [
         'views/company.xml',
         'views/account.xml',

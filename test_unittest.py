@@ -1,4 +1,4 @@
-# Copyright 2022 Akretion France (http://www.akretion.com/)
+# Copyright 2023 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -19,7 +19,7 @@ from odoo.tests import tagged
 # @tagged is used to avoid bugs such as:
 # null value in column "sale_line_warn" violates not-null constraint
 @tagged('post_install', '-at_install')
-class TestFrIntrastatService(TransactionCase):
+class TestFrIntrastatService(SavepointCase):
 
     @classmethod
     def setUpClass(cls):
@@ -70,6 +70,10 @@ assertIn(a, b)  a in b
 assertNotIn(a, b)   a not in b
 assertIsInstance(a, b)  isinstance(a, b)
 assertNotIsInstance(a, b)   not isinstance(a, b)
+# to test a report
+res = self.env['ir.actions.report']._render(
+    "account.report_invoice_with_payments", self.invoice.ids)
+self.assertRegex(str(res[0]), self.product.hs_code_id.hs_code)
 
 from odoo.exceptions import ValidationError
 self._set_analytic_policy('never')

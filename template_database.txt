@@ -13,7 +13,8 @@ When I generate a template database :
  . pos : stock in real time
 - ajouter dans le groupe "Show full accounting features"
 - l10n_fr_account_tax_unece
-- Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale)
+- Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale) + lien compte bancaire
+- Créer un journal "chèque client"
 - Mettre à jour les payment modes avec les 2 journaux de banque
 - Fiscal position : décocher VAT required sur domestique france
 - créer 1 fiscal year

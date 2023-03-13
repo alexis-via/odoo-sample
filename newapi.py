@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Akretion France (http://www.akretion.com/)
+# Copyright 2023 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -14,6 +14,7 @@ from odoo.tools import float_compare, float_is_zero, float_round
 from odoo.tools import file_open
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 from textwrap import shorten  # shorten(assign.partner_name, 20, placeholder='...')
+                              # default placeholder='[...]'
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict   # a = defaultdict(list)
@@ -251,7 +252,7 @@ class ProductCode(models.Model):
         help="My help message")
     display_name = fields.Char(
         string='Display Name', compute='_compute_display_name',
-        readonly=True, store=True)
+        readonly=True, store=True, precompute=True)
     comment = fields.Text(string='Comment', translate=True)
     html = fields.Html(string='report', translate=True)
     code_digits = fields.Integer(
@@ -297,6 +298,7 @@ class ProductCode(models.Model):
     #    selection_add=[('new_key1', 'My new key1'), ('new_key2', 'My New Key2')])
     # v14 : ondelete={"new_key1": "set default"}
     # other possible options for ondelete: set null, cascade (delete the records !)
+    #                                      v16: set consu (where consu is a possible key)
     # Pour afficher la valeur 'lisible' du champ selection (v12+):
     # rec._fields['type'].convert_to_export(rec.type, rec)
     picture = fields.Binary(string='Picture', attachment=True)
@@ -318,7 +320,7 @@ class ProductCode(models.Model):
     # Exemple de champ fonction stocké
     price_subtotal = fields.Float(
         string='Amount', digits= dp.get_precision('Account'),
-        store=True, readonly=True, compute='_compute_price')
+        store=True, precompute=True, readonly=True, compute='_compute_price')
     # Exemple de champ function non stocké avec fonction inverse
     loud = fields.Char(
         store=False, compute='_compute_loud', inverse='_inverse_loud',
@@ -421,7 +423,11 @@ class ProductCode(models.Model):
         # context (clé 'tz'), ou, si elle n'est pas présente, dans la timezone
         # de l'utilisateur:
         # datetime_in_tz_dt = fields.Datetime.context_timestamp(self, date_time_dt)
+        #  -> self sert à donner le context et donc la timezone
         # Datetime en UTC en string : fields.Datetime.now()
+        # Pour écrire dans un rapport la date de génération:
+        # _('Generated on %s') % format_datetime(self.env, datetime.utcnow())
+        # en effet, format_datetime() s'occupe de convertir dans la tz du user
     }
 
     # APPEL A CREATE
@@ -644,7 +650,7 @@ action = self.env["ir.actions.actions"]._for_xml_id("stock.action_stock_rules_re
 action = self.env['report'].get_action(self, 'report_name')  # 1er arg = recordset, ID ou liste d'IDs
 # en v12
 action = self.env.ref('sale.action_report_saleorder')\
-            .with_context({'discard_logo_check': True}).report_action(self)
+            .with_context(discard_logo_check=True).report_action(self)
 # en v14+, on éditer un rapport directement depuis un bouton, pas besoin de code:
 <button name="%(stock.action_report_delivery)d" string="Print" type="action"/>
 
@@ -715,9 +721,9 @@ self.env.ref('mail_template_xmlid').send_mail(res_id)
 @api.cr_uid_ids_context
 def machin(cr, uid, ids, context=None):
 
-# Conversion de devises
+# Conversion de devises v12-
 from_currency.with_context(date=date).compute(amount_to_convert, to_currency, round=True)
-# a partir v12
+# v12+
 from_currency._convert(from_amount, to_currency, company, date, round=True)
 # Conversion d'UoM v10
 In class product.uom
@@ -877,7 +883,7 @@ line_ids = fields.One2many(
 
 @api.depends('line_ids.commission_amount')
 def _compute_amount_total(self):
-    rg_res = self.env['account.invoice.line'].read_group([('result_id', 'in', self.ids)], ['result_id', 'commission_amount'], ['result_id'])
+rg_res = self.env['account.invoice.line'].read_group([('result_id', 'in', self.ids)], ['result_id', 'commission_amount:sum'], ['result_id'])
     mapped_data = dict([(x['result_id'][0], x['commission_amount']) for x in rg_res])
     for rec in self:
         rec.amount_total = mapped_data.get(rec.id, 0)
@@ -918,10 +924,8 @@ account_recordset = self.env['ir.property'].get('property_account_payable_id', '
 if country in self.env.ref('base.europe').country_ids
 
 # v15 translation
-# encore plus simple
+# encore plus simple et conseillé pour des raisons de sécu
 _("My %(label)s is from %(partner)s") % {"label": label, "partner": partner}
-# plus simple = CE QUE JE PREFERE
-raise UserError(_("partner {partner_name} in company {company_name}", partner_name=partner_name, company_name=company_name))
 raise UserError(_("partner {partner_name} in company {company_name}").format(partner_name=partner_name, company_name=company_name))
 # or
 format_vals = {'partner_name': self.partner_id.name, 'company_name': self.company_id.name}
@@ -1001,3 +1005,31 @@ record._origin.id= 7
 type(assign.id) = <class 'int'>
 # Test if a recordset is a newID:
 if not isinstance(st.id, models.NewId)
+
+# Notification
+# Easy : use OCA/web/web_notify, that allows to send messages in HTML
+# Native: return of a method called by a button (doesn't work on an onchange)
+# v14+  # TODO test
+return {
+    'type': 'ir.actions.client',
+    'tag': 'display_notification',
+    'params': {
+        'type': 'success',  # warning/danger
+        'sticky': True,  # if True, popup will stay on screen until closed by user
+        'title': title,
+        'message': message,
+        'next': {'type': 'ir.actions.act_window_close'},  # close wizard AND show pop-up
+        }
+    }
+# in params/next, you can put any ir.actions.act_window
+# tested on v14 native:
+self.env["bus.bus"].sendone(  # v16 method became private : _sendone(
+    (self._cr.dbname, 'res.partner', user.partner_id.id),
+    {
+        "title": _("Currency rates older than %d days", max_days),
+        "sticky": True,
+        "message": "message WITHOUT HTML",
+        'type': 'simple_notification',
+        "warning": True,  # true -> yellow ; false -> red
+    }
+) 

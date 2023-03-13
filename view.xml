@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright 2022 Akretion France (http://www.akretion.com/)
+  Copyright 2023 Akretion France (http://www.akretion.com/)
   @author: Alexis de Lattre <alexis.delattre@akretion.com>
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
 
 <odoo>
 <data>
+
+<!-- WARNING v16 : attrs="{'readonly': 1}" causes an OWL crash  -->
 
 <!-- HERITAGE d'une vue FORM -->
 <record id="view_asterisk_server_company_form" model="ir.ui.view">
@@ -136,7 +138,7 @@
                     <field name="email" widget="email"/>
                     <field name="date" options="{'datepicker': {'warn_future': true}}"/> <!-- datepicker à partir de v13 -->
                     <field name="port" />
-                    <field name="boolean_field" widget="toggle_button"/> <!-- exemple: payslip_status sur hr_holidays => rond cliquable qui change de couleur au lieu de case à cocher -->
+                    <field name="boolean_field" widget="boolean_toggle"/>
                     <field name="password" password="True" />
                     <separator string="New section" colspan="2"/>
                     <field name="tutu_id" widget="selection" />
@@ -210,6 +212,9 @@
                               <field name="received_ratio" widget="percentpie" string="Received"/>  <!-- extrait du module mass_mailing : le widget percentpie affiche un jolie cercle en couleur avec le chiffre en pourcent au milieu. Le type du champ est un integer. Ce widget ne marche qu'en lecture seule. -->
                             </button>
                     <field name="company_type" options="{'horizontal': true}" widget="radio"/>
+                    <field name="analytic_distribution" widget="analytic_distribution"
+                        groups="analytic.group_analytic_accounting"
+                        options="{'product_field': 'product_id', 'account_field': 'account_id'}" />
                     </div>
                 </group>
             </sheet>

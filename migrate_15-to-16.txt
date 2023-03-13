@@ -1,6 +1,8 @@
 https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-16.0
 
-precompute=True
+precompute=True (seulement pour les champs store=True)
+
+read_group : sur le 2e argument, il suffixer les noms des champs à sommer avec ":sum" 
 
 index = ??
 
@@ -10,15 +12,18 @@ héritage create en batch pour éviter un warning au démarrage
 @api.model_create_multi
 def create(self, vals_list):
 
-
+- analytic revolution :
+  _inherit = 'analytic.mixin'
+  => this simple inherit adds a field analytic_distribution = fields.Json()
 
 =============
 
 Main Datamodel changes :
-- analytic revolution
+- account.move : display_type = 'product' pour une ligne de facture 'normale' (avant c'était False). Les lignes de factures sont les move lines domain=[('display_type', 'in', ('product', 'line_section', 'line_note'))]
 - suppresion de stock.inventory
 - res.partner :
 - account.account : user_type_id => account_type (selection)
 - stock.move.line : product_uom_qty -> reserved_uom_qty
 - supplierinfo : name -> partner_id
 - sale.order : compte ana descendu à la ligne
+- stock.picking : move_lines => move_ids (O2M vers stock.move)
