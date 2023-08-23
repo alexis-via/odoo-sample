@@ -1,7 +1,10 @@
-#! /usr/bin/env python
+#! /usr/bin/python3
 
 import git
 import os
+
+GITHUB_LOGIN = 'alexis-via'
+GITHUB_ORG = 'akretion'
 
 version = input('Odoo version : ')
 if len(version) == 2:
@@ -78,11 +81,9 @@ repos = {
         # 'queue': 'https://github.com/OCA/queue',
         # 'connector-ecommerce': 'https://github.com/OCA/connector-ecommerce',
         # 'ecommerce': 'https://github.com/OCA/e-commerce',
-        # 'payment-gateway': 'https://github.com/akretion/payment-gateway',
         # 'search-engine': 'https://github.com/OCA/search-engine',
         # 'storage': 'https://github.com/OCA/storage',
         # 'shopinvader': 'https://github.com/shopinvader/odoo-shopinvader',
-        # 'shopinvader-misc': 'https://github.com/shopinvader/odoo-misc',
         # 'shopinvader-payment': 'https://github.com/shopinvader/odoo-shopinvader-payment',
         # 'shopinvader-pim': 'https://github.com/shopinvader/odoo-pim',
         }
@@ -96,7 +97,9 @@ path.append(os.path.join(cur_dir, 'odoo/odoo/addons'))
 path.append(os.path.join(cur_dir, 'odoo/addons'))
 path.append(os.path.join(cur_dir, 'symlink'))
 
+oca_prefix = 'https://github.com/OCA/'
 for repo_name, repo_url in repos.items():
+    repo_url = '%s.git' % repo_url
     path.append(os.path.join(cur_dir, repo_name))
     test_path.append('../' + repo_name)
     # skip if repo is already on filesystem
@@ -105,6 +108,10 @@ for repo_name, repo_url in repos.items():
         continue
     print(repo_name)
     repo = git.Repo.clone_from(repo_url, repo_name, branch=version, single_branch=True)
+    if repo_url.startswith(oca_prefix):
+        new_prefix = f'https://{GITHUB_LOGIN}@github.com/{GITHUB_ORG}/'
+        org_repo_url = repo_url.replace(oca_prefix, new_prefix)
+        repo.create_remote(GITHUB_ORG, org_repo_url)
 
 
 for x in [path, test_path]:
