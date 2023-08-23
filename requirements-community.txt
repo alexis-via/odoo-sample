@@ -1,0 +1,47 @@
+# OCA stuff
+oca-decorators
+openupgradelib
+odoo_test_helper
+# Upgrade libs from odoo requirements.txt that are too old
+python-stdnum
+ofxparse
+# Needed by commonly-used community modules
+factur-x
+phonenumbers
+regex==2022.3.2
+dateparser==1.1.1
+unidecode
+unicodecsv
+pdfplumber
+simplejson
+html2text
+pycups
+openpyxl
+# Needed by some community that I often deploy
+# ATTENTION, il met à jour à la dernière version de Pillow, qui n'est pas celle du requirements.txt d'Odoo
+python-barcode
+pylibdmtx
+ovh
+# for das2
+pgpy
+# for Chorus connector
+requests_oauthlib
+# Needed by base_view_inheritance_extension
+astor
+# Needed by base_rest
+apispec
+pyquerystring
+cerberus
+parse-accept-language
+# roulier for La Poste connector and other transporters
+roulier
+# Needed for connector
+cachetools>=2.0.1
+# py3o
+py3o.template
+py3o.formats
+# Needed for storage
+boto3
+python_slugify
+# tools
+flake8
