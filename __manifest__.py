@@ -4,7 +4,7 @@
 
 {
     'name': 'Account Cut-off Prepaid',
-    'version': '14.0.1.0.0',
+    'version': '16.0.1.0.0',
     'category': 'Accounting',  # Sales, Warehouse, Manufacturing, Purchases, Human Resources
     'license': 'AGPL-3',
     'summary': 'Prepaid Expense, Prepaid Revenue',  # v7: size=64, v8: no size limit
@@ -32,8 +32,7 @@ This module has been written by Alexis de Lattre from Akretion
     'excludes': ['report_intrastat'],
     'external_dependencies': {'python': ['phonenumbers', 'Asterisk', "python-stdnum>=1.16"]},
     'data': [
-        'views/company.xml',
-        'views/account.xml',
+        'security/ir.model.access.csv',
     ],
     'post_init_hook': 'update_bank_journals',
     'uninstall_hook': 'street3_uninstall_hook',

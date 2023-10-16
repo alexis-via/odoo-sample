@@ -19,7 +19,7 @@ from odoo.tests import tagged
 # @tagged is used to avoid bugs such as:
 # null value in column "sale_line_warn" violates not-null constraint
 @tagged('post_install', '-at_install')
-class TestFrIntrastatService(SavepointCase):
+class TestFrIntrastatService(TransactionCase):  # v16: TransactionCase
 
     @classmethod
     def setUpClass(cls):
@@ -70,6 +70,7 @@ assertIn(a, b)  a in b
 assertNotIn(a, b)   a not in b
 assertIsInstance(a, b)  isinstance(a, b)
 assertNotIsInstance(a, b)   not isinstance(a, b)
+self.assertGreater(a, b)
 # to test a report
 res = self.env['ir.actions.report']._render(
     "account.report_invoice_with_payments", self.invoice.ids)
@@ -82,3 +83,26 @@ with self.assertRaises(ValidationError):
 
 with self.assertRaises(UserError):
     self.partner.sudo(self.user.id).open_map()
+
+from freezegun import freeze_time
+with freeze_time("2022-01-01"):
+    move = self.env["account.move"].create({})
+
+from odoo.tests.common import Form
+wiz_form = Form(self.env["account.move.renumber.wizard"])
+wiz_form.my_char_field = 'Tutu'
+wiz = wiz_form.save()
+wiz.run()
+
+invoice_form = Form(
+    cls.account_move.with_context(default_move_type="in_invoice")
+    )
+invoice_form.partner_id = cls.env["res.partner"].create(
+    {"name": "test partner"}
+    )
+invoice_form.check_total = 1.19
+with invoice_form.invoice_line_ids.new() as line_form:
+    line_form.name = "Test invoice line"
+    line_form.price_unit = 2.99
+    line_form.tax_ids.clear()
+cls.invoice = invoice_form.save()

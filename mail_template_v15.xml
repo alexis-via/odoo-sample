@@ -13,25 +13,36 @@
 
 <div style="margin: 0px; padding: 0px;">
     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-        % set doc_name = 'quotation' if object.state in ('draft', 'sent') else 'order'
-        Dear
-            <t t-if="object.partner_id.parent_id">
-                    <t t-out="object.partner_id.parent_id.name">Nom du partenaire</t>)
-            </t>
-        <br /><br />
-        Here is
-        <t if="ctx.get('proforma')">
-                in attachment your pro-forma invoice
-        </t>
-        <t t-else="">
-            the ${doc_name} <strong>${object.name}</strong>
-        </t>
-        amounting in <strong>${format_amount(object.amount_total, object.pricelist_id.currency_id)}</strong>
-        from ${object.company_id.name}.
-        ${format_date(object.date)}
-        ${format_tz(dt, tz=False, format=False)}
-        <br /><br />
-        Do not hesitate to contact us if you have any question.
+    <table
+                        style="border-spacing: 0; border-collapse: collapse; width: 100%; text-align: center;"
+                    >
+            <tr>
+                <th style="padding: 5px; border: 1px solid black;">Guest Name</th>
+                <th style="padding: 5px; border: 1px solid black;">Guest Qty</th>
+                <th style="padding: 5px; border: 1px solid black;">Arrival Time</th>
+                <th style="padding: 5px; border: 1px solid black;">Rooms</th>
+                <th style="padding: 5px; border: 1px solid black;">Arrival Note</th>
+                <th style="padding: 5px; border: 1px solid black;">Departure Date</th>
+            </tr>
+            <t t-foreach="object._mail_template_get_stays()" t-as="stay">
+            <tr>
+                <td
+                                style="padding: 5px; border: 1px solid black; text-align: left;"
+                        ><t t-out="stay.partner_name"/></td>
+                <td
+                                style="padding: 5px; border: 1px solid black;"
+                        ><t t-out="stay.guest_qty"/></td>
+                <td
+                                style="padding: 5px; border: 1px solid black;"
+                        ><t t-out="dict(stay.fields_get('arrival_time', 'selection')['arrival_time']['selection'])[stay.arrival_time]"/></td>
+                <td style="padding: 5px; border: 1px solid black;"><t t-out="stay.rooms_display_name"/></td>
+                <td style="padding: 5px; border: 1px solid black; text-align: left;"><t t-out="stay.arrival_note"/></td>
+                <td
+                                style="padding: 5px; border: 1px solid black;"
+                        ><t t-out="departure_date"/> <t t-esc="dict(stay.fields_get('departure_time', 'selection')['departure_time']['selection'])[stay.departure_time]"/></td>
+            </tr>
+    </t>
+        </table>
     </p>
 </div>
 

@@ -1,4 +1,4 @@
-Upgrade 18.04 vers 20.04
+Upgrade 20.04 vers 22.04
 ========================
 
 Sur Odoo 10 :
@@ -8,19 +8,18 @@ réinstaller pip :
 https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 get-pip.py
 
-sudo apt install python2-dev gcc libxslt1-dev libldap-dev libsasl2-dev zlib1g-dev
 
 ré-installer les libs py2 en s'inpirant de requirements.txt d'Odoo
 - ne pas oublier la lib pycups (apt install libcups2-dev && pip2 install --upgrade pycups==1.9.74
 - si chorus, ne pas oublier requests_oauthlib
 
 Supprimer les bases de test (pour gagner du temps)
-sudo pg_dropcluster 12 main --stop
-sudo pg_upgradecluster 10 main
-sudo pg_dropcluster 10 main
+sudo pg_dropcluster 14 main --stop
+sudo pg_upgradecluster 12 main
+sudo pg_dropcluster 12 main
 
 La config postgresql est apparamment basculée automatiquement de 10 à 12
 
-sudo apt remove --purge postgresql-10 postgresql-client-10
+sudo apt remove --purge postgresql-12 postgresql-client-12
 
 Py3o a l'air de fonctionner sans chgt lors de l'upgrade

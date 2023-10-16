@@ -21,8 +21,9 @@ Module name
 
 This module was written to extend the functionality of ... to support ... and allow you to ...
 
-*emphasis*
-**strong emphasis**
+*italique*
+**gras**
+``code``
 http://docutils.sourceforge.net/docs/user/rst/quickref.html
 
 =====

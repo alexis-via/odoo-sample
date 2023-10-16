@@ -12,6 +12,8 @@ héritage create en batch pour éviter un warning au démarrage
 @api.model_create_multi
 def create(self, vals_list):
 
+Remplace [(6, 0, [])] et autres syntaxes chelou par les nouvelles Command.set(), .create(), etc...
+
 - analytic revolution :
   _inherit = 'analytic.mixin'
   => this simple inherit adds a field analytic_distribution = fields.Json()

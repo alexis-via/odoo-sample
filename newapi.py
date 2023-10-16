@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # Copyright 2023 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import api, fields, models, tools, _
+from odoo import api, fields, models, tools, Command, _
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
 # v8
 from openerp.exceptions import Warning as UserError
@@ -11,7 +10,7 @@ from openerp.exceptions import Warning as UserError
 import odoo.addons.decimal_precision as dp
 from odoo.tools.misc import format_date, format_datetime, format_amount
 from odoo.tools import float_compare, float_is_zero, float_round
-from odoo.tools import file_open
+from odoo.tools import file_open, file_path  # file_path only for v15+
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 from textwrap import shorten  # shorten(assign.partner_name, 20, placeholder='...')
                               # default placeholder='[...]'
@@ -297,6 +296,7 @@ class ProductCode(models.Model):
     # fields.Selection(
     #    selection_add=[('new_key1', 'My new key1'), ('new_key2', 'My New Key2')])
     # v14 : ondelete={"new_key1": "set default"}
+    # ondelete={'subcontract': lambda recs: recs.write({'type': 'normal', 'active': False})}
     # other possible options for ondelete: set null, cascade (delete the records !)
     #                                      v16: set consu (where consu is a possible key)
     # Pour afficher la valeur 'lisible' du champ selection (v12+):
@@ -327,6 +327,8 @@ class ProductCode(models.Model):
         search='_search_loud')
     account_id = fields.Many2one('account.account', string='Account',
         required=True, domain=[('type', 'not in', ['view', 'closed'])],
+        # domain with XMLID
+        domain=lambda self: [('category_id', '=', self.env.ref('uom.uom_categ_wtime').id)],
         default=lambda self: self._default_account(),
         check_company=True)
         # L'utilisation de lambda permet d'hériter la fonction _default_account() sans
@@ -334,8 +336,7 @@ class ProductCode(models.Model):
         # Possibilité d'hériter un domaine:
         # domain=lambda self: [('reconcile', '=', True), ('user_type_id.id', '=', self.env.ref('account.data_account_type_current_assets').id), ('deprecated', '=', False)]
     company_id = fields.Many2one(
-        'res.company', string='Company',
-        ondelete='cascade', required=True,
+        'res.company', ondelete='cascade', required=True, index=True,
         default=lambda self: self.env['res.company']._company_default_get()
         default=lambda self: self.env.company)  # v13
         # si on veut que tous les args soient nommés : comodel_name='res.company'
@@ -434,14 +435,15 @@ class ProductCode(models.Model):
     # apparemment, ça reste à l'ancienne, et on doit passer des IDs pour les M2O ???
     # on récupère un recordset en sortie
 
-    @api.model  # equivalent de (self, cr, uid, vals, context=None)
-    def create(self, vals):
-        if 'company_id' in vals:  # v14
-            self = self.with_company(vals['company_id'])
-        if vals.get('name', '/') == '/':
-            vals['name'] = self.env['ir.sequence'].next_by_code(
-                'hr.expense.expense')
-        return super(ObjClass, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if 'company_id' in vals:
+                self = self.with_company(vals['company_id'])
+            if vals.get('name', _("New")) == _("New"):
+                vals['name'] = self.env['ir.sequence'].next_by_code(
+                    'sale.order', sequence_date=vals.get('date')) or _("New")
+        return super().create(vals_list)
 
     # Starting from v12, we can also use that:
     @api.model_create_multi
@@ -453,6 +455,17 @@ class ProductCode(models.Model):
     def write(self, vals):
         vals.update({'tutu': toto})
         return super(ObjClass, self).write(vals)
+
+    # Write sur M2M ou O2M
+    # Command.create({})  equiv [(0, 0, {})] : [Command.create({'name': 'S'})]
+    # Command.update(ID, {})  equiv [(1, ID, {}]
+    # Command.delete(ID)  equiv [(2, ID, 0)]
+    # Command.unlink(ID)  equiv [(3, ID, 0)]
+    # Command.link(ID)  equiv [(4, ID)]
+    # Command.clear()  equiv [(5, 0, 0)]
+    # Command.set(IDs)   equiv [(6, 0, [IDs])]
+    - equivalent de [(6, 0, [ids])]
+    'groups_id': [Command.set([cls.group_portal.id])],
 
     @api.multi
     def unlink(self):
@@ -627,7 +640,15 @@ recs2 = self.sudo(user.id)
 recs2 = self.sudo()  # uid = SUPERUSER_ID
 
 # RedirectWarning
+# also allows to ask a question with 2 possible answers (one of the 2 is cancel i.e. do nothing)
 action = self.env.ref('account.action_account_config')  # ok v14
+# action can be an ir.actions.server that contains code:
+<record  id="stock_quant_stock_move_line_desynchronization" model="ir.actions.server">
+    <field name="name">Correct inconsistencies for reservation</field>
+    <field name="model_id" ref="base.model_ir_actions_server"/>
+    <field name="state">code</field>
+    <field name="code"></field>
+</record>
 msg = _('Cannot find a chart of accounts for this company, You should configure it. \nPlease go to Account Configuration.')
 raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
 
@@ -846,6 +867,7 @@ self.env['ir.sequence'].next_by_code('sale.orde', sequence_date='2015-10-09')
 # ATTENTION, ne PAS passer la date en argument de next_by_id() ou next_by_code(), mais la passer dans le context .with_context(ir_sequence_date=date).next_by_id()
 # Si on passe la date en argument, la date s'applique à la sequence mais PAS au préfixe
 # Si on passe la date via le contexte, la date s'applique à la sequence ET au préfixe
+# Est-ce encore vrai en v16 ??
 date = fields.Date.from_string('2021-12-25')
 prefix = 'F-%(year)s-%(month)s-'
 use_date_range = yes du 01/07/2021 au 30/06/2022 next number 42
@@ -924,13 +946,8 @@ account_recordset = self.env['ir.property'].get('property_account_payable_id', '
 if country in self.env.ref('base.europe').country_ids
 
 # v15 translation
-# encore plus simple et conseillé pour des raisons de sécu
+_("My %(label)s is from %(partner)s", label=label, partner=partner)
 _("My %(label)s is from %(partner)s") % {"label": label, "partner": partner}
-raise UserError(_("partner {partner_name} in company {company_name}").format(partner_name=partner_name, company_name=company_name))
-# or
-format_vals = {'partner_name': self.partner_id.name, 'company_name': self.company_id.name}
-raise UserError(_("partner {partner_name} in company {company_name}").format(**format_vals)
-
 try:
     xml_check_xsd(xml_byte, flavor="factur-x", level=ns["level"])
 except Exception as e:
@@ -1032,4 +1049,90 @@ self.env["bus.bus"].sendone(  # v16 method became private : _sendone(
         'type': 'simple_notification',
         "warning": True,  # true -> yellow ; false -> red
     }
-) 
+)
+
+# Analytic v16
+_inherit = "analytic.mixin"
+# => will add a field analytic_distribution (and analytic_precision)
+
+# to add these fields manually:
+    analytic_distribution = fields.Json(
+        string="Analytic",
+        compute="_compute_analytic_distribution",
+        readonly=False,
+        store=True,
+        precompute=True,
+    )
+    analytic_precision = fields.Integer(
+        default=lambda self: self.env["decimal.precision"].precision_get(
+            "Percentage Analytic"
+        ),
+    )
+
+# to get the default values from the analytic distribution models
+    @api.depends("product_id")
+    def _compute_analytic_distribution(self):
+        for line in self:
+            distribution = self.env[
+                "account.analytic.distribution.model"
+            ]._get_distribution(
+                {
+                    "partner_id": line.xxx.partner_id.id,
+                    "partner_category_id": line.xxx.partner_id.category_id.ids,
+                    "product_id": line.xxx.product_id.id,
+                    "product_categ_id": line.xxx.product_id.categ_id.id,
+                    "account_prefix": line.xxx.account.code,
+                    "company_id": line.xxx.company_id.id,
+                }
+            )
+            line.analytic_distribution = distribution or line.analytic_distribution
+
+
+# VALIDATION if it creates account.move
+move.with_context(validate_analytic=True)._post(soft=False)
+
+# VALIDATION if it doesn't create account moves (sale.order, purchase.order)
+def button_confirm(self):
+    for order in self:
+        order.order_line._validate_analytic_distribution()
+
+# on lines:
+def _validate_analytic_distribution(self):
+    for line in self.filtered(lambda l: not l.display_type):
+        line._validate_distribution(**{
+            'product': line.product_id.id,
+            'account': line.account_id.id,
+            'business_domain': 'invoice',
+            'company_id': line.company_id.id,
+        })
+
+# Write on an analytic_distribution field:
+self.write({'analytic_distribution': {ana1_acc_id: 60, ana2_acc_id: 40})
+
+
+class AccountAnalyticApplicability(models.Model):
+    _inherit = 'account.analytic.applicability'
+
+    business_domain = fields.Selection(
+        selection_add=[
+            ('expense', 'Expense'),
+        ],
+        ondelete={'expense': 'cascade'},
+    )
+
+<field
+    name="analytic_distribution"
+    widget="analytic_distribution"
+    groups="analytic.group_analytic_accounting"
+    options="{'product_field': 'product_id', 'account_field': 'account_id', 'business_domain': 'bill', 'force_applicability': 'optional'}"
+    />
+# business_domain: general, invoice, bill, sale_order, purchase_order, expense (ndf)
+# applicability : optional, mandatory or unavailable
+
+
+# new() : Return a new record instance attached to the current environment and
+#        initialized with the provided ``value``. The record is *not* created
+#        in database, it only exists in memory.
+# @api.model
+#    def new(self, values=None, origin=None, ref=None):
+self.env['account.move'].new()

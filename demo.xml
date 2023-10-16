@@ -28,7 +28,7 @@
     <!-- M2O -->
     <field name="uom_id" ref="product.product_uom_unit"/>
     <field name="journal_id" model="account.journal"
-        search="[('type', '=', 'bank')]"/>
+        search="[('type', '=', 'bank'), ('company_id', '=', ref('base.main_company'))]"/>
     <!-- date -->
     <!-- pour du relatif -->
     <field name="membership_date_from" eval="time.strftime('%Y-01-01')" />

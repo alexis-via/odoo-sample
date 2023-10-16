@@ -4,7 +4,7 @@ INSTALLATION Odoo v14 sur Ubuntu 20.04 LTS
 MINIMUM packages pour Odoo
 ==========================
 
-sudo apt install postgresql wait-for-it node-less python3-git python3-tz python3-dateutil python3-psycopg2 python3-werkzeug python3-decorator python3-unittest2 python3-jinja2 python3-docutils python3-openid python3-unidecode python3-passlib python3-psutil python3-serial python3-reportlab python3-pip python3-lxml python3-dev python3-cups python3-bs4 python3-unicodecsv python3-simplejson python3-xlrd python3-mock python3-xlsxwriter python3-html2text python3-suds python3-libsass python3-pypdf2 python3-xlwt python3-babel python3-num2words python3-polib python3-odf python3-astor python3-openpyxl git vim
+sudo apt install postgresql wait-for-it node-less python3-git python3-tz python3-dateutil python3-psycopg2 python3-werkzeug python3-decorator python3-unittest2 python3-jinja2 python3-docutils python3-openid python3-unidecode python3-passlib python3-psutil python3-serial python3-reportlab python3-pip python3-lxml python3-dev python3-cups python3-bs4 python3-unicodecsv python3-simplejson python3-xlrd python3-mock python3-xlsxwriter python3-html2text python3-suds python3-libsass python3-pypdf2 python3-xlwt python3-babel python3-num2words python3-polib python3-odf python3-astor python3-openpyxl python3-freezegun git vim
 
 Pour account_invoice_import_simple_pdf :
 
@@ -15,10 +15,6 @@ TODO clarifier sur gevent/greenlet :
 Pour faire marcher le longpolling avec python3.8 de Ubuntu 20.04
 sudo pip3 install greenlet==0.4.17
 sudo pip3 install gevent==20.9.0
-
-<frozen importlib._bootstrap>:219: RuntimeWarning: greenlet.greenlet size changed, may indicate binary incompatibility. Expected 144 from C header, got 152 from PyObject
-
-=> pour l'instant, j'essaye avec les paquets ubuntu : python3-gevent python3-greenlet
 
 (note : pour que le longpolling marche, il faut aussi workers > 0 et le block /longpolling dans le fichier de config nginx)
 
@@ -37,8 +33,6 @@ Pour l'import de factures PDF :
 sudo pip3 install regex==2022.3.2
 sudo pip3 install dateparser==1.1.1
 sudo pip3 install --upgrade pdfplumber
-Si on veut installer le connecteur Asterisk :
-sudo pip3 install --upgrade py-Asterisk
 
 Téléchargement Odoo
 ===================

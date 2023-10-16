@@ -4,11 +4,18 @@ INSTALLATION Odoo v16 sur Ubuntu 22.04 LTS
 MINIMUM packages pour Odoo
 ==========================
 
-sudo apt install postgresql wait-for-it node-less gsfonts python3-git python3-tz python3-dateutil python3-psycopg2 python3-werkzeug python3-decorator python3-unittest2 python3-jinja2 python3-docutils python3-openid python3-unidecode python3-passlib python3-psutil python3-serial python3-reportlab python3-pip python3-lxml python3-dev python3-cups python3-bs4 python3-unicodecsv python3-simplejson python3-xlrd python3-mock python3-xlsxwriter python3-html2text python3-suds python3-libsass python3-pypdf2 python3-xlwt python3-babel python3-num2words python3-polib python3-odf python3-astor python3-openpyxl python3-qrcode python3-greenlet python3-gevent python3-pylibdmtx python3-vobject git vim poppler-utils
 
-A voir pour plus tard car msg d'erreur au démarrage odoo :
-python3-pylibdmtx
-idem si pris depuis pypi. Mais pas bloquant.
+sudo apt install postgresql wait-for-it node-less gsfonts git vim poppler-utils python3-git libxml2-dev libxmlsec1-dev libldap2-dev libsasl2-dev libpq-dev libev-dev libjpeg-dev
+
+Si cups :
+sudo apt install libcups2-dev
+
+mkdir pyenv
+virtualenv pyenv/o16
+source pyenv/o16/bin/activate
+
+
+pip install --upgrade -r requirements.txt
 
 Pour account_invoice_import_simple_pdf :
 
@@ -126,6 +133,10 @@ max_cron_threads = 2  (= valeur par défaut)
 limit_memory_hard = 2684354560  (valeur par défaut, qui est + élevée que sur les anciennes versions)
 limit_memory_soft = 2147483648  (valeur par défaut)
 limit_request = 65536
+
+* auth_admin_passkey
+auth_admin_passkey_password = 
+auth_admin_passkey_send_to_user = False
 
 Dupliquer le fichier de config de prod pour le serveur de test :
 db_name = test1

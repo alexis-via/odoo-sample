@@ -32,7 +32,6 @@ export BM_UPLOAD_FTP_DESTINATION="backup-odoo"   (à créer au préalable ?)
 pas de burn :
 export BM_BURNING_METHOD="none"
 
-
 Pas de backup incrémental.
 
 
@@ -44,3 +43,6 @@ test -x /usr/sbin/backup-manager || exit 0
 /usr/sbin/backup-manager
 
 chmod 755 /etc/cron.daily/backup-manager
+
+Pour générer des clés ssh :
+ssh-keygen -t ed25519

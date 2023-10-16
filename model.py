@@ -607,7 +607,7 @@ return {
 # READ : cur_production_read['picking_id'] => (7, u'D120042')
 
 
-# WRITE et CREATE MANY2MANY
+# WRITE et CREATE MANY2MANY et ONE2MANY
 [(0, 0,  { values })]    link to a new record that needs to be created with the given values dictionary
 [(1, ID, { values })]    update the linked record with id = ID (write *values* on it)
 [(2, ID)]                remove and delete the linked record with id = ID (calls unlink on ID, that will delete the object completely, and the link to it as well)
@@ -615,12 +615,6 @@ return {
 [(4, ID)]                link to existing record with id = ID (adds a relationship)
 [(5)    ]                unlink all (like using (3,ID) for all linked records)
 [(6, 0, [IDs])]          replace the list of linked IDs (like using (5) then (4,ID) for each ID in the list of IDs)
-
-# WRITE et CREATE ONE2MANY
-(0, 0,  { values })    link to a new record that needs to be created with the given values dictionary
-(1, ID, { values })    update the linked record with id = ID (write *values* on it)
-(2, ID)                remove and delete the linked record with id = ID (calls unlink on ID, that will delete the object completely, and the link to it as well)
-[(6, 0, [IDs])] => pas indiqué dans le code source du serveur, mais ça marche !
 
 # Example :
 [(0, 0, {'field_name':field_value_record1, ...}), (0, 0, {'field_name':field_value_record2, ...})]

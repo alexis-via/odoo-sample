@@ -6,6 +6,19 @@ import os
 GITHUB_LOGIN = 'alexis-via'
 GITHUB_ORG = 'akretion'
 
+proto_map = {
+    '1': 'https',
+    '2': 'ssh',
+    }
+
+proto_int = input('Github access: 1 for HTTPS, 2 for SSH :')
+if proto_int in proto_map:
+    github_proto = proto_map[proto_int]
+else:
+    raise
+assert github_proto in ('https', 'ssh')
+
+
 version = input('Odoo version : ')
 if len(version) == 2:
     assert version.isdigit()
@@ -22,8 +35,7 @@ repos = {
         'community-data-files': 'https://github.com/OCA/community-data-files',
 
         # technical
-        # 'telephony': 'https://github.com/OCA/connector-telephony',
-        # 'py3o-report-templates': 'https://github.com/akretion/odoo-py3o-report-templates',
+        'py3o-report-templates': 'https://github.com/akretion/odoo-py3o-report-templates',
         'viewer-groups': 'https://github.com/akretion/odoo-viewer-groups',
         'reporting-engine': 'https://github.com/OCA/reporting-engine',
         'server-auth': 'https://github.com/OCA/server-auth',  # from v8
@@ -39,14 +51,10 @@ repos = {
 
         # general
         'usability': 'https://github.com/akretion/odoo-usability',
-        # 'ak-incubator': 'https://github.com/akretion/ak-odoo-incubator',
-        # 'pos': 'https://github.com/OCA/pos',
         'purchase-workflow': 'https://github.com/OCA/purchase-workflow',
         'sale-workflow': 'https://github.com/OCA/sale-workflow',
         'l10n-france': 'https://github.com/OCA/l10n-france',
         'edi': 'https://github.com/OCA/edi',
-        # 'contract': 'https://github.com/OCA/contract',
-        # 'multi-company': 'https://github.com/OCA/multi-company',
 
         # stock/mrp
         'stock-logistics-barcode': 'https://github.com/OCA/stock-logistics-barcode',
@@ -54,7 +62,6 @@ repos = {
         'stock-logistics-workflow': 'https://github.com/OCA/stock-logistics-workflow',
         'stock-logistics-tracking': 'https://github.com/OCA/stock-logistics-tracking',
         'manufacture': 'https://github.com/OCA/manufacture',
-        # 'delivery-carrier': 'https://github.com/OCA/delivery-carrier',
 
         # accounting
         'account-move-import': 'https://github.com/akretion/account-move-import',
@@ -72,7 +79,17 @@ repos = {
         'bank-payment': 'https://github.com/OCA/bank-payment',
         'credit-control': 'https://github.com/OCA/credit-control',
         'intrastat': 'https://github.com/OCA/intrastat-extrastat',
+
+        # MISC
         # 'mooncard': 'https://github.com/akretion/odoo-mooncard-connector',
+        # 'telephony': 'https://github.com/OCA/connector-telephony',
+        # 'donation': 'https://github.com/OCA/donation',
+        # 'vertical-abbey': 'https://github.com/OCA/vertical-abbey',
+        # 'contract': 'https://github.com/OCA/contract',
+        # 'multi-company': 'https://github.com/OCA/multi-company',
+        # 'ak-incubator': 'https://github.com/akretion/ak-odoo-incubator',
+        # 'pos': 'https://github.com/OCA/pos',
+        # 'delivery-carrier': 'https://github.com/OCA/delivery-carrier',
 
         # e-commerce / shopinvader
         # 'product-attribute': 'https://github.com/OCA/product-attribute',
@@ -86,6 +103,7 @@ repos = {
         # 'shopinvader': 'https://github.com/shopinvader/odoo-shopinvader',
         # 'shopinvader-payment': 'https://github.com/shopinvader/odoo-shopinvader-payment',
         # 'shopinvader-pim': 'https://github.com/shopinvader/odoo-pim',
+
         }
 
 if not os.path.exists('symlink'):
@@ -98,8 +116,15 @@ path.append(os.path.join(cur_dir, 'odoo/addons'))
 path.append(os.path.join(cur_dir, 'symlink'))
 
 oca_prefix = 'https://github.com/OCA/'
-for repo_name, repo_url in repos.items():
-    repo_url = '%s.git' % repo_url
+for repo_name, original_repo_url in repos.items():
+    repo_url = original_repo_url
+    if github_proto == 'ssh':
+        if original_repo_url.startswith(oca_prefix):
+            repo_url = repo_url.replace(oca_prefix, 'git@github.com:OCA/')
+    elif github_proto == 'https':
+        repo_url = '%s.git' % repo_url
+        if original_repo_url.startswith('https://github.com/') and not original_repo_url.startswith(oca_prefix):
+            repo_url = repo_url.replace('https://', f'https://{GITHUB_LOGIN}@')
     path.append(os.path.join(cur_dir, repo_name))
     test_path.append('../' + repo_name)
     # skip if repo is already on filesystem
@@ -108,9 +133,13 @@ for repo_name, repo_url in repos.items():
         continue
     print(repo_name)
     repo = git.Repo.clone_from(repo_url, repo_name, branch=version, single_branch=True)
-    if repo_url.startswith(oca_prefix):
-        new_prefix = f'https://{GITHUB_LOGIN}@github.com/{GITHUB_ORG}/'
-        org_repo_url = repo_url.replace(oca_prefix, new_prefix)
+    # Add Akretion remote repo
+    if original_repo_url.startswith(oca_prefix):
+        if github_proto == 'ssh':
+            org_repo_url = original_repo_url.replace(oca_prefix, 'git@github.com:akretion/')
+        elif github_proto == 'https':
+            org_repo_url = original_repo_url.replace(oca_prefix, f'https://{GITHUB_LOGIN}@github.com/{GITHUB_ORG}/')
+            org_repo_url = '%s.git' % org_repo_url
         repo.create_remote(GITHUB_ORG, org_repo_url)
 
 

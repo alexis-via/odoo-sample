@@ -1,26 +1,29 @@
 When I generate a template database :
-- dev_profile module
+- account
+- Regarder le nombre de taxes => si > 40, c'est pas normal
+- dev_profile module (ne PAS installer directement dev_profile, sinon ça ne va pas marcher)
+- add module partner_bank_acc_type_constraint
+- add module l10n_fr_account_tax_unece
+- désinstaller l10n_fr_fec
+- désinstaller account_edi
 - langs FR and EN
 . config lang US : date dd/mm/YYYY
 - Company : EUR and France (ok par défaut)
 - pages de config :
- . general : multi-société
+ . general : multi-société (pas en v16)
  . crm : leads
- . sale : remise, multi-uom, 3 address, warnings, proforma, quotation validity, incoterms, invoicing policy=delivered
+ . sale : remise, multi-uom, 3 address (déplacé sur page compta en v16), warnings, proforma, quotation validity, incoterms, invoicing policy=delivered
  . purchase : warning, bill control = received (defaut)
  . stock : multi-emplacement, routes, warning
- . account : multi-currency, VIES, analytic
- . pos : stock in real time
+ . account : multi-currency, VIES, analytic, multi-adresse (v16)
+ . pos : stock in real time (removed in v16?), load remaining partners/products in the background, ePOS printer, flexible pricelists
 - ajouter dans le groupe "Show full accounting features"
-- l10n_fr_account_tax_unece
 - Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale) + lien compte bancaire
 - Créer un journal "chèque client"
 - Mettre à jour les payment modes avec les 2 journaux de banque
-- Fiscal position : décocher VAT required sur domestique france
 - créer 1 fiscal year
 - picking type : incoming : cocher "use existing lots" + create lots
                  outgoing : cocher "show detailed operatoins"
 -date ranges
 - account groups à 2 niveaux
-- désinstaller l10n_fr_fec
-- désinstaller account_edi
+- enlever le bandeau d'onboarding sur la compta

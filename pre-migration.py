@@ -20,7 +20,16 @@ def migrate(env, version):
             ],
         )
 
+_column_renames = {
+    "l10n_fr_intrastat_product_declaration": [("month", None)],
+    "l10n_fr_intrastat_product_computation_line": [("invoice_line_id", None)],
+}
 
+@openupgrade.migrate()
+def migrate(env, version):
+    openupgrade.rename_columns(env.cr, _column_renames)
+# will be accessible in post-upgrade openupgrade.get_legacy_name("month")
+# openupgrade.logged_query(env.cr, "UPDATE xxx")
 
 def migrate(cr, version):
     if not version:
