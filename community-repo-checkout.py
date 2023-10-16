@@ -11,7 +11,7 @@ proto_map = {
     '2': 'ssh',
     }
 
-proto_int = input('Github access: 1 for HTTPS, 2 for SSH :')
+proto_int = input('Github access: 1 for HTTPS, 2 for SSH : ')
 if proto_int in proto_map:
     github_proto = proto_map[proto_int]
 else:
@@ -119,8 +119,8 @@ oca_prefix = 'https://github.com/OCA/'
 for repo_name, original_repo_url in repos.items():
     repo_url = original_repo_url
     if github_proto == 'ssh':
-        if original_repo_url.startswith(oca_prefix):
-            repo_url = repo_url.replace(oca_prefix, 'git@github.com:OCA/')
+        if original_repo_url.startswith('https://github.com/'):
+            repo_url = repo_url.replace('https://github.com/', 'git@github.com:')
     elif github_proto == 'https':
         repo_url = '%s.git' % repo_url
         if original_repo_url.startswith('https://github.com/') and not original_repo_url.startswith(oca_prefix):
