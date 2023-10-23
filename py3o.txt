@@ -210,3 +210,16 @@ Redémarrer LO
 LO hints
 ========
 Pour supprimer un retour à la ligne après un tableau : se mettre dans la dernière cellule du tableau et faire : Ctrl + shift + del
+
+py3o_is_local_fusion DOIT ETRE A TRUE (true n'est que la valeur par défaut)
+UPDATE ir_act_report_xml SET py3o_is_local_fusion=true;
+
+Sinon, ça plante avec une erreur de type:
+  File "/home/odoo/erp/o14/lib/python3.10/site-packages/py3o/template/helpers.py", line 74, in __call__
+    self._ast = ast.parse(dedented_source)
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "<unknown>", line 2
+    with="lang=obj.partner_id.lang or 'en_US'"
+        ^
+SyntaxError: invalid syntax

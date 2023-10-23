@@ -45,6 +45,7 @@ repos = {
         'server-tools': 'https://github.com/OCA/server-tools',
         'server-ux': 'https://github.com/OCA/server-ux',  # from v10
         'report-print-send': 'https://github.com/OCA/report-print-send',
+        'social': 'https://github.com/OCA/social',
         'web': 'https://github.com/OCA/web',
         'web-api': 'https://github.com/OCA/web-api',  # from v14
         'rest-framework': 'https://github.com/OCA/rest-framework',  # from v10
@@ -81,6 +82,9 @@ repos = {
         'intrastat': 'https://github.com/OCA/intrastat-extrastat',
 
         # MISC
+        # 'crm': 'https://github.com/OCA/crm',
+        # 'hr': 'https://github.com/OCA/hr',
+        # 'timesheet': 'https://github.com/OCA/timesheet',
         # 'mooncard': 'https://github.com/akretion/odoo-mooncard-connector',
         # 'telephony': 'https://github.com/OCA/connector-telephony',
         # 'donation': 'https://github.com/OCA/donation',
