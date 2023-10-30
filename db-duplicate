@@ -1,11 +1,12 @@
 #!/bin/bash
 
 #set -x
+# exit if 1 command fails
+set -e
 
-DB_PROD=prod
+DB_PROD=o6_template
 DATADIR_PROD=/home/odoo/erp/data-dir
 DATADIR_TEST=/home/odoo/data-dir-test
-WORKDIR=/home/odoo
 
 if [ $# -ne 1 ]
 then
@@ -15,19 +16,14 @@ fi
 
 db_name=${1}
 
-if [ "${db_name}" == $DB_PROD ]
+if [ "${db_name}" == "$DB_PROD" ]
 then
     echo "Are you crazy ?!?"
     exit 2
 fi
 
 
-if [ -e $WORKDIR/$db_name.sql ]; then
-    echo "File $WORKDIR/$db_name.sql already exists. Delete it."
-    exit 1
-fi
-
-if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'" $DB_PROD)" == '1' ]
+if psql -lqt | cut -d \| -f 1 | grep -qw ${db_name}
 then
     echo "Database $db_name already exists. Delete it ? (y/n)"
     read answer_db
@@ -43,7 +39,8 @@ else
     echo "Database $db_name doesn't already exist."
 fi
 
-if [ -d $DATADIR_TEST/filestore/$db_name ]; then
+if [ -d $DATADIR_TEST/filestore/$db_name ]
+then
     echo "Filestore directory $DATADIR_TEST/filestore/$db_name already exists."
     echo "Delete it ? (y/n)"
     read answer
@@ -57,36 +54,27 @@ if [ -d $DATADIR_TEST/filestore/$db_name ]; then
     fi
 fi
 
-if [ -d $DATADIR_PROD/filestore/$DB_PROD ]; then
+if [ -d $DATADIR_PROD/filestore/$DB_PROD ]
+then
     echo "Prod filestore directory $DATADIR_PROD/filestore/$DB_PROD found."
 else
     echo "Prod filestore directory $DATADIR_PROD/filestore/$DB_PROD NOT found"
     exit 1
 fi
 
-echo -n "Dumping production database to file $WORKDIR/$db_name.sql ... "
-pg_dump -f $WORKDIR/$db_name.sql $DB_PROD
-echo "done."
 echo -n "Creating database ${db_name} ... "
 createdb ${db_name}
-psql ${db_name} < $WORKDIR/$db_name.sql
+pg_dump $DB_PROD | psql ${db_name}
 echo "done."
 echo -n "Updating database ${db_name} for test environnement ... "
 psql -c "UPDATE ir_cron SET active=False" ${db_name}
 psql -c "UPDATE ir_config_parameter SET value='TEST<br/>{db_name}' where key='ribbon.name'" ${db_name}
 # Max TCP port is 65535, so I set 66000 (no constrain on Odoo)
 psql -c "UPDATE ir_mail_server SET smtp_port=66000" ${db_name}
-#psql -c "update pos_config set proxy_ip=False, iface_payment_terminal=False, iface_print_via_proxy=False, iface_customer_display=False" ${db_name}
 echo "done."
 
 echo -n "Copying filestore from $DATADIR_PROD/filestore/$DB_PROD to $DATADIR_TEST/filestore/$db_name ... "
-cp -R $DATADIR_PROD/filestore/$DB_PROD $DATADIR_TEST/filestore/$db_name
+cp -a $DATADIR_PROD/filestore/$DB_PROD $DATADIR_TEST/filestore/$db_name
 echo "done."
-
-if [ -e $WORKDIR/$db_name.sql ]; then
-    echo -n "Deleting database dump ... "
-    rm -f $WORKDIR/$db_name.sql
-    echo "done."
-fi
 
 exit 0
