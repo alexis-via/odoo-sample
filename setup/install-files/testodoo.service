@@ -7,7 +7,7 @@ After=network.target postgresql.service
 Type=forking
 User=odoo
 Group=odoo
-ExecStart=bash -c "/usr/bin/screen -S testodoo -dm bash -c 'cd /home/odoo/erp/odoo ; ./odoo-bin -c /home/odoo/erp/test.conf'"
+ExecStart=bash -c "/usr/bin/screen -S testodoo -dm bash -c 'cd /home/odoo/erp/odoo ; /home/odoo/erp/o16/bin/python ./odoo-bin -c /home/odoo/erp/test.conf'"
 KillMode=mixed
 Restart=no
 

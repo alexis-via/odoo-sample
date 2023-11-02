@@ -7,7 +7,7 @@ After=network.target postgresql.service
 Type=simple
 User=odoo
 Group=odoo
-ExecStart=/home/odoo/erp/odoo/odoo-bin --config /home/odoo/erp/prod.conf
+ExecStart=/home/odoo/erp/o16/bin/python /home/odoo/erp/odoo/odoo-bin --config /home/odoo/erp/prod.conf
 KillMode=mixed
 
 [Install]
