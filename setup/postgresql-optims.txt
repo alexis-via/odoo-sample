@@ -1,5 +1,5 @@
+Sources d'info:
 https://wiki.postgresql.org/wiki/Performance_Optimization
-
 https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
 
 postgresql.conf
@@ -15,7 +15,6 @@ effective_cache_size
 . conseillé : 1/2 RAM
 
 checkpoint_completion_target
-. par défaut 18.04 : 0.5 (commenté)
 . par défaut 22.04 : 0.9 (commenté)
 . conseillé : 0.9
 
@@ -32,6 +31,6 @@ max_connections
 
 page_cost SI TOURNE SUR SSD
 seq_page_cost = 1.0
-random_page_cost = 1.0 (4.0 par défaut 18.04)
+random_page_cost = 1.0 (4.0 par défaut 22.04)
 
 En fait, il faut mettre les 2 à la même valeur ; Info issue de https://amplitude.engineering/how-a-single-postgresql-config-change-improved-slow-query-performance-by-50x-85593b8991b0

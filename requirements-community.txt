@@ -43,6 +43,9 @@ cachetools>=2.0.1
 # py3o
 py3o.template
 py3o.formats
+# partner_import_helper
+openai
+email_validator
 # storage
-boto3
-python_slugify
+#boto3
+#python_slugify

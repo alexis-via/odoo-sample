@@ -1,56 +1,23 @@
 INSTALLATION Odoo v16 sur Ubuntu 22.04 LTS
 ==============================================
 
-MINIMUM packages pour Odoo
-==========================
+Les fichiers de config d'exemple utilisés dans ce tuto sont dispo sur https://github.com/alexis-via/odoo-sample dans le sous-répertoire setup/install-files
 
+Le tuto suppose que vous avez déjà créé un utilisateur système "odoo"
 
-sudo apt install postgresql wait-for-it node-less gsfonts git vim poppler-utils python3-git libxml2-dev libxmlsec1-dev libldap2-dev libsasl2-dev libpq-dev libev-dev libjpeg-dev python3-dev python3-virtualenv
+Paquets Debian à ajouter
+========================
 
-Si cups :
+sudo apt install postgresql wait-for-it node-less gsfonts git vim poppler-utils python3-git libxml2-dev libxmlsec1-dev libldap2-dev libsasl2-dev libpq-dev libev-dev libjpeg-dev python3-dev python3-virtualenv fontconfig xfonts-base xfonts-75dpi libxrender1
+
+Si utilisation du module OCA base_report_to_printer, qui utilise CUPS :
 sudo apt install libcups2-dev
-
-mkdir o16
-virtualenv o16
-source o16/bin/activate
-
-
-pip install --upgrade -r requirements.txt
-
-Pour account_invoice_import_simple_pdf :
-
-sudo apt install python3-fitz
-
-Pour gevent/greenlet, les versions du requirements.txt d'odoo sont identiques à celles packagées dans 22.04
 
 Facultatif mais conseillé sur tout serveur:
 sudo apt install molly-guard fail2ban
 
-sudo pip3 install --upgrade flake8
-sudo pip3 install --upgrade odoo_test_helper
-sudo pip3 install --ignore-installed git+https://github.com/OCA/openupgradelib.git@master
-   # PLUS BESOIN ? sudo pip3 install --upgrade vatnumber
-sudo pip3 install --upgrade python-stdnum
-sudo pip3 install --upgrade ofxparse
-sudo pip3 install --upgrade phonenumbers
-sudo pip3 install --upgrade oca-decorators
-sudo pip3 install --upgrade factur-x
-Pour l'import de factures PDF :
-sudo pip3 install regex==2022.3.2
-sudo pip3 install --upgrade dateparser
-sudo pip3 install --upgrade pdfplumber
-Si on veut installer le connecteur Asterisk :
-   # PLUS BESOIN AVEC ARI : sudo pip3 install --upgrade py-Asterisk
-
-Téléchargement Odoo
-===================
-
-Récupérer la branche git:
-git clone -b 16.0 --single-branch https://github.com/OCA/OCB odoo
-
 Wkhtmltopdf
 ===========
-sudo apt install fontconfig xfonts-base xfonts-75dpi libxrender1
 
 Infos à jour sur https://github.com/odoo/odoo/wiki/Wkhtmltopdf
 Bon, on installe quand même 0.12.6 malgré qu'ils conseillent 0.12.5 sur la page.
@@ -60,6 +27,29 @@ Ne pas prendre le paquet dispo dans ubuntu car il n'est pas buildé avec un "pat
 wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
 
 sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+
+Téléchargement Odoo
+===================
+
+Récupérer la branche git:
+git clone -b 16.0 --single-branch https://github.com/OCA/OCB odoo
+
+Téléchargement des modules OCA et akretion
+==========================================
+
+Utilisation de mon script community-repo-checkout.py dispo dans https://github.com/alexis-via/odoo-sample
+
+Librairies python
+=================
+
+mkdir o16
+virtualenv o16
+source o16/bin/activate
+
+Dans le répertoire "odoo" :
+pip install -r requirements.txt
+
+pip install --upgrade -r requirements-community.txt
 
 PostgreSQL
 ==========
@@ -79,10 +69,49 @@ Eventuellement, la mettre par défaut :
 update-locale LANG=fr_FR.UTF-8
 Plus d'infos : https://www.thomas-krenn.com/en/wiki/Configure_Locales_in_Ubuntu
 
+Tuning des perfs de PostgreSQL : cf mon fichier postgresql-optims.txt
 
+Logrotate
+=========
 
-Démarrage automatique
-=====================
+sudo mkdir /var/log/odoo
+sudo chown odoo:odoo /var/log/odoo
+sudo cp logrotate-odoo /etc/logrotate.d/odoo
+sudo chown root:root /etc/logrotate.d/odoo
+
+Moteur de rapport communautaire Py3o
+====================================
+
+py3o.template en py3 ; renderserver, fusion et le reste en py2
+
+sudo apt install ttf-mscorefonts-installer libgoogle-gson-java default-jre ure libreoffice-java-common libreoffice-writer fonts-symbola g++
+
+Vérifier que py3o.template et py3o.formats sont bien installés dans le virtualenv "o16" (c'est le cas avec requirements-community.txt)
+
+ATTENTION, le reste est en python2 :
+
+sudo apt install python2 python2-dev
+wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+sudo python2 ./get-pip.py
+
+sudo pip2 install --upgrade service-identity
+sudo pip2 install JPype1==0.6.3
+sudo pip2 install --upgrade py3o.renderserver
+sudo pip2 install --upgrade py3o.fusion
+
+Copier les fichiers py3o-renderserver.service py3o-fusion.service libreoffice.service dans /etc/systemd/system/
+
+chown root:root /etc/systemd/system/py3o*.service
+chown root:root /etc/systemd/system/libreoffice.service
+
+Vérifier que le répertoire /var/log/odoo existe bien
+
+sudo systemctl enable py3o-fusion
+sudo systemctl enable py3o-renderserver
+sudo systemctl enable libreoffice
+
+Démarrage automatique d'Odoo
+============================
 
 Script de démarrage :
 
@@ -90,25 +119,13 @@ copier odoo.service (et éventuellement aussi testodoo.service) dans /etc/system
 
 chown root:root /etc/systemd/system/*odoo*service
 
-Personnaliser les paramètres de config situés à l'intérieur du fichier .service, qui donnent notamment le chemin vers odoo.py, le chemin vers le fichier de config et l'utilisateur qui va lancer odoo.py
+Personnaliser les paramètres de config situés à l'intérieur du fichier .service (chemins, utilisateur)
 
 sudo systemctl enable odoo
 sudo systemctl enable testodoo
 
-Logrotate
-=========
-
-Règle logrotate
-Copie logrotate-odoo en tant que /etc/logrotate.d/odoo
-chown root:root /etc/logrotate.d/odoo
-
-En cas d'ennui de CSS manquante sur rapports qweb (https://github.com/odoo/odoo/issues/1105 et https://github.com/odoo/docker/issues/24) :
-Dans Settings > Parameters > System Parameters : créer une clé :
-clé : report.url
-valeur : http://0.0.0.0:8069
-
-Fichier de config
-=================
+Fichier de config serveur Odoo
+==============================
 
 Pour générer un fichier de config de base:
 ./odoo-bin -s
@@ -135,7 +152,7 @@ limit_memory_soft = 2147483648  (valeur par défaut)
 limit_request = 65536
 
 * auth_admin_passkey
-auth_admin_passkey_password = 
+auth_admin_passkey_password = <mot_de_passe_super_solide>
 auth_admin_passkey_send_to_user = False
 
 Dupliquer le fichier de config de prod pour le serveur de test :
@@ -147,12 +164,6 @@ data_dir = /home/odoo/data-dir-test
 logfile = False
 workers = 0
 
-Tuning postgres
-===============
-https://wiki.postgresql.org/wiki/Performance_Optimization
-http://www.revsys.com/writings/postgresql-performance.html
-cf mon fichier postgresql-optims.txt
-
 Proxy nginx pour HTTPS
 ======================
 
@@ -161,13 +172,12 @@ sudo apt install nginx
 Copier nginx-odoo-prod dans /etc/nginx/sites-available/odoo-prod
 
 Editer le fichier et personnaliser :
-le port d'écoute "server 127.0.0.1:8069" si Odoo n'est pas sur le port 8069
-server_name x 2
+- le port d'écoute "server 127.0.0.1:8069" si Odoo n'est pas sur le port 8069
+- server_name (2 occurences dans le fichier)
 Désactiver le ssl en attendant l'étape suivante
 
 sudo ln -s /etc/nginx/sites-available/odoo-prod /etc/nginx/sites-enabled/odoo-prod
-sudo service nginx reload
-
+sudo systemctl reload nginx
 
 Certificats let's encrypt
 =========================
@@ -276,41 +286,17 @@ créer le modes de paiement => mettre un mode de paiement par défaut sur client
 date range
 format de date en_US : %d/%m/%Y au lieu de %m/%d/%Y
 
-Moteur de rapport communautaire Py3o
-====================================
+Si pb mise-en-page avec wkhtmltopdf
+-----------------------------------
 
-py3o.template en py3 ; renderserver, fusion et le reste en py2
-
-sudo apt install ttf-mscorefonts-installer libgoogle-gson-java default-jre ure libreoffice-java-common libreoffice-writer fonts-symbola g++
-
-sudo pip3 install --upgrade py3o.template
-sudo pip3 install --upgrade py3o.formats
+En cas d'ennui de CSS manquante sur rapports qweb (https://github.com/odoo/odoo/issues/1105 et https://github.com/odoo/docker/issues/24) :
+Dans Settings > Parameters > System Parameters : créer une clé :
+clé : report.url
+valeur : http://0.0.0.0:8069
 
 
-ATTENTION, le reste est en python2 :
-
-sudo apt install python2 python2-dev
-wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-sudo python2 ./get-pip.py
-
-sudo pip2 install --upgrade service-identity
-sudo pip2 install JPype1==0.6.3
-sudo pip2 install --upgrade py3o.renderserver
-sudo pip2 install --upgrade py3o.fusion
-
-Copier les fichiers py3o-renderserver.service py3o-fusion.service libreoffice.service dans /etc/systemd/system/
-
-chown root:root /etc/systemd/system/py3o*.service
-chown root:root /etc/systemd/system/libreoffice.service
-
-Vérifier que le répertoire /var/log/odoo existe bien
-
-sudo systemctl enable py3o-fusion
-sudo systemctl enable py3o-renderserver
-sudo systemctl enable libreoffice
-
-Diagnostic et autres infos techs
---------------------------------
+Diagnostic py3o et autres infos techs
+--------------------------------------
 
 $ pip freeze|grep py3o
 py3o.formats==0.3
