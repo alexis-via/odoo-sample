@@ -4,8 +4,6 @@
 
 from odoo import api, fields, models, tools, Command, _
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
-# v8
-from openerp.exceptions import Warning as UserError
 
 import odoo.addons.decimal_precision as dp
 from odoo.tools.misc import format_date, format_datetime, format_amount
@@ -76,7 +74,8 @@ class ProductCode(models.Model):
     self._cr.execute("""CREATE or REPLACE VIEW %s as (SELECT ...""")
 
 
-    # DEPRECATED ? Apparemment, il faut ajouter un champ fonction "display_name"
+    # DEPRECATED ? Apparemment, il faut ajouter un champ fonction "_compute_display_name"
+    # plus utilisable en v17+
     @api.multi
     def name_get(self):
         res = []
@@ -85,6 +84,17 @@ class ProductCode(models.Model):
         return res
         # when called with a single ID :
         # record.name_get()[0][1]
+
+    # v16+  (autres exemples: res.country, account.account)
+    def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
+        if args is None:
+            args = []
+        ids = []
+        if name and operator == 'ilike':
+            ids = list(self._search([('code', '=', name)] + args, limit=limit))
+            if ids:
+                return ids
+        return super()._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
 
     # Hériter la recherche textuelle dans les champs many2one (et aussi dans les vues de recherche qui ont <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
     # name : object name to search for

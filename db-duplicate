@@ -4,7 +4,7 @@
 # exit if 1 command fails
 set -e
 
-DB_PROD=o6_template
+DB_PROD=prod
 DATADIR_PROD=/home/odoo/erp/data-dir
 DATADIR_TEST=/home/odoo/data-dir-test
 
