@@ -12,9 +12,10 @@ regex==2022.3.2
 dateparser
 unidecode
 unicodecsv
-pdfplumber
+# pdfplumber
 simplejson
 html2text
+requests_oauthlib
 pycups
 openpyxl
 # Needed by some community that I often deploy
@@ -30,10 +31,11 @@ pyquerystring
 cerberus
 parse-accept-language
 # Needed for connector
-cachetools>=2.0.1
+# cachetools>=2.0.1
 # py3o
 py3o.template
 py3o.formats
+mock
 # Needed for storage
-boto3
-python_slugify
+# boto3
+# python_slugify

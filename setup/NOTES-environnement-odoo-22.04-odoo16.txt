@@ -19,6 +19,14 @@ sudo apt install molly-guard fail2ban
 Wkhtmltopdf
 ===========
 
+[NEW] Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/wkhtmltopdf
+Il y a un packet pour jammy en 0.13.0-1.nightly
+
+wget https://github.com/odoo/wkhtmltopdf/releases/download/nightly/wkhtmltox_0.13.0-1.nightly.jammy_amd64.deb
+sudo dpkg -i wkhtmltox_0.13.0-1.nightly.jammy_amd64.deb
+
+[OLD ?]
+
 Infos à jour sur https://github.com/odoo/odoo/wiki/Wkhtmltopdf
 Bon, on installe quand même 0.12.6 malgré qu'ils conseillent 0.12.5 sur la page.
 
@@ -201,15 +209,14 @@ pip3 install --upgrade pyopenssl
 
 Ajouter dans /etc/crontab :
 
-8 2 * * * root /usr/bin/letsencrypt renew && service nginx reload
+8 2 * * * root /usr/bin/letsencrypt renew && systemctl reload nginx
 
 ATTENTION, ne pas l'ajouter dans la cron perso du root (crontab -e), sinon le reload nginx ne s'exécute pas (je ne sais pas pourquoi !)
 
 Pour faire un test de renouvellement à la main :
 letsencrypt renew --dry-run --agree-tos
 
-Note: le message "WARNING:letsencrypt.client:Registering without email!" est normal.
-On doit avoir ensuite:
+On doit avoir:
 Congratulations, all renewals succeeded. The following certs have been renewed.
 
 Activer le SSL dans les 2 fichiers /etc/nginx/sites-available/odoo-prod et odoo-test
