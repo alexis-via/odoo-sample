@@ -12,6 +12,7 @@ regex==2022.3.2
 dateparser
 unidecode
 unicodecsv
+# ATTENTION, pdfplumber met à jour à la dernière version de Pillow, qui n'est pas celle du requirements.txt d'Odoo
 # pdfplumber
 simplejson
 html2text
@@ -19,7 +20,6 @@ requests_oauthlib
 pycups
 openpyxl
 # Needed by some community that I often deploy
-# ATTENTION, il met à jour à la dernière version de Pillow, qui n'est pas celle du requirements.txt d'Odoo
 python-barcode
 pylibdmtx
 ovh
