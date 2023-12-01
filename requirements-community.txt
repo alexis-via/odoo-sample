@@ -29,6 +29,8 @@ ovh
 pgpy
 # Chorus connector
 requests_oauthlib
+# Mooncard
+pycountry
 # base_view_inheritance_extension
 astor
 # base_rest
