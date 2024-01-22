@@ -13,7 +13,6 @@ unidecode
 unicodecsv
 simplejson
 html2text
-pycups
 openpyxl
 python-barcode
 pylibdmtx
@@ -42,6 +41,8 @@ apispec
 pyquerystring
 cerberus
 parse-accept-language
+## CUPS (requires libcups2-dev)
+# pycups
 ## roulier for La Poste connector and other transporters
 # roulier
 ## connector/shopfloor
