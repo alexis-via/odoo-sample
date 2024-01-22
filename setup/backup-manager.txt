@@ -1,10 +1,10 @@
-sudo apt-get install backup-manager
+sudo apt install backup-manager
 
 export BM_ARCHIVE_TTL="8"   (nombre de jours de conservation)
 
 export BM_ARCHIVE_METHOD="tarball pgsql"
 
-export BM_TARBALL_DIRECTORIES="/etc /home/odoo/erp"
+export BM_TARBALL_DIRECTORIES="/home/odoo/erp/data-dir/filestore"
 
 export BM_PGSQL_DATABASES="prod"
 
@@ -18,7 +18,7 @@ export BM_UPLOAD_HOSTS="192.168.60.19"
 export BM_UPLOAD_DESTINATION="/Volumes/Time-Machine/odoo-backup"
 
 export BM_UPLOAD_SSH_USER="cell"
-export BM_UPLOAD_SSH_KEY="/root/.ssh/id_rsa"
+export BM_UPLOAD_SSH_KEY="/root/.ssh/id_ed25519"
 
 Si transfert par FTP :
 export BM_UPLOAD_METHOD="ftp"

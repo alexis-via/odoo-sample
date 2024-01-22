@@ -106,3 +106,70 @@ with invoice_form.invoice_line_ids.new() as line_form:
     line_form.price_unit = 2.99
     line_form.tax_ids.clear()
 cls.invoice = invoice_form.save()
+
+# ===================================
+# accounting test with required a new company:
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+
+@tagged("post_install", "-at_install")
+class TestAccountInvoiceChangeCurrency(AccountTestInvoicingCommon):
+    @classmethod
+    def setUpClass(cls, chart_template_ref=None):
+        super().setUpClass(chart_template_ref=chart_template_ref)
+        # cf addons/account/tests/common.py
+        # si on laisse chart_template_ref à None, Odoo prend l10n_generic_coa.configurable_chart_template
+        # Après ça, on a 2 company bien setupée en country US et currency USD:
+        # - cls.company_data
+        # - cls.company_data_2
+        # Si on veut une company FR avec currency EUR:
+        # les arguments après "chart_template" sont passés au create() de res.company
+        cls.fr_test_company = cls.setup_company_data('Akretion France', chart_template=chart_template_ref, country_id=cls.env.ref("base.fr").id)
+        pprint(cls.fr_test_company)
+        cls.company = cls.fr_test_company['company']
+        print('country=', cls.company.country_id.code)
+        print('currency=', cls.company.currency_id.name)
+        # On a bien une société avec country FR et devise EUR
+        cls.user.write({
+            'company_ids': [Command.link(cls.company.id)],
+            'company_id': cls.company.id,
+        })
+
+
+{'company': res.company(18,),
+ 'currency': res.currency(1,),
+ 'default_account_assets': account.account(863,),
+ 'default_account_deferred_expense': account.account(853,),
+ 'default_account_deferred_revenue': account.account(865,),
+ 'default_account_expense': account.account(882,),
+ 'default_account_payable': account.account(866,),
+ 'default_account_receivable': account.account(858,),
+ 'default_account_revenue': account.account(876,),
+ 'default_account_tax_purchase': account.account(860,),
+ 'default_account_tax_sale': account.account(871,),
+ 'default_journal_bank': account.journal(33,),
+ 'default_journal_cash': account.journal(34,),
+ 'default_journal_misc': account.journal(30,),
+ 'default_journal_purchase': account.journal(29,),
+ 'default_journal_sale': account.journal(28,),
+ 'default_tax_purchase': account.tax(74,),
+ 'default_tax_sale': account.tax(73,)}
+cls.company_data_2=============
+{'company': res.company(17,),
+ 'currency': res.currency(1,),
+ 'default_account_assets': account.account(816,),
+ 'default_account_deferred_expense': account.account(806,),
+ 'default_account_deferred_revenue': account.account(818,),
+ 'default_account_expense': account.account(835,),
+ 'default_account_payable': account.account(819,),
+ 'default_account_receivable': account.account(811,),
+ 'default_account_revenue': account.account(829,),
+ 'default_account_tax_purchase': account.account(813,),
+ 'default_account_tax_sale': account.account(824,),
+ 'default_journal_bank': account.journal(24,),
+ 'default_journal_cash': account.journal(25,),
+ 'default_journal_misc': account.journal(21,),
+ 'default_journal_purchase': account.journal(20,),
+ 'default_journal_sale': account.journal(19,),
+ 'default_tax_purchase': account.tax(72,),
+ 'default_tax_sale': account.tax(71,)}
+

@@ -1,0 +1,26 @@
+https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-17.0
+
+git checkout -b 17.0-mig-$module origin/17.0
+git format-patch --keep-subject --stdout origin/17.0..origin/16.0 -- $module | git am -3 --keep
+pre-commit run -a
+git add -A
+git commit -m "[IMP] $module: pre-commit auto fixes"  --no-verify  # it is important to do all formatting in one commit the first time
+
+name_get -> _compute_display_name
+
+pre_init_hook, post_init_hook or uninstall_hook => argument passé est maintenant "env"
+
+active_id => id ; active_model est supprimé
+
+Fin des attrs et states => invisible="name == 'red'"
+   exemple : states="draft" ==> invisible="state != 'draft'"
+
+views des res.config.settings
+
+read_group => _read_group
+name_search => def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
+               CHANGEMENT DU PROTO de la méthode par rapport à v16
+
+=============
+
+Main Datamodel changes :

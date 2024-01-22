@@ -44,7 +44,7 @@ cerberus
 parse-accept-language
 ## roulier for La Poste connector and other transporters
 # roulier
-## connector
+## connector/shopfloor
 # cachetools>=2.0.1
 ## partner_import_helper
 # openai

@@ -8,6 +8,8 @@
 
 from odoo import api, SUPERUSER_ID
 
+# v17+
+def set_department_on_partner(env):
 
 def set_department_on_partner(cr, registry):
     """This post_install script is required because, when the module

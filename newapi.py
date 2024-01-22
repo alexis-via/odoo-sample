@@ -89,12 +89,22 @@ class ProductCode(models.Model):
     def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
         if args is None:
             args = []
-        ids = []
         if name and operator == 'ilike':
             ids = list(self._search([('code', '=', name)] + args, limit=limit))
             if ids:
                 return ids
         return super()._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
+
+    # v17+
+    @api.model
+    def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
+        if domain is None:
+            domain = []
+        if name and operator == 'ilike':
+            ids = list(self._search([('code', '=', name)] + domain, limit=limit, order=order))
+            if ids:
+                return ids
+        return super()._name_search(name, domain=domain, operator=operator, limit=limit, order=order)
 
     # Hériter la recherche textuelle dans les champs many2one (et aussi dans les vues de recherche qui ont <field name="partner_id" filter_domain="[('partner_id','child_of',self)]"/>
     # name : object name to search for
@@ -903,6 +913,10 @@ for inv in invoices.sorted(reverse=True):
 
 self.read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)
 
+v17 : self._read_group(domain, groupby=(), aggregates=(), having=(), offset=0, limit=None, order=None)
+# => renvoie une liste de tuples (recordset, valeur_agg1, valeur_agg2, valeur_agg3)
+# Le recordset est une instance de l'objet pointé par le champ du groupby
+
 le(s) champ(s) présent dans groupby doit aussi être présent dans fields
 lazy: if true, the results are only grouped by the first groupby and the
 remaining groupbys are put in the __context key. If false, all the groupbys are
@@ -915,10 +929,18 @@ line_ids = fields.One2many(
 
 @api.depends('line_ids.commission_amount')
 def _compute_amount_total(self):
-rg_res = self.env['account.invoice.line'].read_group([('result_id', 'in', self.ids)], ['result_id', 'commission_amount:sum'], ['result_id'])
+    rg_res = self.env['account.invoice.line'].read_group([('move_id', 'in', self.ids)], ['result_id', 'commission_amount:sum'], ['result_id'])
     mapped_data = dict([(x['result_id'][0], x['commission_amount']) for x in rg_res])
     for rec in self:
         rec.amount_total = mapped_data.get(rec.id, 0)
+
+v17:
+@api.depends('invoice_line_ids.price_subtotal')
+def _compute_amount_total(self):
+    rg_res = self.env['account.move.line'].read_group([('move_id', 'in', self.ids)], groupby=['move_id'], aggregates=['price_subtotal:sum'])
+    mapped_data = dict([(inv.id, total) for (inv, total) in rg_res])
+    for inv in self:
+        inv.amount_total = mapped_data.get(inv.id, 0)
 
 def _compute_sale_count(self):
     rg_res = self.env['sale.order'].read_group(
