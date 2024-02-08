@@ -14,6 +14,9 @@ active_id => id ; active_model est supprimé
 
 Fin des attrs et states => invisible="name == 'red'"
    exemple : states="draft" ==> invisible="state != 'draft'"
+   les states= dans le code python sont à déplacer dans la vue
+   readonly="state in ['cancel', 'done', 'purchase']"
+Vue tree, invisible="1" => column_invisible="1"
 
 views des res.config.settings
 
@@ -21,6 +24,25 @@ read_group => _read_group
 name_search => def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
                CHANGEMENT DU PROTO de la méthode par rapport à v16
 
+==============
+
+SI OUBLI v16 :
+- ajout ACL 1,0,0,0 pour account.group_account_readonly
+- check_company=True
+- date en vue search : <filter string="Deposit Date" name="deposit_date" date="deposit_date"/>
+- (0, 0, {}) =>Command.create/set
+
 =============
 
 Main Datamodel changes :
+stock.move.line : reserved_uom_qty et qty_done => quantity ou quantity_product_uom (le champ est le même 
+
+stock.move :
+product_uom_qty (qté demandée) in product_uom
+product_qty in product's uom
+quantity in product_uom
+stock.move.line :
+quantity in product_uom_id
+quantity_product_uom in product's uom
+
+sale.order : plus d'état "done" => la SO est tjs éditable

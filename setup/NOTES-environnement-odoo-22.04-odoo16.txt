@@ -98,14 +98,18 @@ Vérifier que py3o.template et py3o.formats sont bien installés dans le virtual
 
 ATTENTION, le reste est en python2 :
 
-sudo apt install python2 python2-dev
+sudo apt install python2 python2-dev python2-setuptools-whl python2-pip-whl
 wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 ./get-pip.py
 
-sudo pip2 install --upgrade service-identity
-sudo pip2 install JPype1==0.6.3
-sudo pip2 install --upgrade py3o.renderserver
-sudo pip2 install --upgrade py3o.fusion
+mkdir py3o-py2
+virtualenv -p /usr/bin/python2  py3o-py2
+source py3o-py2/bin/activate
+
+pip install --upgrade service-identity
+pip install JPype1==0.6.3
+pip install --upgrade py3o.renderserver
+pip install --upgrade py3o.fusion
 
 Copier les fichiers py3o-renderserver.service py3o-fusion.service libreoffice.service dans /etc/systemd/system/
 

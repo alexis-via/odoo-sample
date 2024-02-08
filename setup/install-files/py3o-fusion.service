@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=odoo
 Group=odoo
-ExecStart=/usr/local/bin/start-py3o-fusion --debug -s localhost -i localhost
+ExecStart=/home/odoo/erp/py3o-py2/bin/start-py3o-fusion --debug -s localhost -i localhost
 KillMode=mixed
 Restart=always
 # number of seconds to attempt restart after failure

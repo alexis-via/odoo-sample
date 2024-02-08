@@ -18,6 +18,7 @@ from collections import defaultdict   # a = defaultdict(list)
 
 import logging
 logger = logging.getLogger(__name__)
+# Utiliser self.logger.info() ? Vu dans database_cleanup v12
 
 try:
     import phonenumbers
@@ -913,8 +914,9 @@ for inv in invoices.sorted(reverse=True):
 
 self.read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)
 
-v17 : self._read_group(domain, groupby=(), aggregates=(), having=(), offset=0, limit=None, order=None)
+v17 : self._read_group(domain, groupby=[], aggregates=[], having=[], offset=0, limit=None, order=None)
 # => renvoie une liste de tuples (recordset, valeur_agg1, valeur_agg2, valeur_agg3)
+# si groupby=[], renvoie [(valeur_agg1, valeur_agg2)]
 # Le recordset est une instance de l'objet pointé par le champ du groupby
 
 le(s) champ(s) présent dans groupby doit aussi être présent dans fields

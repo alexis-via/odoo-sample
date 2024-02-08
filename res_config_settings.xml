@@ -1,0 +1,35 @@
+Page de config :
+<app data-string="Manufacturing" string="Manufacturing" name="mrp" groups="mrp.group_mrp_manager">
+
+section dans la page de config
+
+<block title="Operations" name="process_operations_setting_container">
+
+</block>
+
+Champ ac case à cocher :
+<setting id="" string="" help="">
+    <field name="mon_champ_bool"/>
+</setting>
+Champ avec valeur sous le libellé : comme pour bool
+
+Champs avec valeur en ligne:
+<setting id="" string="" help="">
+
+    <div class="row mt16">
+        <label for="intrastat_arrivals" class="col-lg-5 o_light_label" />
+        <field name="intrastat_arrivals" />
+    </div>
+    <div class="row mt16">
+        <label for="intrastat_dispatches" class="col-lg-5 o_light_label" />
+        <field name="intrastat_dispatches" />
+    </div>
+</setting>
+
+
+Champ ac unité
+<setting id="dft_cutoff_picking_interval_days" string="Picking Analysis Interval">
+    <div class="mt16">
+        <field name="dft_cutoff_picking_interval_days" class="oe_inline" /> days
+    </div>
+</setting>
