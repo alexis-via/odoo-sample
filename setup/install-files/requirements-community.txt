@@ -4,6 +4,8 @@ oca-decorators
 openupgradelib
 odoo_test_helper
 flake8
+## Used by odoo, but not in odoo's requirements.txt
+pygments
 ## Upgrade libs from odoo requirements.txt that are too old
 python-stdnum
 ofxparse
@@ -24,13 +26,13 @@ regex
 dateparser
 pymupdf
 ## WARNING: pdfplumber updates to the latest version of Pillow, which is not the version of Odoo's requirements.txt
-pdfplumber
+## pdfplumber
 ## py3o
 py3o.template
 py3o.formats
 mock
 ## das2
-pgpy
+pyfrdas2
 ## l10n_fr_chorus_account
 requests_oauthlib
 ## mooncard_payment_card

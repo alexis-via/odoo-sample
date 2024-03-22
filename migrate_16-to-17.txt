@@ -1,6 +1,6 @@
 https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-17.0
 
-git checkout -b 17.0-mig-$module origin/17.0
+git checkout origin/17.0 -b 17.0-mig-$module
 git format-patch --keep-subject --stdout origin/17.0..origin/16.0 -- $module | git am -3 --keep
 pre-commit run -a
 git add -A
@@ -23,6 +23,15 @@ views des res.config.settings
 read_group => _read_group
 name_search => def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
                CHANGEMENT DU PROTO de la méthode par rapport à v16
+
+ACL sans group : remplacer par 3 ACLs :
+base.group_user
+base.group_public
+base.group_portal
+
+message_post() avec HTML :
+from markupsafe import Markup, escape
+
 
 ==============
 

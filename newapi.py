@@ -1,4 +1,4 @@
-# Copyright 2023 Akretion France (http://www.akretion.com/)
+# Copyright 2024 Akretion France (http://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -31,6 +31,7 @@ class ProductCode(models.Model):
     _name = "product.code"
     _description = "Product code"
     _rec_name = "display_name"  # Nom du champ qui fait office de champ name
+    _rec_names_search = ["name", "code"]
     _order = "name, id desc"
     _check_company_auto = True  # to combine with check_company=True on fields definition
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
@@ -86,7 +87,7 @@ class ProductCode(models.Model):
         # when called with a single ID :
         # record.name_get()[0][1]
 
-    # v16+  (autres exemples: res.country, account.account)
+    # v16  (autres exemples: res.country, account.account)
     def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
         if args is None:
             args = []
@@ -131,7 +132,7 @@ class ProductCode(models.Model):
             accounts.append((0, 0, {'ovh_account_id': account.id, 'password': account.password,}))
             # en v8, ça marche aussi sans [(0, 0, {})] en donnant directement [{}]
         # return date as string (not datetime)
-        # M2M : v10 : list of IDs ou [(6, 0, IDs)]
+        # M2M : v10 : list of IDs ou [(6, 0, IDs)] ou [Command.set([42, 43])]
         # O2M : ID
         # to set the value for a O2M fields, you need to return:
         # v8 :
@@ -929,6 +930,7 @@ line_ids = fields.One2many(
     'account.invoice.line', 'result_id', 'Commission Lines',
     readonly=True)
 
+v16-
 @api.depends('line_ids.commission_amount')
 def _compute_amount_total(self):
     rg_res = self.env['account.invoice.line'].read_group([('move_id', 'in', self.ids)], ['result_id', 'commission_amount:sum'], ['result_id'])
@@ -944,6 +946,7 @@ def _compute_amount_total(self):
     for inv in self:
         inv.amount_total = mapped_data.get(inv.id, 0)
 
+v16-
 def _compute_sale_count(self):
     rg_res = self.env['sale.order'].read_group(
             [('agreement_id', 'in', self.ids)],
@@ -952,6 +955,15 @@ def _compute_sale_count(self):
         [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
     for agreement in self:
         agreement.sale_count = mapped_data.get(agreement.id, 0)
+
+v17:  # field fr_chorus_service_count on res.partner
+def _compute_fr_chorus_service_count(self):
+    rg_res = self.env["chorus.partner.service"]._read_group(
+        [("partner_id", "in", self.ids)], groupby=["partner_id"], aggregates=['__count']
+    )
+    mapped_data = {partner.id: srv_count for (partner, srv_count) in rg_res}
+    for partner in self:
+        partner.fr_chorus_service_count = mapped_data.get(partner.id, 0)
 
 from odoo.tools.misc import formatLang
 # CAUTION: it is not the same method as in the report ! It is only for numbers, not dates.

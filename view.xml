@@ -108,7 +108,9 @@
                   A partner with the same <span><span class="o_vat_label">Tax ID</span></span> already exists (<field name="same_vat_partner_id"/>), are you sure to create a new one?
             </div>
             <sheet>
-                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>  <!--
+                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                <!--
                 New for v13+.
                 Possible values for bg_color: same as decoration: danger, info, success, warning   -->
                 <div class="oe_button_box" name="button_box">
@@ -169,9 +171,12 @@
                     domain="[('partner_id','=',partner_id)]"
                     pour filtrer sur l'ID courant, utiliser "active_id" au lieu de "id"
                     domain="[('partner_id', '=', active_id)]
-                    Pour filtrer un M2O sur le contenu d'un M2M:
+                    Pour filtrer un M2O sur le contenu d'un M2M en v13-:
                     domain="[('id', 'in', opportunity_ids and opportunity_ids[0] and opportunity_ids[0][2] or False)]"
                     cf addons/crm/base_partner_merge_view.xml champ dst_partner_id
+                    Pour filtrer un M2O sur le contenu d'un M2M en v14+:
+                    domain="[('id', 'in', partner_ids or False)]"
+                    cf odoo/odoo/addons/base/wizard/base_partner_merge.py
                      -->
                     <field name="invoice_id" context="{'form_view_ref': 'account.invoice_form', 'tree_view_ref': 'account.invoice_tree'}"/>
                     <!-- clés form_view_ref et tree_view_ref pour forcer une certaine vue ... mais ça n'a l'air de marcher uniquement sur O2M -->
