@@ -19,22 +19,17 @@ sudo apt install molly-guard fail2ban
 Wkhtmltopdf
 ===========
 
-[NEW] Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/wkhtmltopdf
-Il y a un packet pour jammy en 0.13.0-1.nightly
+Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/wkhtmltopdf
+Aller sur https://github.com/odoo/wkhtmltopdf/releases
+Prendre la dernière release ; actuellement, il y a une seule release "nightly"
+Cliquer sur la release (si c'est "nightly, on arrive sur https://github.com/odoo/wkhtmltopdf/releases/tag/nightly)
 
-wget https://github.com/odoo/wkhtmltopdf/releases/download/nightly/wkhtmltox_0.13.0-1.nightly.jammy_amd64.deb
-sudo dpkg -i wkhtmltox_0.13.0-1.nightly.jammy_amd64.deb
+Télécharger le fichier .deb correspondant au paquet Debian pour ubuntu jammy (jammy = 22.04). Actuellement, le fichier s'appelle odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb)
 
-[OLD ?]
+Installer le packet debian :
+sudo dpkg -i odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb
 
-Infos à jour sur https://github.com/odoo/odoo/wiki/Wkhtmltopdf
-Bon, on installe quand même 0.12.6 malgré qu'ils conseillent 0.12.5 sur la page.
-
-Ne pas prendre le paquet dispo dans ubuntu car il n'est pas buildé avec un "patched Qt" donc certaines options ne marchent pas.
-
-wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
-
-sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+Dans tous les cas, ne pas prendre le paquet dispo dans ubuntu car il n'est pas buildé avec un "patched Qt" donc certaines options ne marchent pas.
 
 Téléchargement Odoo
 ===================
@@ -68,10 +63,13 @@ $ sudo su
 $ su - postgres
 $ createuser -s odoo
 
-Vérifier que la locale français est installé :
+Vérifier que les 3 locales suivantes sont installées :
+- fr_FR.UTF-8
+- en_US.UTF-8
+- en_GB.UTF-8
 (ça permet d'avoir la langue qui se met bien en %d/%m/%Y à l'install)
-locale -a
-Si ce n'est pas le cas, l'ajouter :
+Pour voir les locales installées : locale -a
+Si ce n'est pas le cas, ajouter les locales manquantes. Exemple pour fr_FR.UTF-8 :
 locale-gen fr_FR.UTF-8
 Eventuellement, la mettre par défaut :
 update-locale LANG=fr_FR.UTF-8
@@ -102,6 +100,7 @@ sudo apt install python2 python2-dev python2-setuptools-whl python2-pip-whl
 wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 ./get-pip.py
 
+Dans /home/odoo/erp/ :
 mkdir py3o-py2
 virtualenv -p /usr/bin/python2  py3o-py2
 source py3o-py2/bin/activate
@@ -141,7 +140,7 @@ Fichier de config serveur Odoo
 
 Pour générer un fichier de config de base:
 ./odoo-bin -s
-=> ça génère un fichier de base ~/.odoorc  (sur odoo v8 : ~/.openerp_serverrc)
+=> ça génère un fichier de base ~/.odoorc
 
 * Modifs sur le fichier de config:
 admin_passwd = <mettre un mdp très solide>

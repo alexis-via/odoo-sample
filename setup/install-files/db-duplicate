@@ -5,8 +5,8 @@
 set -e
 
 DB_PROD=prod
-DATADIR_PROD=/home/odoo/erp/data-dir
-DATADIR_TEST=/home/odoo/data-dir-test
+DATADIR_PROD=/home/alexis/erp/data-dir
+DATADIR_TEST=/home/alexis/data-dir-test
 
 if [ $# -ne 1 ]
 then
@@ -41,17 +41,7 @@ fi
 
 if [ -d $DATADIR_TEST/filestore/$db_name ]
 then
-    echo "Filestore directory $DATADIR_TEST/filestore/$db_name already exists."
-    echo "Delete it ? (y/n)"
-    read answer
-    if [ $answer == 'y' ]; then
-        echo -n "Deleting directory $DATADIR_TEST/filestore/$db_name ... "
-        rm -rf $DATADIR_TEST/filestore/$db_name
-        echo "done."
-    else
-        echo "Please delete the filestore directory $DATADIR_TEST/filestore/$db_name manually and restart the script."
-        exit 1
-    fi
+    echo "Filestore directory $DATADIR_TEST/filestore/$db_name already exists. Will be synced"
 fi
 
 if [ -d $DATADIR_PROD/filestore/$DB_PROD ]
@@ -73,8 +63,8 @@ psql -c "UPDATE ir_config_parameter SET value='TEST<br/>{db_name}' where key='ri
 psql -c "UPDATE ir_mail_server SET smtp_port=66000" ${db_name}
 echo "done."
 
-echo -n "Copying filestore from $DATADIR_PROD/filestore/$DB_PROD to $DATADIR_TEST/filestore/$db_name ... "
-cp -a $DATADIR_PROD/filestore/$DB_PROD $DATADIR_TEST/filestore/$db_name
+echo -n "Rsync filestore from $DATADIR_PROD/filestore/$DB_PROD to $DATADIR_TEST/filestore/$db_name ... "
+rsync -av --delete-after --safe-links $DATADIR_PROD/filestore/$DB_PROD/* $DATADIR_TEST/filestore/$db_name
 echo "done."
 
 exit 0

@@ -56,6 +56,8 @@
     <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'child_of', [user.company_id.id])]</field>
     <!-- v13+ -->
     <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    <!-- new : better perf -->
+    <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
 </record>
 
 </data>

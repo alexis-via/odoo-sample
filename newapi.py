@@ -772,6 +772,8 @@ from_currency._convert(from_amount, to_currency, company, date, round=True)
 In class product.uom
 @api.multi
 def _compute_quantity(self, qty, to_unit, round=True, rounding_method='UP'):
+converted_qty = source_uom._compute_quantity(source_qty, destination_uom)
+
 
 @api.multi
 def _compute_price(self, price, to_unit):
