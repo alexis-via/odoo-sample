@@ -5,8 +5,8 @@
 set -e
 
 DB_PROD=prod
-DATADIR_PROD=/home/alexis/erp/data-dir
-DATADIR_TEST=/home/alexis/data-dir-test
+DATADIR_PROD=/home/odoo/erp/data-dir
+DATADIR_TEST=/home/odoo/data-dir-test
 
 if [ $# -ne 1 ]
 then
