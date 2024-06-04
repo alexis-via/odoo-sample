@@ -1,4 +1,5 @@
 ## OCA stuff
+# WARNING: pre-commit depends on a recent version of PyYAML which doesn't work on v11
 pre-commit
 oca-decorators
 openupgradelib

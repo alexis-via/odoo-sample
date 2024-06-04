@@ -1,6 +1,7 @@
 Upgrade 20.04 vers 22.04
 ========================
 
+
 Sur Odoo 10 :
 
 réinstaller pip :
@@ -13,12 +14,15 @@ ré-installer les libs py2 en s'inpirant de requirements.txt d'Odoo
 - ne pas oublier la lib pycups (apt install libcups2-dev && pip2 install --upgrade pycups==1.9.74
 - si chorus, ne pas oublier requests_oauthlib
 
+ATTENTION VERIFIER le data_directory de postgres 12 pour voir si il a été déplacé par rapport à la valeur par défaut /var/lib/postgresql
+L'espace du data_directory VA DOUBLER pendant pg_upgradecluster => vérifier qu'on a ASSEZ DE PLACE
+
 Supprimer les bases de test (pour gagner du temps)
 sudo pg_dropcluster 14 main --stop
 sudo pg_upgradecluster 12 main
 sudo pg_dropcluster 12 main
 
-La config postgresql est apparamment basculée automatiquement de 10 à 12
+La config postgresql est apparamment basculée automatiquement de 10 à 12 SAUF le data_directory
 
 sudo apt remove --purge postgresql-12 postgresql-client-12
 

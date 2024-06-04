@@ -261,6 +261,13 @@ dig odoo._domainkey.nuska.fr TXT
 dig _dmarc.nuska.fr TXT
 vérifier la reverse
 
+Outil db-duplicate
+==================
+
+sudo apt install rsync
+copier db-duplicate depuis setup/install-files vers /usr/local/bin
+Mettre à jour le nom dans la base de prod et l'emplacement des data-dir de prod et test au début du script
+
 Préparation de la base de prod
 ==============================
 Désinstaller les modules :

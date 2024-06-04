@@ -31,7 +31,8 @@
         amounting in <strong>${format_amount(object.amount_total, object.pricelist_id.currency_id)}</strong>
         from ${object.company_id.name}.
         ${format_date(object.date)}
-        ${format_tz(dt, tz=False, format=False)}
+        ${format_tz(dt, tz=False, format=False)}  # v12
+        ${format_datetime(dt, tz=False, dt_format=False, lang_code=False)}  # v14
         <br /><br />
         Do not hesitate to contact us if you have any question.
     </p>

@@ -7,7 +7,7 @@ from odoo.exceptions import UserError, ValidationError, RedirectWarning
 
 import odoo.addons.decimal_precision as dp
 from odoo.tools.misc import format_date, format_datetime, format_amount
-from odoo.tools import float_compare, float_is_zero, float_round
+from odoo.tools import float_compare, float_is_zero, float_round, is_html_empty
 from odoo.tools import file_open, file_path  # file_path only for v15+
 from odoo import workflow  # ex-netsvc  => on peut faire workflow.trg_validate()
 from textwrap import shorten  # shorten(assign.partner_name, 20, placeholder='...')
@@ -195,6 +195,7 @@ class ProductCode(models.Model):
         'product_id', 'invoice_id.partner_id', 'invoice_id.currency_id')
     @api.depends_context('company')
     @api.depends_context('uid')
+    @api.depends_context('lang')
     # @api.depends est utilisé pour: invalidation cache, recalcul, onchange
     # donc, maintenant, le fait d'avoir un champ calculé fait qu'il est
     # automatiquement mis à jour dans la vue quand un de ses champs 'depends'
@@ -479,13 +480,13 @@ class ProductCode(models.Model):
         return super(ObjClass, self).write(vals)
 
     # Write sur M2M ou O2M
-    # Command.create({})  equiv [(0, 0, {})] : [Command.create({'name': 'S'})]
-    # Command.update(ID, {})  equiv [(1, ID, {}]
-    # Command.delete(ID)  equiv [(2, ID, 0)]
-    # Command.unlink(ID)  equiv [(3, ID, 0)]
-    # Command.link(ID)  equiv [(4, ID)]
-    # Command.clear()  equiv [(5, 0, 0)]
-    # Command.set(IDs)   equiv [(6, 0, [IDs])]
+    # [Command.create({})]  equiv [(0, 0, {})] : [Command.create({'name': 'S'})]
+    # [Command.update(ID, {})]  equiv [(1, ID, {}]
+    # [Command.delete(ID)]  equiv [(2, ID, 0)]
+    # [Command.unlink(ID)]  equiv [(3, ID, 0)]  cut the link, don't delete
+    # [Command.link(ID)]  equiv [(4, ID)]
+    # [Command.clear()]  equiv [(5, 0, 0)]  delete all records
+    # [Command.set([IDs])]   equiv [(6, 0, [IDs])]
     - equivalent de [(6, 0, [ids])]
     'groups_id': [Command.set([cls.group_portal.id])],
 
