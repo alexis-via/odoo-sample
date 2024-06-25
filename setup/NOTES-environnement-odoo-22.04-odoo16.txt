@@ -1,5 +1,5 @@
-INSTALLATION Odoo v16 sur Ubuntu 22.04 LTS
-==============================================
+INSTALLATION Odoo v16 sur Ubuntu 22.04 et 24.04 LTS
+===================================================
 
 Les fichiers de config d'exemple utilisés dans ce tuto sont dispo sur https://github.com/alexis-via/odoo-sample dans le sous-répertoire setup/install-files
 
@@ -96,9 +96,20 @@ Vérifier que py3o.template et py3o.formats sont bien installés dans le virtual
 
 ATTENTION, le reste est en python2 :
 
+ubuntu 22.04 :
+-------------
 sudo apt install python2 python2-dev python2-setuptools-whl python2-pip-whl
 wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 ./get-pip.py
+
+ubuntu 24.04
+------------
+Suivre le tutoriel : https://linux.how2shout.com/how-to-install-python-2-7-on-ubuntu-24-04-noble-lts-linux/
+wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+sudo python2.7 ./get-pip.py
+NOTE : en 24.04, je n'arrive pas à créer le virtualenv => j'install en global... c'est pas grave vu que c'est en 2.7
+virtualenv versions >= 20.22.0 dropped support for creating Python environments for Python versions <= 3.6, so you'll need to downgrade virtualenv : pip install virtualenv==20.21.1
+=> j'ai créé un virtualenv spécial où j'ai lancé pip install virtualenv==20.21.1 ; dans ce virtualenv, j'ai pu créer le virtualenv -p /usr/local/bin/python2.7
 
 Dans /home/odoo/erp/ :
 mkdir py3o-py2
@@ -153,6 +164,7 @@ data_dir = /home/odoo/erp/data-dir
 logfile = /var/log/odoo/odoo-server.log
 db_name = prod
 dbfilter = ^prod$
+running_env = prod
 
 * exemple si on veut du multi-worker:
 
@@ -162,9 +174,10 @@ limit_memory_hard = 2684354560  (valeur par défaut, qui est + élevée que sur 
 limit_memory_soft = 2147483648  (valeur par défaut)
 limit_request = 65536
 
-* auth_admin_passkey
+* Clés à ajouter :
 auth_admin_passkey_password = <mot_de_passe_super_solide>
 auth_admin_passkey_send_to_user = False
+running_env = test
 
 Dupliquer le fichier de config de prod pour le serveur de test :
 db_name = test1

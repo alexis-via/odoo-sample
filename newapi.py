@@ -988,7 +988,10 @@ self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default
 # WARNING: It the value of the param is True or False, get_param() will return
 # 'True' or 'False' as strings !
 
+# v13-
 account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
+# v14+
+account_recordset = self.env['ir.property']._get('property_account_payable_id', 'res.partner')
 
 
 # v14+ test intrastat country :

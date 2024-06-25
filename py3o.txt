@@ -1,5 +1,18 @@
 Deprecated method IrActionsReportXml._lookup_report in module odoo.addons.report_py3o.models.ir_actions_report_xml
 
+Si ERREUR :
+ File "/home/odoo/erp14/o14/lib/python3.10/site-packages/py3o/template/helpers.py", line 74, in __call__
+    self._ast = ast.parse(dedented_source)
+  File "/usr/lib/python3.10/ast.py", line 50, in parse
+    return compile(source, filename, mode, flags,
+  File "<unknown>", line 2
+    with="lang=obj.partner_id.lang or 'en_US'"
+        ^
+SyntaxError: invalid syntax
+
+C'est que py3o_is_local_fusion = false sur ir.actions.report => le passer à True. Requête SQL:
+UPDATE ir_act_report_xml SET py3o_is_local_fusion=true WHERE report_type='py3o' and py3o_is_local_fusion is not true;
+
 Définition du rapport sortie ODT
 ================================
 

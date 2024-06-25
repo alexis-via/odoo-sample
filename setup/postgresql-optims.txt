@@ -7,15 +7,15 @@ postgresql.conf
 
 shared_buffers
 ATTENTION, il faut postgres 9.3 ou > pour ne pas avoir à tuner son kernel
-. par défaut 22.04 : 128MB
+. par défaut 22.04/24.04 : 128MB
 . conseillé : 1/4 RAM si RAM > 1 Go
 
 effective_cache_size
-. par défaut 22.04 : 4GB (commenté)
+. par défaut 22.04/24.04 : 4GB (commenté)
 . conseillé : 1/2 RAM
 
 checkpoint_completion_target
-. par défaut 22.04 : 0.9 (commenté)
+. par défaut 22.04/24.04 : 0.9 (commenté)
 . conseillé : 0.9
 
 work_mem
@@ -27,10 +27,10 @@ maintenance_work_mem
 . conseillé : significantly larger than work_mem -> 100MB
 
 max_connections
-. par défaut 22.04: 100
+. par défaut 22.04/24.04: 100
 
 page_cost SI TOURNE SUR SSD
 seq_page_cost = 1.0
-random_page_cost = 1.0 (4.0 par défaut 22.04)
+random_page_cost = 1.0 (4.0 par défaut 22.04/24.04)
 
 En fait, il faut mettre les 2 à la même valeur ; Info issue de https://amplitude.engineering/how-a-single-postgresql-config-change-improved-slow-query-performance-by-50x-85593b8991b0

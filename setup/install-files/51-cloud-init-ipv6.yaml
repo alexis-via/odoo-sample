@@ -1,0 +1,13 @@
+# config VPS OVH pour IPv6 testé sur 24.04
+network:
+    version: 2
+    ethernets:
+        ens3:
+            dhcp6: no
+            match:
+              name: ens3
+            addresses:
+              - 2001:xxxx:yyy:zzzz::9b1/64
+            routes:
+              - to: default
+                via: 2001:xxxx:yyy:zzzz::1
