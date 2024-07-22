@@ -14,7 +14,7 @@ from textwrap import shorten  # shorten(assign.partner_name, 20, placeholder='..
                               # default placeholder='[...]'
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from collections import defaultdict   # a = defaultdict(list)
+from collections import defaultdict   # a = defaultdict(list) or defaultdict(lambda: self.env['sale.order.line'])
 
 import logging
 logger = logging.getLogger(__name__)

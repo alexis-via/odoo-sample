@@ -19,10 +19,9 @@ sudo apt install molly-guard fail2ban
 Wkhtmltopdf
 ===========
 
-Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/wkhtmltopdf
-Aller sur https://github.com/odoo/wkhtmltopdf/releases
+Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/o-html2pdf
+Aller sur https://github.com/odoo/o-html2pdf/releases/
 Prendre la dernière release ; actuellement, il y a une seule release "nightly"
-Cliquer sur la release (si c'est "nightly, on arrive sur https://github.com/odoo/wkhtmltopdf/releases/tag/nightly)
 
 Télécharger le fichier .deb correspondant au paquet Debian pour ubuntu jammy (jammy = 22.04). Actuellement, le fichier s'appelle odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb)
 
