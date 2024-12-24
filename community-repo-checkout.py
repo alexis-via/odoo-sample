@@ -95,7 +95,7 @@ if __name__ == '__main__':
         usage=usage, epilog=epilog, description=description)
     parser.add_argument(
         '-c', '--config', dest='config_file', default='/home/odoo/erp/community-repo.conf',
-        help="Configuration file."
+        help="Configuration file. "
              "Default value: /home/odoo/erp/odoo-community-repo.conf")
     parser.add_argument(
         '-n', '--no-update', dest='noupdate', action='store_true',

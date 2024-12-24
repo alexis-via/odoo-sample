@@ -29,3 +29,4 @@ Main Datamodel changes :
 - supplierinfo : name -> partner_id
 - sale.order : compte ana descendu à la ligne
 - stock.picking : move_lines => move_ids (O2M vers stock.move)
+- stock.production.lot => stock.lot

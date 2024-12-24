@@ -1,4 +1,4 @@
-# Copyright 2024 Akretion France (http://www.akretion.com/)
+# Copyright 2024 Akretion France (https://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 
 try:
     import phonenumbers
-except ImportError:
-    logger.debug('Cannot import phonenumbers')
+except (ImportError, IOError) as err:
+    logger.debug('Cannot import phonenumbers. Error details below.')
+    logger.debug(err)
 
 
 class ProductCode(models.Model):
@@ -31,9 +32,11 @@ class ProductCode(models.Model):
     _name = "product.code"
     _description = "Product code"
     _rec_name = "display_name"  # Nom du champ qui fait office de champ name
-    _rec_names_search = ["name", "code"]
+    _rec_names_search = ["name", "code"]  # v16+
     _order = "name, id desc"
     _check_company_auto = True  # to combine with check_company=True on fields definition
+    _check_company_domain = models.check_company_domain_parent_of  # record can be used if company_id=False or company_id is a parent of any of the given companies
+    # 2e valeur possible: models.check_companies_domain_parent_of => utilisé que pour account.account v18
     # C'est ascendant par défaut, donc pas besoin de préciser "asc"
     _table = "prod_code"  # Nom de la table ds la DB
     _inherit = ['mail.thread']    # OU ['mail.thread', 'ir.needaction_mixin'] ?? ds quel cas ?
@@ -88,6 +91,7 @@ class ProductCode(models.Model):
         # record.name_get()[0][1]
 
     # v16  (autres exemples: res.country, account.account)
+    # v16+ : pas utiliser ça : utiliser _rec_names_search = ["name", "code"]
     def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
         if args is None:
             args = []
@@ -98,6 +102,7 @@ class ProductCode(models.Model):
         return super()._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
 
     # v17+
+    # v16+ : ne pas utiliser ça : utiliser _rec_names_search = ["name", "code"]
     @api.model
     def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
         if domain is None:
@@ -267,6 +272,7 @@ class ProductCode(models.Model):
     ### CHAMPS
     # id, create_uid, write_uid, create_date et write_date
     # sont déjà utilisable dans le code python sans re-définition
+    # attribut exportable=False 
     active = fields.Boolean(default=True)
     # Par défaut, string = nom du champ avec majuscule pour chaque début de mot
     login = fields.Char(
@@ -352,12 +358,14 @@ class ProductCode(models.Model):
         required=True, domain=[('type', 'not in', ['view', 'closed'])],
         # domain with XMLID
         domain=lambda self: [('category_id', '=', self.env.ref('uom.uom_categ_wtime').id)],
+        domain=lambda self: self._domain_account_id,
         default=lambda self: self._default_account(),
         check_company=True)
         # L'utilisation de lambda permet d'hériter la fonction _default_account() sans
         # hériter le champ. Sinon, on peut aussi utiliser default=_default_account
         # Possibilité d'hériter un domaine:
         # domain=lambda self: [('reconcile', '=', True), ('user_type_id.id', '=', self.env.ref('account.data_account_type_current_assets').id), ('deprecated', '=', False)]
+        # Question : est-ce que le domain peut dépendre de la valeur d'un autre champ ??
     company_id = fields.Many2one(
         'res.company', ondelete='cascade', required=True, index=True,
         default=lambda self: self.env['res.company']._company_default_get()
@@ -479,7 +487,18 @@ class ProductCode(models.Model):
         vals.update({'tutu': toto})
         return super(ObjClass, self).write(vals)
 
+    res = self._search(domain, offset=0, limit=None, order=None)
+    # ATTENTION, aucun ordre par défaut !!!
+    # res est un objet SQL (PAS une liste d'IDs)
+    # list(res) : liste d'IDs
+    # on peut boucler sur res ; chaque item est l'ID
+
+    def _check_company_domain(self, companies):
+    # renvoie un domain
+
+
     # Write sur M2M ou O2M
+    # Command. can be used on v15+
     # [Command.create({})]  equiv [(0, 0, {})] : [Command.create({'name': 'S'})]
     # [Command.update(ID, {})]  equiv [(1, ID, {}]
     # [Command.delete(ID)]  equiv [(2, ID, 0)]
@@ -503,13 +522,21 @@ class ProductCode(models.Model):
     @api.model
     def search(self, args, offset=0, limit=None, order=None, count=False):
 
-    @api.one
     def copy(self, default=None):
+        self.ensure_one()
         default = dict(default or {})
         # Si on a une séquence sur le champ name
         default['name'] = '/'  # comme ça, l'inherit du create va incrémenter la séq
         default['name'] = _('%s (copy)') % self.name
         return super(res_partner, self).copy(default)
+
+    def copy_data(self, default=None):
+        self.ensure_one()
+        if default is None:
+            default = {}
+        if 'name' not in default:
+            default['name'] = _("%s (copy)") % self.name
+        return super().copy_data(default=default)
 
     # CONTRAINTE PYTHON
     @api.one
@@ -812,6 +839,7 @@ exemple : float_round(1.3298, precision_digits=precision)
 is_zero()
 compare_amounts()
 round()
+format(amount)  # v16+
 
 # Tools
 from openerp.tools import file_open
@@ -987,6 +1015,7 @@ format_amount(env, amount, currency, lang_code=False)  # v13+
 self.env['ir.config_parameter'].sudo().get_param('webkit_path', default='default_path')
 # WARNING: It the value of the param is True or False, get_param() will return
 # 'True' or 'False' as strings !
+self.env['ir.config_parameter'].sudo().set_param('webkit_path', 'my_path')
 
 # v13-
 account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
@@ -1188,3 +1217,10 @@ class AccountAnalyticApplicability(models.Model):
 # @api.model
 #    def new(self, values=None, origin=None, ref=None):
 self.env['account.move'].new()
+
+from odoo.osv import expression
+
+expression.AND(
+# AND([D1,D2,...]) returns a domain representing D1 and D2 and ...
+expression.OR()
+# OR([D1,D2,...]) returns a domain representing D1 or D2 or ...

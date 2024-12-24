@@ -1,0 +1,53 @@
+https://github.com/OCA/maintainer-tools/wiki/Migration-to-version-18.0
+
+git checkout origin/18.0 -b 18.0-mig-$module
+git format-patch --keep-subject --stdout origin/18.0..origin/17.0 -- $module | git am -3 --keep
+pre-commit run -a
+git add -A
+git commit -m "[IMP] $module: pre-commit auto fixes"  --no-verify  # it is important to do all formatting in one commit the first time
+
+View tree => list
+_name_search => _search_display_name
+<chatter/>
+JS : retirer /** @odoo-module **/
+vue list : invisible => column_invisible
+
+==============
+
+SI OUBLI v16/v17 :
+- read_group => _read_group
+- ajout ACL 1,0,0,0 pour account.group_account_readonly
+- check_company=True
+- date en vue search : <filter string="Deposit Date" name="deposit_date" date="deposit_date"/>
+- (0, 0, {}) =>Command.create/set
+
+=============
+
+Main Datamodel changes :
+- product.template : retrait de detailed_type / type: consu/service/combo / champ bool is_storable
+- ir_cron : 
+- account.move : reversal_move_id (O2M !!!) => reversal_move_ids (O2M) ; c'est juste un renommage de champ
+- account.journal: type ajout de 'credit'   : ('bank', 'cash') => ('bank', 'cash', 'credit')
+- account.account : plus de champ company_id ; champ company_ids
+   champ code = champ calculé non stocké en DB, searchable (ça cherche sur self.env.company, donc il faut bien mettre self.with_company().search)
+   code_store : sorte de champ property JSONB {ID company: code, ...}
+   + O2M code_mapping_ids vers account.code.mapping ac 2 champs code et company_id (NON STOCKE EN BASE)
+   Pour chercher un compte par code dans une société :
+NONNON  self.with_company(ID Company).sudo()._search([('code_store', '=like', '626%')])
+
+- res.company : root_id ; si pas de parent, ça pointe vers lui-même
+
+addons/account/models/account_bank_statement_line.py
+def _get_default_amls_matching_domain(self):
+        self.ensure_one()
+        all_reconcilable_account_ids = self.env['account.account'].search([
+            ("company_ids", "child_of", self.company_id.root_id.id),
+            ('reconcile', '=', True),
+        ]).ids
+
+
+pay.destination_account_id = self.env['account.account'].with_company(pay.company_id).search([
+                        *self.env['account.account']._check_company_domain(pay.company_id),
+                        ('account_type', '=', 'asset_receivable'),
+                        ('deprecated', '=', False),
+                    ], limit=1)

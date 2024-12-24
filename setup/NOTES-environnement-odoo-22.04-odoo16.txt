@@ -1,6 +1,11 @@
 INSTALLATION Odoo v16 sur Ubuntu 22.04 et 24.04 LTS
 ===================================================
 
+LAST MINUTE bug https://github.com/odoo/odoo/issues/187021
+modifier requirements.txt pour mettre :
+gevent==22.10.2
+greenlet==2.0.2
+
 Les fichiers de config d'exemple utilisés dans ce tuto sont dispo sur https://github.com/alexis-via/odoo-sample dans le sous-répertoire setup/install-files
 
 Le tuto suppose que vous avez déjà créé un utilisateur système "odoo"
@@ -50,6 +55,8 @@ source o16/bin/activate
 
 Dans le répertoire "odoo" :
 pip install -r requirements.txt
+Si ça plante sur gevent à cause de https://github.com/odoo/odoo/issues/187021
+modifier requirements.txt pour passer de gevent 21.8.0 à 21.12.0
 
 pip install --upgrade -r requirements-community.txt
 
@@ -101,14 +108,10 @@ sudo apt install python2 python2-dev python2-setuptools-whl python2-pip-whl
 wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 ./get-pip.py
 
-ubuntu 24.04
+ubuntu 22.04 & 24.04
 ------------
-Suivre le tutoriel : https://linux.how2shout.com/how-to-install-python-2-7-on-ubuntu-24-04-noble-lts-linux/
-wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-sudo python2.7 ./get-pip.py
-NOTE : en 24.04, je n'arrive pas à créer le virtualenv => j'install en global... c'est pas grave vu que c'est en 2.7
 virtualenv versions >= 20.22.0 dropped support for creating Python environments for Python versions <= 3.6, so you'll need to downgrade virtualenv : pip install virtualenv==20.21.1
-=> j'ai créé un virtualenv spécial où j'ai lancé pip install virtualenv==20.21.1 ; dans ce virtualenv, j'ai pu créer le virtualenv -p /usr/local/bin/python2.7
+=> créer un virtualenv spécial où j'ai lancé pip install virtualenv==20.21.1 ; dans ce virtualenv, j'ai pu créer le virtualenv -p /usr/local/bin/python2.7
 
 Dans /home/odoo/erp/ :
 mkdir py3o-py2
@@ -157,6 +160,7 @@ admin_passwd = <mettre un mdp très solide>
 without_demo = True
 limit_time_cpu = 2000
 limit_time_real = 3600
+http_interface = localhost
 unaccent = True
 proxy_mode = True
 data_dir = /home/odoo/erp/data-dir
@@ -176,7 +180,7 @@ limit_request = 65536
 * Clés à ajouter :
 auth_admin_passkey_password = <mot_de_passe_super_solide>
 auth_admin_passkey_send_to_user = False
-running_env = test
+running_env = prod
 
 Dupliquer le fichier de config de prod pour le serveur de test :
 db_name = test1
@@ -186,6 +190,7 @@ longpolling_port = 7072
 data_dir = /home/odoo/data-dir-test
 logfile = False
 workers = 0
+running_env = test
 
 Proxy nginx pour HTTPS
 ======================
@@ -208,9 +213,9 @@ Doc : https://certbot.eff.org/#ubuntuxenial-nginx
 
 En root :
 
-apt install certbot (paquet qui remplace letsencrypt)
+sudo apt install certbot (paquet qui remplace letsencrypt)
 
-letsencrypt certonly --webroot -w /var/www/html -d odoo.nuska.fr -d testodoo.nuska.fr
+sudo letsencrypt certonly --webroot -w /var/www/html -d odoo.nuska.fr -d testodoo.nuska.fr
 
 => entrer l'adresse email de l'administreur du domaine
 
@@ -229,7 +234,7 @@ Ajouter dans /etc/crontab :
 ATTENTION, ne pas l'ajouter dans la cron perso du root (crontab -e), sinon le reload nginx ne s'exécute pas (je ne sais pas pourquoi !)
 
 Pour faire un test de renouvellement à la main :
-letsencrypt renew --dry-run --agree-tos
+sudo letsencrypt renew --dry-run --agree-tos
 
 On doit avoir:
 Congratulations, all renewals succeeded. The following certs have been renewed.

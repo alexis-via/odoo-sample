@@ -47,5 +47,7 @@ class PosDetailsSessionXlsx(models.AbstractModel):
     _description = "POS details Session XLSX"
 
     def generate_xlsx_report(self, workbook, data, objects):
+        # for some strange reasons, lang is not kept in context
+        self = self.with_context(lang=self.env.user.lang)
 
 </odoo>
