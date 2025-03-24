@@ -43,8 +43,11 @@ server {
     proxy_buffers 16 64k;
     proxy_buffer_size 128k;
 
-    # Allow HTTP compression
+    # avoid various errors
     client_max_body_size 64m;
+    large_client_header_buffers 4 32k;
+
+    # Allow HTTP compression
     gzip             on;
     gzip_min_length  400;
     gzip_proxied     expired no-cache no-store private auth;

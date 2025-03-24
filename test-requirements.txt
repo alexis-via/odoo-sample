@@ -1,0 +1,8 @@
+Doc : https://github.com/OCA/maintainer-tools/wiki/Use-temporary-reference(s)-to-another-pull-request(s)
+
+# syntax v17+
+odoo-addon-account_payment_order @ git+https://github.com/OCA/bank-payment.git@refs/pull/1403/head#subdirectory=account_payment_order
+
+Emplacement : à la racine du repo
+Message de commit :
+[DON'T MERGE] add test-requirements.txt

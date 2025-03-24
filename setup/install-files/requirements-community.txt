@@ -46,14 +46,14 @@ pyquerystring
 cerberus
 parse-accept-language
 ## CUPS (requires libcups2-dev)
-# pycups
+pycups
 ## roulier for La Poste connector and other transporters
-# roulier
+roulier
 ## connector/shopfloor
 # cachetools>=2.0.1
 ## partner_import_helper
-# openai
-# email_validator
+openai
+email_validator
 ## storage
-# boto3
-# python_slugify
+boto3
+python_slugify

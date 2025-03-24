@@ -11,6 +11,9 @@ _name_search => _search_display_name
 <chatter/>
 JS : retirer /** @odoo-module **/
 vue list : invisible => column_invisible
+message_post(body=" ac <a href=# data-oe-model=account.move data-oe-id=%d> -> utiliser 
+product_link = Markup(
+                    "<a href=# data-oe-model=product.product data-oe-id=%s>%s</a>" % (product.id, product.display_name))
 
 ==============
 
@@ -20,14 +23,16 @@ SI OUBLI v16/v17 :
 - check_company=True
 - date en vue search : <filter string="Deposit Date" name="deposit_date" date="deposit_date"/>
 - (0, 0, {}) =>Command.create/set
+- ir.rule : 
 
 =============
 
 Main Datamodel changes :
-- product.template : retrait de detailed_type / type: consu/service/combo / champ bool is_storable
-- ir_cron : 
+- product.template : retrait de detailed_type / type: consu/service/combo / champ bool is_storable / pos_categ_id -> pos_categ_ids
+- ir_cron : retrait du champ numbercall
 - account.move : reversal_move_id (O2M !!!) => reversal_move_ids (O2M) ; c'est juste un renommage de champ
 - account.journal: type ajout de 'credit'   : ('bank', 'cash') => ('bank', 'cash', 'credit')
+- account.payment : ref -> memo
 - account.account : plus de champ company_id ; champ company_ids
    champ code = champ calculé non stocké en DB, searchable (ça cherche sur self.env.company, donc il faut bien mettre self.with_company().search)
    code_store : sorte de champ property JSONB {ID company: code, ...}
@@ -36,6 +41,7 @@ Main Datamodel changes :
 NONNON  self.with_company(ID Company).sudo()._search([('code_store', '=like', '626%')])
 
 - res.company : root_id ; si pas de parent, ça pointe vers lui-même
+- sale.order : retrait de state = 'done'
 
 addons/account/models/account_bank_statement_line.py
 def _get_default_amls_matching_domain(self):

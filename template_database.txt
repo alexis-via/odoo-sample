@@ -17,7 +17,7 @@ When I generate a template database :
  . stock : multi-emplacement, routes, warning, display lots on delivery slip
  . account : multi-currency, VIES, analytic, multi-adresse (v16), DESACTIVER auto-validate bills
  . pos : stock in real time (removed in v16?, but default in v18), load remaining partners/products in the background, ePOS printer, flexible pricelists, DESACTIVER restrict by categories, allow ship later
-- ajouter dans le groupe "Show full accounting features"
+- ajouter dans le groupe "Show full accounting features" (pas en v17)
 - dans FR company, Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale) + lien compte bancaire
 - Créer un journal "chèque client"
 - fiscal positions : décocher détect automatically et enlever VAT required pour domestic
@@ -25,7 +25,8 @@ When I generate a template database :
 - créer 1 fiscal year
 - picking type : incoming : cocher "use existing lots" + create lots
                  outgoing : cocher "show detailed operatoins" (plus dispo en v18)
--date ranges
+- date ranges
 - account groups à 2 niveaux
 - enlever le bandeau d'onboarding sur la compta
 - supprimer le inventory journal
+- 471100 / 511500 / 512999

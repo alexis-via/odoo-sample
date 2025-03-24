@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright 2024 Akretion France (https://www.akretion.com/)
+  Copyright 2025 Akretion France (https://www.akretion.com/)
   @author: Alexis de Lattre <alexis.delattre@akretion.com>
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
@@ -32,9 +32,11 @@
             </page>
         </notebook>
         <xpath expr="//field[@name='product_id']" position="attributes">
-            <!-- expr : expr="//header//a[hasclass('navbar-brand')]" -->
-            <!-- expr="//button[@name='action_invoice_sent' and not(hasclass('oe_highlight'))] -->
-            <!-- expr="//header/button[last()]" -->
+            <!-- expr="//header//a[hasclass('navbar-brand')]"
+                 expr="//button[@name='action_invoice_sent' and not(hasclass('oe_highlight'))]
+                 expr="//header/button[last()]"
+                 expr="//field[@name='preferred_payment_method_line_id'][last()]"
+                -->
             <attribute name="editable">bottom</attribute>
             <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
             <attribute name="readonly">1</attribute>
@@ -419,6 +421,7 @@ Ce champ fonction peut être utile pr débugger :
             <field name="donation_date" interval="month" type="col"/>
             <field name="country_id" type="row"/>
             <field name="amount_total_company_currency" type="measure"/>
+            <!-- it is possible to dynamically set the measures via the context: {'pivot_measures': ['product_uom_qty']} -->
         </pivot>
     </field>
 </record>

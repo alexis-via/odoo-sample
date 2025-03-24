@@ -1,4 +1,4 @@
-# Copyright 2024 Akretion France (https://www.akretion.com/)
+# Copyright 2025 Akretion France (https://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -90,7 +90,12 @@ class ProductCode(models.Model):
         # when called with a single ID :
         # record.name_get()[0][1]
 
-    # v16  (autres exemples: res.country, account.account)
+    # v18+
+    @api.model
+    def _search_display_name(self, operator, value):
+        return domain
+
+    # v16 à v17 (autres exemples: res.country, account.account)
     # v16+ : pas utiliser ça : utiliser _rec_names_search = ["name", "code"]
     def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
         if args is None:
@@ -101,7 +106,7 @@ class ProductCode(models.Model):
                 return ids
         return super()._name_search(name=name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
 
-    # v17+
+    # v17 (pas PAS v18)
     # v16+ : ne pas utiliser ça : utiliser _rec_names_search = ["name", "code"]
     @api.model
     def _name_search(self, name, domain=None, operator='ilike', limit=None, order=None):
@@ -735,6 +740,12 @@ else:
     if not res:
         raise UserError(_('Unsupported report type %s found.') % report.report_type)
     result, format = res
+# v16 à v18 : appeler self.env['ir.actions.report']._render(self, report_ref, res_ids, data=None)
+res = self.env['ir.actions.report']._render(report_ref, [res_id])
+# report_ref : ID du rapport, report_name, recordset du report ou XMLID du report
+if not res:
+    raise UserError(_('Failed to render report xxx.'))
+result, report_format = res
 
 # Action pour récupérer un fichier qui a été généré par Odoo sur un objet (exemple : wizard FEC) :
 # v8
@@ -770,6 +781,18 @@ picking.message_post(_("The picking has been re-opened and set to draft state"))
 # v10
 message = _("This transfer has been created from the point of sale session: <a href=# data-oe-model=pos.order data-oe-id=%d>%s</a>") % (order.id, order.name)
 return_picking.message_post(body=message)
+# v18+
+from markupsafe import Markup
+return_picking.message_post(body=Markup(message))
+OU
+product_link = Markup(
+    f"<a href=# data-oe-model=product.product data-oe-id={product.id}>{product.display_name}</a>")
+picking.message_post(body=_(
+    "Product %(product_link)s qty %(qty)s %(uom)s unreserved",
+    product_link=product_link,
+    qty=formatLang(self.env, moveline.quantity, dp='Product Unit of Measure'),
+    uom=product.uom_id.name))
+
 # proto complet
 def message_post(self, cr, uid, thread_id, body='', subject=None, type='notification', subtype=None, parent_id=False, attachments=None, context=None, content_subtype='html', **kwargs)
 
@@ -842,7 +865,7 @@ round()
 format(amount)  # v16+
 
 # Tools
-from openerp.tools import file_open
+from odoo.tools import file_open
 f = file_open(
             'account_invoice_import_invoice2data/tests/pdf/'
             'invoice_free_fiber_201507.pdf',
@@ -1224,3 +1247,13 @@ expression.AND(
 # AND([D1,D2,...]) returns a domain representing D1 and D2 and ...
 expression.OR()
 # OR([D1,D2,...]) returns a domain representing D1 or D2 or ...
+
+# SQL traduc
+SELECT
+   min(aml.id) as id,
+   MAX(a.name ->> 'en_US') as name,
+
+# f-string sur 2 lignes :
+f"{dskdls}"\
+        f"suite {encore}"
+

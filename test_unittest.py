@@ -1,4 +1,4 @@
-# Copyright 2024 Akretion France (http://www.akretion.com/)
+# Copyright 2025 Akretion France (https://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -108,7 +108,7 @@ with invoice_form.invoice_line_ids.new() as line_form:
 cls.invoice = invoice_form.save()
 
 # ===================================
-# accounting test with required a new company:
+# accounting test that create a new company v16
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
 @tagged("post_install", "-at_install")
@@ -173,3 +173,50 @@ cls.company_data_2=============
  'default_tax_purchase': account.tax(72,),
  'default_tax_sale': account.tax(71,)}
 
+# ==============================
+# accounting test v18
+# Modèle : account_check_deposit, l10n_fr_intrastat_service
+
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+
+
+@tagged("post_install", "-at_install")
+class TestFrIntrastatService(AccountTestInvoicingCommon):
+    @classmethod
+    @AccountTestInvoicingCommon.setup_country("fr")
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
+        # 2 options:
+        # 1) we can use the default company created by AccountTestInvoicingCommon
+        # => cls.company = cls.company_data['company']
+        # 2) we need a new company with specific values: we call setup_other_company() and we
+        # can put any field of res.company as argument
+        cls.fr_test_company_dict = cls.setup_other_company(
+            name="Akretion France TEST DES",
+            vat="FR86792377731",
+        )
+        cls.company = cls.fr_test_company_dict["company"]
+        cls.env.user.write({'groups_id': [Command.link(cls.env.ref('account_payment_order.group_account_payment').id)], 'company_ids': [Command.link(cls.company.id)]})
+
+        pprint(cls.fr_test_company_dict)
+
+        {'company': res.company(168,),
+ 'currency': res.currency(125,),
+ 'default_account_assets': account.account(8201,),
+ 'default_account_deferred_expense': account.account(8189,),
+ 'default_account_deferred_revenue': account.account(8203,),
+ 'default_account_expense': account.account(8221,),
+ 'default_account_payable': account.account(8204,),
+ 'default_account_receivable': account.account(8195,),
+ 'default_account_revenue': account.account(8215,),  # =income
+ 'default_account_tax_purchase': account.account(8198,),
+ 'default_account_tax_sale': account.account(8210,),
+ 'default_journal_bank': account.journal(1213,),
+ 'default_journal_cash': account.journal(1214,),
+ 'default_journal_credit': account.journal(1215,),
+ 'default_journal_misc': account.journal(1210,),
+ 'default_journal_purchase': account.journal(1209,),
+ 'default_journal_sale': account.journal(1208,),
+ 'default_tax_purchase': account.tax(759,),
+ 'default_tax_sale': account.tax(758,)}
