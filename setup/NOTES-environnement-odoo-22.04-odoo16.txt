@@ -24,8 +24,8 @@ sudo apt install molly-guard fail2ban
 Wkhtmltopdf
 ===========
 
-Odoo reprend la maintenance de wkhtmltopdf  https://github.com/odoo/o-html2pdf
-Aller sur https://github.com/odoo/o-html2pdf/releases/
+Odoo reprend la maintenance de wkhtmltopdf
+https://github.com/odoo/wkhtmltopdf/releases/tag/nightly
 Prendre la dernière release ; actuellement, il y a une seule release "nightly"
 
 Télécharger le fichier .deb correspondant au paquet Debian pour ubuntu jammy (jammy = 22.04). Actuellement, le fichier s'appelle odoo-wkhtmltopdf-ubuntu-jammy-x86_64-0.13.0-nightly.deb)
@@ -48,6 +48,11 @@ Utilisation de mon script community-repo-checkout.py dispo dans https://github.c
 
 Librairies python
 =================
+
+SI recours à deadsnake, par exemple pour avoir python3.10 sur ubuntu 24.04 :
+
+sudo apt install python3.10-dev python3.10-distutils
+
 
 mkdir o16
 virtualenv o16
@@ -107,6 +112,17 @@ ubuntu 22.04 :
 sudo apt install python2 python2-dev python2-setuptools-whl python2-pip-whl
 wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
 sudo python2 ./get-pip.py
+
+ubuntu 24.04 :
+-------------
+Télécharger python 2.7.18 depuis les sources :
+https://www.python.org/downloads/release/python-2718/
+Télécharger le fichier tgz et décompresser
+./configure
+make
+sudo make install
+
+=> quand on créé le virtualenv, on ajoute -p /usr/local/bin/python2.7
 
 ubuntu 22.04 & 24.04
 ------------
