@@ -45,6 +45,13 @@ apispec
 pyquerystring
 cerberus
 parse-accept-language
+## fastapi
+fastapi
+python-multipart
+ujson
+a2wsgi
+# only for fastapi v14
+pydantic<2
 ## CUPS (requires libcups2-dev)
 pycups
 ## roulier for La Poste connector and other transporters

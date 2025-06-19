@@ -60,3 +60,5 @@ format_datetime
 format_time
 format_amount
 format_duration
+
+<span style="font-weight: bold;"  t-out="format_amount(object.amount_total, object.pricelist_id.currency_id) or ''">$ 10.00</span>

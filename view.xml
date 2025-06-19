@@ -19,7 +19,7 @@
     <field name="inherit_id" ref="base.view_company_form" />
     <field name="groups_id" eval="[(4, ref('account.group_account_user'))]"/> <!-- vu en v8 seulement 
     OU -->
-    <field name="groups_id" eval="[(6, 0, [ref('account.group_account_user')])]"/> 
+    <field name="groups_id" eval="[(6, 0, [ref('account.group_account_user')])]"/> <!-- plus possible en v16+ : il faut mettre groups="" sur les champs directement -->
     <!-- => pratique pour avoir un champ en readonly=1 pour tout le monde et en readonly=0 pour account.group_account_user par exemple -> dans cet héritage avec groups_id, on hérite le champ concerné avec position="attributes" et <attribute name="readonly">0</attribute> -->
     <field name="priority">100</field> <!-- Only when necessary -->
     <field name="arch" type="xml">
@@ -113,7 +113,7 @@
             </div>
             <sheet>
                 <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
-                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/> <!-- v17+ -->
                 <!--
                 New for v13+.
                 Possible values for bg_color: same as decoration: danger, info, success, warning   -->
@@ -488,7 +488,7 @@ Same in v10 : <pivot display_quantity="True">
     groups="group_stock_manager" />
     <!-- For top-level menu entries : add web_icon="module_name,static/description/icon.png"
         The top-level icons can be generated with the script oca-gen-addon-icon
-        from https://github.com/OCA/maintainer-tools/pull/491
+        from https://github.com/OCA/maintainer-tools/pull/584
         A exécuter depuis le répertoire racine du module, et il va écrire
         sur static/description/icon.png
         oca-gen-addon-icon --addon-dir=. --format png --icon-extra='{"fa fa-church": {"position": "absolute", "top": "30px", "left": "20px", "font-size": "70px"}}' --icon-color pink
@@ -640,4 +640,9 @@ MRP : base.menu_mrp_root
 <!--
  parent.partner_id => utilisable dans les on_change et les contexte
  mais a priori pas dans les attrs
+-->
+
+<!-- color field on a tag (for exemple)
+        on tag form view : <field name="color" widget="color_picker"/>
+        on object form view : <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
 -->

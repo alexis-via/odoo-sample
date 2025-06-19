@@ -33,6 +33,7 @@
         ${format_date(object.date)}
         ${format_tz(dt, tz=False, format=False)}  # v12
         ${format_datetime(dt, tz=False, dt_format=False, lang_code=False)}  # v14
+        ${dict(object.fields_get(allfields=['x_order_type'])['x_order_type']['selection'])['R']
         <br /><br />
         Do not hesitate to contact us if you have any question.
     </p>

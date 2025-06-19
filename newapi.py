@@ -461,7 +461,7 @@ class ProductCode(models.Model):
         # de l'utilisateur:
         # datetime_in_tz_dt = fields.Datetime.context_timestamp(self, date_time_dt)
         #  -> self sert à donner le context et donc la timezone
-        # Datetime en UTC en string : fields.Datetime.now()
+        # Datetime en UTC en datetime.datetime : fields.Datetime.now()
         # Pour écrire dans un rapport la date de génération:
         # _('Generated on %s') % format_datetime(self.env, datetime.utcnow())
         # en effet, format_datetime() s'occupe de convertir dans la tz du user
