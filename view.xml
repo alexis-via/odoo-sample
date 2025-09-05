@@ -36,6 +36,7 @@
                  expr="//button[@name='action_invoice_sent' and not(hasclass('oe_highlight'))]
                  expr="//header/button[last()]"
                  expr="//field[@name='preferred_payment_method_line_id'][last()]"
+                 expr="//field[@name='partner_bank_id'][2]"  # CAUTION: count starts from 1 and not 0 !
                 -->
             <attribute name="editable">bottom</attribute>
             <attribute name="on_change">onchange_product_id(product_id, location_id, location_dest_id, False)</attribute>
@@ -264,6 +265,10 @@
         decoration-bf  (bold font)
         decoration-success (green)
         decoration-warning (orange pâle)
+
+
+        decoration-danger="end_date &lt; today"
+        decoration-warning="date_planned and date_planned &gt;= datetime.datetime.combine(datetime.date.today(), datetime.time(0,0,0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')
          -->
         <!-- ajout possible : edit="0" create="0" delete="0" multi_edit="1" import="0"
         editable="top/bottom" : rend la vue liste éditable, avec création de nouveaux records en haut ou en bas de la liste

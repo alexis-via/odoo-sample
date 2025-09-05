@@ -1,3 +1,5 @@
+Markdown is the NEW format used by OCA since v18
+
 *Emphasize* _emphasize_
 **Strong** __Strong__
 ***Strong and italic*** ___Strong and italic___
@@ -33,3 +35,8 @@ This is a block of code
 ###### Header 6
 
 http://daringfireball.net/projects/markdown/syntax
+
+Image:
+
+![alt text](static/description/partner_duplicate_warning.png)
+

@@ -966,6 +966,7 @@ quants.mapped('package_id') est un recordset de tous les packages liés à ces q
 
 for inv in invoices.sorted(key='date_invoice'):
 for inv in invoices.sorted(reverse=True):
+for inv in invoices.sorted(lambda x: x.product_id.default_code)
 
 self.read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)
 
@@ -1044,6 +1045,8 @@ self.env['ir.config_parameter'].sudo().set_param('webkit_path', 'my_path')
 account_recordset = self.env['ir.property'].get('property_account_payable_id', 'res.partner')
 # v14+
 account_recordset = self.env['ir.property']._get('property_account_payable_id', 'res.partner')
+# v18+
+self.env[model]._fields['credit_limit'].get_company_dependent_fallback(self.env[model])
 
 
 # v14+ test intrastat country :
@@ -1257,3 +1260,8 @@ SELECT
 f"{dskdls}"\
         f"suite {encore}"
 
+# Call a method where method is build dynamically
+# example from account_dashboard_banner/models/account_dashboard_banner_cell.py
+if hasattr(self, f"_prepare_cell_data_{cell_type}"):
+    specific_method = getattr(self, f"_prepare_cell_data_{cell_type}")
+    res = specific_method(arg1, arg2, ...)

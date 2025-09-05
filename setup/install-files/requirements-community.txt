@@ -8,7 +8,7 @@ flake8
 ## Used by odoo, but not in odoo's requirements.txt
 pygments
 ## Upgrade libs from odoo requirements.txt that are too old
-python-stdnum
+python-stdnum==1.20
 ofxparse
 ## Needed by commonly-used community modules
 factur-x

@@ -107,6 +107,9 @@ with invoice_form.invoice_line_ids.new() as line_form:
     line_form.tax_ids.clear()
 cls.invoice = invoice_form.save()
 
+# today in tests
+today = fields.Date.today()
+
 # ===================================
 # accounting test that create a new company v16
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon

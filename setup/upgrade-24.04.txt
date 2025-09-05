@@ -1,0 +1,21 @@
+Upgrade 22.04 vers 24.04
+========================
+
+
+ATTENTION VERIFIER le data_directory de postgres 14 pour voir si il a été déplacé par rapport à la valeur par défaut /var/lib/postgresql
+L'espace du data_directory VA DOUBLER pendant pg_upgradecluster => vérifier qu'on a ASSEZ DE PLACE
+
+Supprimer les bases de test (pour gagner du temps)
+sudo pg_dropcluster 16 main --stop
+sudo pg_upgradecluster 14 main
+sudo pg_dropcluster 14 main
+
+La config postgresql est apparamment basculée automatiquement de 14 à 16 SAUF le data_directory
+
+sudo apt remove --purge postgresql-14 postgresql-client-14
+
+Problèmes rencontrés :
+ERROR:  functions in index expression must be marked IMMUTABLE
+
+
+Travail sur Py3o 

@@ -14,6 +14,7 @@ vue list : invisible => column_invisible
 message_post(body=" ac <a href=# data-oe-model=account.move data-oe-id=%d> -> utiliser 
 product_link = Markup(
                     "<a href=# data-oe-model=product.product data-oe-id=%s>%s</a>" % (product.id, product.display_name))
+Champ company_dependent=True: migration script needed. Example: https://github.com/OCA/bank-payment/pull/1492/files
 
 ==============
 
