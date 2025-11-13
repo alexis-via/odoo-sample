@@ -77,7 +77,12 @@ server {
         # Not supported on our version of Nginx
         # proxy_no_cache $cookie_nocache $arg_nocache $arg_comment;
         # proxy_no_cache $http_pragma $http_authorization;
-        }
+    }
+    # Disallow indexing by search engines. REMOVE if Odoo is used as the company's website
+    location /robots.txt {
+        add_header Content-Type text/plain;
+       return 200 "User-agent: *\nDisallow: /\n";
+    }
 }
 
 

@@ -1,6 +1,5 @@
 WARNING: RST is the old format => since v18, OCA has switched to markdown
 
-NEW FORMAT :
 DESCRIPTION.rst
 INSTALL.rst
 CONFIGURE.rst

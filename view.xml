@@ -387,11 +387,12 @@ Ce champ fonction peut être utile pr débugger :
     <field name="name">sale.order.calendar</field>
     <field name="model">sale.order</field>
     <field name="arch" type="xml">
-        <!-- date_start => field must be a datetime ? -->
-        <calendar string="Sales Orders" color="state" date_start="date_order" date_stop="date_end" mode="month" quick_add="false">
+            <!-- date_start => field must be a datetime ? -->
+            <!-- color must be a M2O field that point to a table with a color_field
+        <calendar string="Sales Orders" color="partner_id" date_start="date_order" date_stop="date_end" mode="month" quick_add="false">
             <!-- list fields displayed on the calendar sticker -->
             <field name="partner_id"/>
-            <field name="amount_total" filters="1"/>
+            <field name="amount_total" filters="1"/>  <!-- filters="1" : display a filter option on the right side -->
         </calendar>
     </field>
 </record>

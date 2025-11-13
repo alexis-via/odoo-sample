@@ -1,5 +1,14 @@
 Markdown is the NEW format used by OCA since v18
 
+DESCRIPTION.md
+INSTALL.md
+CONFIGURE.md
+USAGE.md
+HISTORY.md
+ROADMAP.md
+CONTRIBUTORS.md
+CREDITS.md
+
 *Emphasize* _emphasize_
 **Strong** __Strong__
 ***Strong and italic*** ___Strong and italic___
@@ -24,7 +33,9 @@ Code :
 
 Code block:
 ~~~~
+
 This is a block of code
+
 ~~~~
 
 # Header 1

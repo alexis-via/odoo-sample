@@ -9,6 +9,7 @@ User=odoo
 Group=odoo
 ExecStart=/home/odoo/erp/o16/bin/python /home/odoo/erp/odoo/odoo-bin --config /home/odoo/erp/prod.conf
 KillMode=mixed
+# ExecStartPre=psql -c "UPDATE queue_job SET state='pending' WHERE state in ('started', 'enqueued')" prod
 
 [Install]
 WantedBy=multi-user.target

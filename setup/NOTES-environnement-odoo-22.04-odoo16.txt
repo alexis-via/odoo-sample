@@ -21,6 +21,11 @@ sudo apt install postgresql wait-for-it node-less gsfonts git vim poppler-utils 
 Si utilisation du module OCA base_report_to_printer, qui utilise CUPS :
 sudo apt install libcups2-dev
 
+TODO intégrer : Pour le PDF des lots :
+
+sudo apt install libcairo2-dev pkg-config python3-dev
+pip install rlPyCairo
+
 Facultatif mais conseillé sur tout serveur:
 sudo apt install molly-guard fail2ban
 

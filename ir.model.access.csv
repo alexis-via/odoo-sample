@@ -14,6 +14,9 @@ champ_m2m,autre_champ
 "base.fr,base.de,base.es","autre_champ"
 
 Employee : base.group_user
+Role / Public : base.group_public
+Role / Portal : base.group_portal
+Partner Manager : base.group_partner_manager
 Access Rights : base.group_erp_manager
 Settings : base.group_system
 Technique : base.group_no_one

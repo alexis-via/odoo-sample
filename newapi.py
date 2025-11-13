@@ -557,7 +557,7 @@ class ProductCode(models.Model):
     # supprimer dans postgres : ALTER TABLE res_partner DROP CONSTRAINT ...
     # On peut hériter une contrainte d'un module dont on dépend en lui
     # donnant le même nom (1er arg du tuple)
-    _sql_constraints = [
+    _sql_constraints = [  # up to 18.0
         (
             'date_uniq',
             'unique(start_date, company_id, type)',
@@ -575,6 +575,12 @@ class ProductCode(models.Model):
             "CHECK( 1=1 )",
             'Contacts require a name.'),
     ]
+
+    # v19.0+
+    _check_length_prefix = models.Constraint(
+        "CHECK(char_length(COALESCE(code_prefix_start, '')) = char_length(COALESCE(code_prefix_end, '')))",
+        'The length of the starting and the ending code prefix must be the same',
+    )
 
     @api.multi
     def my_button(self):
@@ -1143,6 +1149,10 @@ return {
         'title': title,
         'message': message,
         'next': {'type': 'ir.actions.act_window_close'},  # close wizard AND show pop-up
+        # "next": {   # refresh data on current page
+#                    "type": "ir.actions.client",
+#                    "tag": "soft_reload",
+#                    }
         }
     }
 # in params/next, you can put any ir.actions.act_window
