@@ -1,4 +1,4 @@
-# Copyright 2025 Akretion France (https://www.akretion.com/)
+# Copyright 2026 Akretion France (https://www.akretion.com/)
 # @author: Alexis de Lattre <alexis.delattre@akretion.com>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
@@ -335,6 +335,8 @@ class ProductCode(models.Model):
     #                                      v16: set consu (where consu is a possible key)
     # Pour afficher la valeur 'lisible' du champ selection (v12+):
     # rec._fields['type'].convert_to_export(rec.type, rec)
+    # A tester:
+    # dict(rec._fields['type']._description_selection(self.env)).get(rec.type)
     picture = fields.Binary(string='Picture', attachment=True)
     # Pour fields.binary, il existe une option filters='*.png, *.gif',
     # qui restreint les formats de fichiers sélectionnables dans
@@ -523,6 +525,12 @@ class ProductCode(models.Model):
                         "set it back to draft before deleting it.")
                     % donation.number)
         return super(DonationDonation, self).unlink()
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_active_user(self):  # naming convention _unlink_except_xxx or _unlink_if_
+        if any(user.active for user in self):
+            raise UserError(self.env._("Can't delete an active user!"))
+
 
     @api.model
     def search(self, args, offset=0, limit=None, order=None, count=False):
@@ -1153,6 +1161,15 @@ return {
 #                    "type": "ir.actions.client",
 #                    "tag": "soft_reload",
 #                    }
+#       # "next": {
+#                    "type": "ir.actions.act_window":,
+#                    "name": "action name",
+#                    "res_model": "account.move",
+#                    "view_mode": "form",
+#                    "views": [(False, "form")],  # il faut avoir views !
+#                    "view_id": False,
+#                    "res_id": 14,
+#                    },
         }
     }
 # in params/next, you can put any ir.actions.act_window
@@ -1275,3 +1292,7 @@ f"{dskdls}"\
 if hasattr(self, f"_prepare_cell_data_{cell_type}"):
     specific_method = getattr(self, f"_prepare_cell_data_{cell_type}")
     res = specific_method(arg1, arg2, ...)
+
+# Remove all kinds of spaces in string (including non-breakable space)
+zipcode = ' 48 250 '
+zipcode_no_spaces = "".join(x for x in zipcode if not x.isspace())

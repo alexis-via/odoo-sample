@@ -39,7 +39,7 @@
                 <td style="padding: 5px; border: 1px solid black; text-align: left;"><t t-out="stay.arrival_note"/></td>
                 <td
                                 style="padding: 5px; border: 1px solid black;"
-                        ><t t-out="departure_date"/> <t t-esc="dict(stay.fields_get('departure_time', 'selection')['departure_time']['selection'])[stay.departure_time]"/></td>
+                        ><t t-out="format_date(departure_date)"/> <t t-esc="dict(stay.fields_get('departure_time', 'selection')['departure_time']['selection'])[stay.departure_time]"/></td>
             </tr>
     </t>
         </table>
@@ -60,5 +60,7 @@ format_datetime
 format_time
 format_amount
 format_duration
+is_html_empty  (v16+)
+slug (v18+)
 
 <span style="font-weight: bold;"  t-out="format_amount(object.amount_total, object.pricelist_id.currency_id) or ''">$ 10.00</span>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright 2025 Akretion France (https://www.akretion.com/)
+  Copyright 2026 Akretion France (https://www.akretion.com/)
   @author: Alexis de Lattre <alexis.delattre@akretion.com>
   License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 -->
@@ -269,6 +269,7 @@
 
         decoration-danger="end_date &lt; today"
         decoration-warning="date_planned and date_planned &gt;= datetime.datetime.combine(datetime.date.today(), datetime.time(0,0,0)).to_utc().strftime('%Y-%m-%d %H:%M:%S')
+        decoration-warning="next_stay_arrival_date == (datetime.date.today() + datetime.timedelta(1)).strftime('%Y-%m-%d')"
          -->
         <!-- ajout possible : edit="0" create="0" delete="0" multi_edit="1" import="0"
         editable="top/bottom" : rend la vue liste éditable, avec création de nouveaux records en haut ou en bas de la liste
@@ -297,7 +298,7 @@
             <field name="end_date" decoration-bf="1"/>  <!-- champ en gras -->
             <field name="sequence" widget="handle"/>  <!-- v10+ -->
             <field name="user_id" widget="many2one_avatar_user"/>  <!-- v14+ -->
-            <field name="product_uom_qty" string="Demand" attrs="{'column_invisible': [('parent.immediate_transfer', '=', True)], 'readonly': ['|', ('is_initial_demand_editable', '=', False), '&amp;', '&amp;', ('show_operations', '=', True), ('is_locked', '=', True), ('is_initial_demand_editable', '=', False)]}"/>  <!-- column_invisible en v11+  / On peut faire column_invisible : parent.xxx même si la vue tree n'est pas définie à l'intérieur d'un champ d'une vue forme -->
+            <field name="product_uom_qty" string="Demand" attrs="{'column_invisible': [('parent.immediate_transfer', '=', True)], 'readonly': ['|', ('is_initial_demand_editable', '=', False), '&amp;', '&amp;', ('show_operations', '=', True), ('is_locked', '=', True), ('is_initial_demand_editable', '=', False)]}"/>  <!-- column_invisible en v11+  / On peut faire column_invisible : parent.xxx même si la vue tree n'est pas définie à l'intérieur d'un champ d'une vue form -->
             <field name="on_order" attrs="{'invisible':[('on_order','=', True)]}"/>
             <!-- quand on met un attrs / invisible sur une vue Tree, ça ne masque
             pas la colonne mais ça rend invisible la valeur
@@ -388,7 +389,7 @@ Ce champ fonction peut être utile pr débugger :
     <field name="model">sale.order</field>
     <field name="arch" type="xml">
             <!-- date_start => field must be a datetime ? -->
-            <!-- color must be a M2O field that point to a table with a color_field
+            <!-- color= soit un champ Integer qui donne la couleur, soit un champ M2O et alors Odoo attribuera des couleurs random. Si on veut un champ M2O avec couleur configurées par l'utilisateur, on ajoute un champ integer color sur l'objet du M2O et on fait un related sur l'objet du calendar et on indique ce related dans color= -->
         <calendar string="Sales Orders" color="partner_id" date_start="date_order" date_stop="date_end" mode="month" quick_add="false">
             <!-- list fields displayed on the calendar sticker -->
             <field name="partner_id"/>

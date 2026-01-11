@@ -47,7 +47,7 @@ Téléchargement Odoo
 ===================
 
 Récupérer la branche git:
-git clone -b 16.0 --single-branch https://github.com/OCA/OCB odoo
+git clone -b 18.0 --single-branch https://github.com/OCA/OCB odoo
 
 Téléchargement des modules OCA et akretion
 ==========================================

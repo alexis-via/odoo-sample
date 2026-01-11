@@ -15,6 +15,7 @@
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase, SavepointCase
 from odoo.tests import tagged
+from odoo.tools import file_open, mute_logger
 
 # @tagged is used to avoid bugs such as:
 # null value in column "sale_line_warn" violates not-null constraint
@@ -28,6 +29,7 @@ class TestFrIntrastatService(TransactionCase):  # v16: TransactionCase
         # create data
 
     # WARNING: the name of the method must start with test ?
+    @mute_logger("pypdf._reader")
     def test_generate_des(self):
         # Set company country to France
         company = self.env.ref('base.main_company')
