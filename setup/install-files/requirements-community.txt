@@ -29,6 +29,7 @@ pymupdf
 ## WARNING: pdfplumber updates to the latest version of Pillow, which is not the version of Odoo's requirements.txt
 ## pdfplumber
 ## py3o
+packaging
 py3o.template
 py3o.formats
 mock
