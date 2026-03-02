@@ -106,6 +106,12 @@ sudo chown odoo:odoo /var/log/odoo
 sudo cp logrotate-odoo /etc/logrotate.d/odoo
 sudo chown root:root /etc/logrotate.d/odoo
 
+Hostname
+========
+Editer les 2 fichiers suivants:
+/etc/hostname
+/etc/hosts
+
 Moteur de rapport communautaire Py3o
 ====================================
 
