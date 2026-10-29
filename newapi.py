@@ -85,7 +85,7 @@ class ProductCode(models.Model):
     def name_get(self):
         res = []
         for record in self:
-            res.append((record.id, u'%s (%s-%s)' % (record.name, record.date_start, record.date_end)))
+            res.append((record.id, '%s (%s-%s)' % (record.name, record.date_start, record.date_end)))
         return res
         # when called with a single ID :
         # record.name_get()[0][1]
@@ -93,6 +93,10 @@ class ProductCode(models.Model):
     # v18+
     @api.model
     def _search_display_name(self, operator, value):
+        if operator == "ilike" and value and isinstance(value, str) and value.isdigit():
+            domain = [('zipcode', '=like', value + '%')]
+        else:
+            domain = super()._search_display_name(operator, value)
         return domain
 
     # v16 à v17 (autres exemples: res.country, account.account)
@@ -482,6 +486,9 @@ class ProductCode(models.Model):
                 vals['name'] = self.env['ir.sequence'].next_by_code(
                     'sale.order', sequence_date=vals.get('date')) or _("New")
         return super().create(vals_list)
+    # key that can be interested to pass in context:
+    # mail_create_nosubscribe=True
+    # mail_create_nolog=True
 
     # Starting from v12, we can also use that:
     @api.model_create_multi
@@ -714,7 +721,7 @@ recs2 = self.sudo()  # uid = SUPERUSER_ID
 # RedirectWarning
 # also allows to ask a question with 2 possible answers (one of the 2 is cancel i.e. do nothing)
 action = self.env.ref('account.action_account_config')  # ok v14
-# action can be an ir.actions.server that contains code:
+# action can be an ir.actions.actions, ir.actions.act_window or ir.actions.server that contains code:
 <record  id="stock_quant_stock_move_line_desynchronization" model="ir.actions.server">
     <field name="name">Correct inconsistencies for reservation</field>
     <field name="model_id" ref="base.model_ir_actions_server"/>
@@ -722,7 +729,8 @@ action = self.env.ref('account.action_account_config')  # ok v14
     <field name="code"></field>
 </record>
 msg = _('Cannot find a chart of accounts for this company, You should configure it. \nPlease go to Account Configuration.')
-raise RedirectWarning(msg, action.id, _('Go to the configuration panel'))
+# the 2nd arg can be either a dict or an ID of ir.actions.server
+raise RedirectWarning(msg, action.id, _('Go to the configuration panel'), additional_context={'account_unmerge_confirm': True})
 
 # Récupérer une action sous forme de dico
 action = self.env['ir.actions.act_window'].for_xml_id('stock', 'action_package_view')
@@ -768,7 +776,7 @@ result, report_format = res
 # v8
 
 action = action = {
-    'name': u'Export ComptaFirst',
+    'name': 'Export',
     'type': 'ir.actions.act_url',
     'url': "web/binary/saveas/?model=account.move.export.comptafirst&id=%d&filename_field=filename&field=file_data&download=true&filename=%s" % (self.id, self.filename),
     'target': 'new',
@@ -936,7 +944,8 @@ self.env['pos.config'].check_access_rights('read', raise_exception=True)
 my_partner.check_access_rule('read')
 
 # Lire une entrée du fichier de config du serveur Odoo
-idir = tools.config.get('invoice2data_templates_dir', False)
+idir = tools.config.get('invoice2data_templates_dir')
+
 
 # Pour avoir la string d'un champ sélection
 self._fields['state'].convert_to_export(self.state, self)
@@ -968,10 +977,10 @@ self.env['ir.sequence'].browse(94).next_by_id('2021-12-25') => F-2022-07-42 (si 
 self.env['ir.sequence'].browse(94).with_context(ir_sequence_date='2021-12-25').next_by_id() => F-2021-12-42
 
 self.env['account.analytic.account'].search_read([('type', '=', 'contract')], ['code'])
-result: [{'code': u'113966', 'id': 14}, {'code': u'1485427485', 'id': 16}, {'code': u'AA001', 'id': 2}, {'code': u'AA002', 'id': 3}]
+result: [{'code': '113966', 'id': 14}, {'code': '1485427485', 'id': 16}, {'code': 'AA001', 'id': 2}, {'code': 'AA002', 'id': 3}]
 
 Ca renvoie comme un read:
-Pour un M2O : 'account_id': (508, u'627100 Frais sur titres (achat, vente, garde)'
+Pour un M2O : 'account_id': (508, '627100 Frais sur titres (achat, vente, garde)'
 
 for move in self.filtered(lambda move: move.product_id.cost_method != 'real' and not move.origin_returned_move_id):
 
@@ -1006,7 +1015,7 @@ v16-
 @api.depends('line_ids.commission_amount')
 def _compute_amount_total(self):
     rg_res = self.env['account.invoice.line'].read_group([('move_id', 'in', self.ids)], ['result_id', 'commission_amount:sum'], ['result_id'])
-    mapped_data = dict([(x['result_id'][0], x['commission_amount']) for x in rg_res])
+    mapped_data = {x['result_id'][0]: x['commission_amount'] for x in rg_res}
     for rec in self:
         rec.amount_total = mapped_data.get(rec.id, 0)
 
@@ -1014,7 +1023,7 @@ v17:
 @api.depends('invoice_line_ids.price_subtotal')
 def _compute_amount_total(self):
     rg_res = self.env['account.move.line'].read_group([('move_id', 'in', self.ids)], groupby=['move_id'], aggregates=['price_subtotal:sum'])
-    mapped_data = dict([(inv.id, total) for (inv, total) in rg_res])
+    mapped_data = {inv.id: total for (inv, total) in rg_res}
     for inv in self:
         inv.amount_total = mapped_data.get(inv.id, 0)
 
@@ -1023,8 +1032,7 @@ def _compute_sale_count(self):
     rg_res = self.env['sale.order'].read_group(
             [('agreement_id', 'in', self.ids)],
             ['agreement_id'], ['agreement_id'])
-    mapped_data = dict(
-        [(x['agreement_id'][0], x['agreement_id_count']) for x in rg_res])
+    mapped_data = {x['agreement_id'][0]: x['agreement_id_count'] for x in rg_res}
     for agreement in self:
         agreement.sale_count = mapped_data.get(agreement.id, 0)
 
@@ -1158,19 +1166,22 @@ return {
         'type': 'success',  # warning/danger
         'sticky': True,  # if True, popup will stay on screen until closed by user
         'title': title,
-        'message': message,
+        'message': message,   # '%s' si 'links' présent
+        'links': [{  # pour que 'links' fonctionne, il faut mettre le contenu du msg dans 'title' et 'message' doit contenir simplement '%s'
+            'label': self.env._("Display Log"),
+            'url': f'/odoo/fr-einvoicing-log/{log.id}',
+        }],
         'next': {'type': 'ir.actions.act_window_close'},  # close wizard AND show pop-up
         # "next": {   # refresh data on current page
 #                    "type": "ir.actions.client",
 #                    "tag": "soft_reload",
 #                    }
 #       # "next": {
-#                    "type": "ir.actions.act_window":,
+#                    "type": "ir.actions.act_window",
 #                    "name": "action name",
 #                    "res_model": "account.move",
 #                    "view_mode": "form",
 #                    "views": [(False, "form")],  # il faut avoir views !
-#                    "view_id": False,
 #                    "res_id": 14,
 #                    },
         }

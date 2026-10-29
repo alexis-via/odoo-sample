@@ -12,6 +12,7 @@ CREDITS.md
 *Emphasize* _emphasize_
 **Strong** __Strong__
 ***Strong and italic*** ___Strong and italic___
+==surligné==
 
 A [link](http://example.com "Optional Title").
 

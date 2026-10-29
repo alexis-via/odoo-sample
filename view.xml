@@ -442,6 +442,7 @@ Same in v10 : <pivot display_quantity="True">
 <record id="fr_intrastat_product_action" model="ir.actions.act_window">
     <field name="name">Intrastat Product</field>
     <field name="res_model">report.intrastat.product</field>
+    <field name="path">intrastat-product</field>  <!-- v18+ -->
     <field name="view_mode">list,form</field> <!-- v18+ -->
     <field name="view_mode">tree,form</field>
     <field name="domain">[('is_customer', '=', True)]</field>

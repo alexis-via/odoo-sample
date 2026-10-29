@@ -4,7 +4,7 @@
 
 {
     'name': 'Account Cut-off Prepaid',
-    'version': '16.0.1.0.0',
+    'version': '18.0.1.0.0',
     'category': 'Accounting',  # Sales, Warehouse, Manufacturing, Purchases, Human Resources
     'license': 'AGPL-3',
     'summary': 'Prepaid Expense, Prepaid Revenue',  # v7: size=64, v8: no size limit

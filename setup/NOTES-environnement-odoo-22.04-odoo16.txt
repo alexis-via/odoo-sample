@@ -1,4 +1,4 @@
-INSTALLATION Odoo v16/v18 sur Ubuntu 22.04 et 24.04 LTS
+INSTALLATION Odoo v16/v18 sur Ubuntu 22.04/24.04/26.04 LTS
 ========================================================
 
 LAST MINUTE bug https://github.com/odoo/odoo/issues/187021  sur odoo 16:
@@ -52,7 +52,7 @@ git clone -b 18.0 --single-branch https://github.com/OCA/OCB odoo
 Téléchargement des modules OCA et akretion
 ==========================================
 
-Utilisation de mon script community-repo-checkout.py dispo dans https://github.com/alexis-via/odoo-sample
+Utilisation de mon script community-repo-checkout.py dispo dans https://github.com/alexis-via/odoo-sample avec son fichier de configuration install-files/community-repo.conf
 
 Librairies python
 =================
@@ -112,8 +112,60 @@ Editer les 2 fichiers suivants:
 /etc/hostname
 /etc/hosts
 
-Moteur de rapport communautaire Py3o
-====================================
+Saxon server
+============
+Sur 24.04 :
+sudo apt install openjdk-25-jre openjdk-25-jre-headless
+Sur 26.06 :
+sudo apt install openjdk-26-jre openjdk-26-jre-headless
+
+Télécharger la dernière release https://github.com/willemvlh/saxon-server/releases
+Copier le .jar sur /usr/local/src
+sudo chown root:root /usr/local/src/saxon-server-1.15.jar
+Copier saxonserver.service dans /etc/systemd/system
+sudo chown root:root /etc/systemd/system/saxonserver.service
+sudo systemctl enable saxonserver
+sudo systemctl start saxonserver
+
+Filtrage du port 5000:
+sudo apt remove --purge ufw
+le paquet nftables doit déjà être installé
+
+Persistence via /etc/nftables.conf: ajouter à la fin du bloc chain input:
+
+iifname "ens3" tcp dport 5000 reject;
+
+activer la persistence:
+
+sudo systemctl enable nftables
+sudo systemctl start nftables
+
+pour voir les règles actives :
+sudo nft list ruleset
+
+A la main:
+iptables -A INPUT -i ens3 -p tcp --dport 5000 -j REJECT
+ip6tables -A INPUT -i ens3 -p tcp --dport 5000 -j REJECT
+
+fichier /etc/iptables.up.rules
+*filter
+-A INPUT -i ens3 -p tcp --dport 5000 -j REJECT
+COMMIT
+
+[NEW] Moteur de rapport communautaire Py3o
+==========================================
+Branch 18-report_py3o_fusion_server-libreoffice_direct
+
+sudo apt install ttf-mscorefonts-installer libreoffice-writer fonts-symbola python3-uno
+
+Dans virtualenv:
+pip install --upgrade py3o.formats py3o.template
+pip install oooenv
+oooenv cmd-link -a
+
+
+[OLD] Moteur de rapport communautaire Py3o
+===========================================
 
 py3o.template en py3 ; renderserver, fusion et le reste en py2
 
@@ -207,10 +259,13 @@ data_dir = /home/odoo/erp/data-dir
 logfile = /var/log/odoo/odoo-server.log
 db_name = prod
 dbfilter = ^prod$
+list_db = False
+limit_time_real_cron = 3600
 
 * exemple si on veut du multi-worker:
 
 workers = 5
+db_maxconn = 32  (64 par défaut, mais comme c'est par worker, après ça fait trop)
 max_cron_threads = 2  (= valeur par défaut)
 limit_memory_hard = 2684354560  (valeur par défaut, qui est + élevée que sur les anciennes versions)
 limit_memory_soft = 2147483648  (valeur par défaut)
@@ -228,8 +283,16 @@ http_port = 7069
 longpolling_port = 7072
 data_dir = /home/odoo/data-dir-test
 logfile = False
+list_db = True
 workers = 0
 running_env = test
+db_maxconn = 32
+max_cron_threads = 0
+
+Il faut que la somme de db_maxconn (64 par défaut) de prod.conf et test.conf ne dépasse pas le paramètre max_connections de postgresql.conf (défaut : 100). NON, car db_maxconn est PAR WORKER.
+Sur le serveur de test, c'est TRES important de mettre max_cron_threads = 0, car les crons ne tiennent pas compte de dbfilter et il est susceptible d'exécuter les crons de prod !
+Intéressant : https://odooskills.com/blog/developpement-odoo-2/cron-ne-s-execute-pas-odoo-20-289
+
 
 Proxy nginx pour HTTPS
 ======================

@@ -12,6 +12,7 @@ python-stdnum==1.20
 ofxparse
 ## Needed by commonly-used community modules
 factur-x
+pyfrctc
 phonenumbers
 unidecode
 simplejson
@@ -32,6 +33,7 @@ packaging
 py3o.template
 py3o.formats
 mock
+oooenv
 ## das2
 pyfrdas2
 ## l10n_fr_chorus_account

@@ -1,7 +1,8 @@
 When I generate a template database :
+Créer la base à la main pour pouvoir préciser le pays, et du coup faire en sorte que la devise soit EUR sur My Company (San Franciso)
 - account
 - Regarder le nombre de taxes => si > 40, c'est pas normal
-- dev_profile module (ne PAS installer directement dev_profile, sinon ça ne va pas marcher)
+- dev_profile module (ne PAS installer directement dev_profile, sinon ça ne va pas marcher à cause de PoS)
 - (NON, car ça fait échouer certains tests) add module partner_bank_acc_type_constraint
 - add module l10n_fr_account_tax_unece
 - désinstaller l10n_fr_fec (non valable v18+ car fec intégré à l10n_fr_account)
@@ -10,15 +11,15 @@ When I generate a template database :
 . config lang US : date dd/mm/YYYY
 - Company : EUR and France (ok par défaut)
 - pages de config :
- . general : multi-société (pas en v16)
+ . general : multi-société (pas en v16), password expiry
  . crm : leads
- . sale : remise, multi-uom, 3 address (déplacé sur page compta en v16), warnings, proforma, quotation validity, incoterms, invoicing policy=delivered
+ . sale : remise, multi-uom, 3 address (déplacé sur page compta en v16), warnings, proforma, quotation validity, (incoterms), invoicing policy=delivered
  . purchase : warning, bill control = received (defaut), dropship
  . stock : multi-emplacement, routes, warning, display lots on delivery slip
  . account : multi-currency, VIES, analytic, multi-adresse (v16), DESACTIVER auto-validate bills
  . pos : stock in real time (removed in v16?, but default in v18), load remaining partners/products in the background, ePOS printer, flexible pricelists, DESACTIVER restrict by categories, allow ship later
 - ajouter dans le groupe "Show full accounting features" (pas en v17+)
-- dans FR company, Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale) + lien compte bancaire
+- dans FR OCA company, Mettre à jour/Créer 2 journaux de banque (La Banque postale et Société générale) + lien compte bancaire
 - Créer un journal "chèque client"
 - fiscal positions : décocher détect automatically et enlever VAT required pour domestic
 - Mettre à jour les payment modes avec les 2 journaux de banque
@@ -29,5 +30,5 @@ When I generate a template database :
 - account groups à 2 niveaux
 - enlever le bandeau d'onboarding sur la compta
 - supprimer le inventory journal (v18 : Settings > Technical > Actions > User-defined Defaults)
-- v18+ : supprimer l'un des 2 journaux de cash créé
-- 471100 / 511500 / 512999
+- 471100 / 511500 / 512999nal
+- company par défaut "FR OCA company" sur user "admin"
