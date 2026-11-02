@@ -1,5 +1,5 @@
-INSTALLATION Odoo v16/v18 sur Ubuntu 22.04/24.04/26.04 LTS
-========================================================
+INSTALLATION Odoo v16/v18/v20 sur Ubuntu 22.04/24.04/26.04 LTS
+==============================================================
 
 LAST MINUTE bug https://github.com/odoo/odoo/issues/187021  sur odoo 16:
 modifier requirements.txt pour mettre :
@@ -47,7 +47,7 @@ Téléchargement Odoo
 ===================
 
 Récupérer la branche git:
-git clone -b 18.0 --single-branch https://github.com/OCA/OCB odoo
+git clone -b 20.0 --single-branch https://github.com/OCA/OCB odoo
 
 Téléchargement des modules OCA et akretion
 ==========================================
@@ -57,16 +57,16 @@ Utilisation de mon script community-repo-checkout.py dispo dans https://github.c
 Librairies python
 =================
 
-SI recours à deadsnake, par exemple pour avoir python3.10 sur ubuntu 24.04 :
+Si recours à deadsnake, par exemple pour avoir python3.10 sur ubuntu 24.04 :
 
 sudo add-apt-repository ppa:deadsnakes/ppa
 
 sudo apt install python3.10-dev python3.10-distutils
 
 
-mkdir o16
-virtualenv o16
-source o16/bin/activate
+mkdir o20
+virtualenv o20
+source o20/bin/activate
 
 Dans le répertoire "odoo" :
 pip install -r requirements.txt
@@ -121,7 +121,7 @@ sudo apt install openjdk-26-jre openjdk-26-jre-headless
 
 Télécharger la dernière release https://github.com/willemvlh/saxon-server/releases
 Copier le .jar sur /usr/local/src
-sudo chown root:root /usr/local/src/saxon-server-1.15.jar
+sudo chown root:root /usr/local/src/saxon-server-1.16.jar
 Copier saxonserver.service dans /etc/systemd/system
 sudo chown root:root /etc/systemd/system/saxonserver.service
 sudo systemctl enable saxonserver
@@ -162,6 +162,12 @@ Dans virtualenv:
 pip install --upgrade py3o.formats py3o.template
 pip install oooenv
 oooenv cmd-link -a
+
+Copier les fichiers libreoffice.service dans /etc/systemd/system/
+
+chown root:root /etc/systemd/system/libreoffice.service
+
+sudo systemctl enable libreoffice
 
 
 [OLD] Moteur de rapport communautaire Py3o
@@ -245,11 +251,13 @@ Fichier de config serveur Odoo
 
 Pour générer un fichier de config de base:
 ./odoo-bin -s
+sur Odoo 20 :
+./odoo-bin server --save
 => ça génère un fichier de base ~/.odoorc
 
 * Modifs sur le fichier de config:
 admin_passwd = <mettre un mdp très solide>
-without_demo = True
+without_demo = True  # ATTENTION en v20 INVERSE with_demo
 limit_time_cpu = 2000
 limit_time_real = 3600
 http_interface = localhost
@@ -282,7 +290,7 @@ dbfilter = ^test.*
 http_port = 7069
 longpolling_port = 7072
 data_dir = /home/odoo/data-dir-test
-logfile = False
+logfile = 
 list_db = True
 workers = 0
 running_env = test

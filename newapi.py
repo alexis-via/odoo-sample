@@ -1314,3 +1314,21 @@ zipcode_no_spaces = "".join(x for x in zipcode if not x.isspace())
 
 # le 2e arg est la syntaxe relativedelta
 fields.Date.add(fields.Date.context_today(self), days=7)
+
+# SIREN/SIRET en v20
+p1 = self.env['res.partner'].create({
+    'name': 'alexinux test1',
+    'country_id': self.env.ref('base.fr').id,
+    'additional_identifiers': {'FR_SIRET': '790 614 614 00028'},
+    })
+    print(f'additional_identifiers', p1.additional_identifiers)
+    additional_identifiers = {'FR_SIREN': '790614614', 'FR_SIRET': '79061461400028'}
+    # il raise si checksum faux
+    # il enlève bien les espaces
+    # si on met juste la clé FR_SIRET, il ajoute automatiquement la clé FR_SIREN
+siret = p1._get_additional_identifier('FR_SIRET')
+siren = p1._get_additional_identifier('FR_SIREN')
+partners = self.env['res.partner'].search([('additional_identifiers', 'like', '"FR_SIREN": "790614614"')])
+# Import Excel:
+en-tête de colonne : additional_identifiers
+contenu: {"FR_SIRET": "79061461400028"}  # attention à bien mettre une double quote et pas d'espace avant : et 1 seul espace après :
