@@ -59,8 +59,7 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3.10-dev python3.10-distutils
 
 
-mkdir o20
-virtualenv o20
+virtualenv o20  (le sous-répertoire o20 sera créé automatiquement)
 source o20/bin/activate
 
 Dans le répertoire "odoo" :
@@ -154,8 +153,7 @@ Branch 18-report_py3o_fusion_server-libreoffice_direct
 sudo apt install ttf-mscorefonts-installer libreoffice-writer fonts-symbola python3-uno
 
 Dans virtualenv:
-pip install --upgrade py3o.formats py3o.template
-pip install oooenv
+pip install --upgrade py3o.formats py3o.template oooenv   (déjà installé via requirements-community.txt)
 oooenv cmd-link -a
 
 Copier les fichiers libreoffice.service dans /etc/systemd/system/
@@ -227,20 +225,6 @@ sudo systemctl enable py3o-fusion
 sudo systemctl enable py3o-renderserver
 sudo systemctl enable libreoffice
 
-Démarrage automatique d'Odoo
-============================
-
-Script de démarrage :
-
-copier odoo.service (et éventuellement aussi testodoo.service) dans /etc/systemd/system
-
-chown root:root /etc/systemd/system/*odoo*service
-
-Personnaliser les paramètres de config situés à l'intérieur du fichier .service (chemins, utilisateur)
-
-sudo systemctl enable odoo
-sudo systemctl enable testodoo
-
 Fichier de config serveur Odoo
 ==============================
 
@@ -295,6 +279,21 @@ max_cron_threads = 0
 Il faut que la somme de db_maxconn (64 par défaut) de prod.conf et test.conf ne dépasse pas le paramètre max_connections de postgresql.conf (défaut : 100). NON, car db_maxconn est PAR WORKER.
 Sur le serveur de test, c'est TRES important de mettre max_cron_threads = 0, car les crons ne tiennent pas compte de dbfilter et il est susceptible d'exécuter les crons de prod !
 Intéressant : https://odooskills.com/blog/developpement-odoo-2/cron-ne-s-execute-pas-odoo-20-289
+
+
+Démarrage automatique d'Odoo
+============================
+
+Script de démarrage :
+
+copier odoo.service (et éventuellement aussi testodoo.service) dans /etc/systemd/system
+
+chown root:root /etc/systemd/system/*odoo*service
+
+Personnaliser les paramètres de config situés à l'intérieur du fichier .service (chemins, utilisateur)
+
+sudo systemctl enable odoo
+sudo systemctl enable testodoo
 
 
 Proxy nginx pour HTTPS
