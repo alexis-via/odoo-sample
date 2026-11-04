@@ -1,10 +1,12 @@
-Python:
+Python natif:
+Ubuntu 26.04 (resolute): 3.14
 Ubuntu 24.04 (noble): 3.12
 Ubuntu 22.04 (jammy) : 3.10
 Ubuntu 20.04 (focal) : 3.8
 
 
 18 : ubuntu 24.04 python natif
+     ubuntu 26.04 python natif
 
 16 : ubuntu 24.04 python natif
 
